@@ -1,31 +1,30 @@
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
-from views import ra_origin, dec_origin, inc, minF, maxF, obs_array, max_len
-
-# pixel class
-class Pixel:
-    ra = 0
-    dec = 0
-    avg_freq = 0
-    avg_sensitivity = 0
-    # ...
-
-    def __init__(self, ra, dec)
+from pixel import Pixel
 
 # global vars
 obs_array = None
 inc = 0
 ra_origin = 0
 dec_origin = 0
+json_global
+curr_freq = 0
+
+curr_pixel = Pixel()
 
 # simple converter, might be discontinued
-def arcsecToAngle(arcsec):
+def arcsec_to_angle(arcsec):
     return arcsec / 3600
+
+# =============================================================================
+#       MAIN FUNCTION, EVERYONE ELSE SUCKS
+#       returns a json file with all relevant information
+# =============================================================================
 
 def get_json_plot(cosmos_field, minF, maxF, center):
     # auxiliary variables
-    ra_origin = float(center.ra.degree) - float((size/2)) + arcsecToAngle(res/2)
-    dec_origin = float(center.dec.degree) + float((size/2)) - arcsecToAngle(res/2)
+    ra_origin = float(center.ra.degree) - float((size/2)) + arcsec_to_angle(res/2)
+    dec_origin = float(center.dec.degree) + float((size/2)) - arcsec_to_angle(res/2)
     
     # get number of pixels
     angle_size = Angle(size, unit=u.degree)
@@ -43,9 +42,27 @@ def get_json_plot(cosmos_field, minF, maxF, center):
         fov = row["Field of view"]
         fillPixels(ra, dec, fov)
 
+    # convert full 2d array to json
 
+# -----------------------------------------------------------------------------------------
+# modifies the observation array, whether by adding a new pixel or modyfing an existing one
+
+def add_or_change(i, j, new_pixel):
+    position = obs_array[i][j] 
+    if(position == None):
+        position = pixel
+    else:
+        # calculate new values for that pixel
+        position.n_obs = n_obs + 1
+        position.avg = new_pixel
+        #   # mais coisas...
+
+# -----------------------------------------------------------------------------------------
 # fills the pixels around given ra/dec coordinates and a fov measured in arcsecs
+
 def fillPixels(ra, dec, fov):
+    # create temp pixel object
+    set_curr_pixel('args')
     # builds an Angle object for convenience
     fov_degree = Angle(fov, unit=u.arcsec)
     # define some support variables and the subgrid
@@ -65,11 +82,17 @@ def fillPixels(ra, dec, fov):
             # see if the current cell falls within the observation fov
             sep = center.separation(currCoord)
             if(sep < fov_degree):
-# =============================================================================
-#                 this can be easily replaced with any other function - most
-#                 likely, it will serialize data to populate a JSON file with
-# =============================================================================
-                obs_array[i][j] += 1
-            # optional code block for visual antialias
-            elif((sep - fov_degree) < Angle(square_size/2, unit=u.degree)): 
-                obs_array[i][j] += fov_degree/sep
+                # call to add_or_change
+                add_or_change(i, j, curr_pixel)
+
+# -----------------------------------------------------------------------------------------
+# builds the final JSON file to expedite
+
+def add_to_json(pixel):
+    json_pixel = {
+        "ra" : pixel.ra,
+        "dec" : pixel.dec,
+        "avg_freq" : pixel.freq,
+
+    }
+    json_global = json.dumps
