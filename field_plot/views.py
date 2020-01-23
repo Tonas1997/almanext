@@ -1,5 +1,5 @@
 import numpy as np
-from utils import arcsecToAngle, fillPixels
+from utils import get_json_plot
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 
@@ -25,30 +25,11 @@ def get_plot(request, var_center, size, res):
 # =============================================================================
 #    PLACEHOLDER: THIS PART OF THE CODE WILL FETCH ALL RELEVANT OBSERVATIONS
 #    FROM TRE DATABASE
-# =============================================================================
+
+    obs_set = 
+# =============================================================================   
     
-    # get the coordinates for the top-left corner
-    ra_origin = float(center.ra.degree) - float((size/2)) + arcsecToAngle(res/2)
-    dec_origin = float(center.dec.degree) + float((size/2)) - arcsecToAngle(res/2)
-    
-    # get number of pixels
-    angle_size = Angle(size, unit=u.degree)
-    angle_res = Angle(res, unit=u.arcsec)
-    max_len = int((angle_size/angle_res))
-    # create 2D plot
-    obs_array = np.zeros((max_len, max_len))
-    inc = angle_res.degree
-    
-    count = 0
-    
-    # fill pixels
-    for index, row in cosmos_field.iterrows():
-        print("Processing observation " + str(row["Project code"]) + "(" + str(round(float(count/datasize), 2)*100) + "%)")
-        ra = row["RA"]
-        dec = row["Dec"]
-        fov = row["Field of view"]
-        fillPixels(ra, dec, fov)
-        count += 1
+    JSONplot = get_json_plot(cosmos_field, minF, maxF, center)
         
 # =============================================================================
 #     SERIALIZE AND RETURN A JSON OBJECT

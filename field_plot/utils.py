@@ -2,32 +2,47 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from views import ra_origin, dec_origin, inc, minF, maxF, obs_array, max_len
 
-# checks whether or not an observation has coverage for the given frequencies
-# (values in GHz)
-def freqFilter(row):
-    if(minF == -1):
-        return(True)
-    # get spectral windows
-    freqs = row["Frequency support"]
-    str_windows = freqs.split('U')
-    # checks each spectral window individually
-    for i in range(len(str_windows)):
-        string = (str_windows[i].split(","))[0]
-        frequency_array = (string[1: (len(string) - 3)]).split('[')
-        freq_range = frequency_array[len(frequency_array)-1]
-        vals = freq_range.split("..")
-        # this tuple will contain the start and end freqencies of a window
-        valNums = [float(vals[0]), float(vals[1])]
-        if(len(vals) == 2):
-            if((valNums[0] > minF and valNums[0] < maxF) or
-               (valNums[1] > minF and valNums[1] < maxF)):
-                return(True)
-    return(False)
-# -------------- LIB --------------
+# pixel class
+class Pixel:
+    ra = 0
+    dec = 0
+    avg_freq = 0
+    avg_sensitivity = 0
+    # ...
+
+    def __init__(self, ra, dec)
+
+# global vars
+obs_array = None
+inc = 0
+ra_origin = 0
+dec_origin = 0
 
 # simple converter, might be discontinued
 def arcsecToAngle(arcsec):
     return arcsec / 3600
+
+def get_json_plot(cosmos_field, minF, maxF, center):
+    # auxiliary variables
+    ra_origin = float(center.ra.degree) - float((size/2)) + arcsecToAngle(res/2)
+    dec_origin = float(center.dec.degree) + float((size/2)) - arcsecToAngle(res/2)
+    
+    # get number of pixels
+    angle_size = Angle(size, unit=u.degree)
+    angle_res = Angle(res, unit=u.arcsec)
+    global max_len = int((angle_size/angle_res))
+
+    # create 2D plot
+    global obs_array = np.zeros((max_len, max_len))
+    global inc = angle_res.degree
+
+    # iterate over the QuerySet object
+    for index, row in cosmos_field.iterrows():
+        ra = row["RA"]
+        dec = row["Dec"]
+        fov = row["Field of view"]
+        fillPixels(ra, dec, fov)
+
 
 # fills the pixels around given ra/dec coordinates and a fov measured in arcsecs
 def fillPixels(ra, dec, fov):
