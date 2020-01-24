@@ -31,7 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'field_plot.apps.FieldPlotConfig'
+    'common.apps.CommonConfig',
+    'field_plot.apps.FieldPlotConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -69,7 +70,7 @@ TEMPLATES = [
         },
     },
 ]
-        
+
 STATICFILES_DIRS = [
         os.path.join(BASE_DIR, 'static'),
 ]
