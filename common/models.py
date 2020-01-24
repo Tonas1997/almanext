@@ -15,7 +15,7 @@ class Observation(models.Model):
     mosaic
     integration_time = models.FloatField()
     release_date = models.CharField()
-    freq_support
+    freq_support = models.ForeignKey(SpectralWindow)
     velocity_resolution = models.FloatField()
     pol_product
     observation_date = models.DateTimeField()
@@ -23,7 +23,7 @@ class Observation(models.Model):
     sb_name = models.CharField()
     proposal_authors = models.CharField()
     line_sensitivity = models.FloatField()
-    continuum_sensitivity = v
+    continuum_sensitivity = models.FloatField()
     pwv = models.FloatField()
     group_ous_id
     member_ous_id
@@ -38,3 +38,5 @@ class Observation(models.Model):
     science_leywords
     scientific_cat
     asa_project_code = models.CharField()
+
+class SpectralWindow(models.Model):
