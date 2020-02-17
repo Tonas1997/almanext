@@ -28,7 +28,7 @@ def get_plot(request, var_center, var_size, var_res):
 #    PLACEHOLDER: THIS PART OF THE CODE WILL FETCH ALL RELEVANT OBSERVATIONS
 #    FROM TRE DATABASE
 
-    obs_set =
+    obs_set = 
 # =============================================================================
 
     JSONplot = get_json_plot(center, size, res, obs_set)
