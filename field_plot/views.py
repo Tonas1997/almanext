@@ -15,9 +15,9 @@ maxF = 0
 def index(request):
     #return HttpResponse("<h1>Hello world</h1>")
     return render(request, 'base.html')
-    
+
 # Create your views here.
-def get_plot(request, var_center, var_size, var_res):
+def get_plot(request, var_center, var_size, var_res, min_freq, max_freq):
 
     center = ["10h00m24s","+2:00"]
     size = 2
