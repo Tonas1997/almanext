@@ -1,17 +1,14 @@
 import json
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
-from pixel import Pixel
+from field_plot.pixel import Pixel
 
 # global vars
 obs_array = None
 inc = 0
 ra_origin = 0
 dec_origin = 0
-json_global
 curr_freq = 0
-
-curr_pixel = Pixel()
 
 # -----------------------------------------------------------------------------------------
 # simple converter, might be discontinued
@@ -76,11 +73,11 @@ def get_json_plot(center, size, res, obs_set):
     # get number of pixels
     angle_size = Angle(size, unit=u.degree)
     angle_res = Angle(res, unit=u.arcsec)
-    global max_len = int((angle_size/angle_res))
+    max_len = int(angle_size/angle_res)
 
     # create 2D plot
-    global obs_array = [[None for x in range(max_len)] for y in range(max_len)]
-    global inc = angle_res.degree
+    obs_array = [[None for x in range(max_len)] for y in range(max_len)]
+    inc = angle_res.degree
 
     # iterate over the QuerySet object
     # fill pixels

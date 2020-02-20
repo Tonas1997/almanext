@@ -1,15 +1,18 @@
 import numpy as np
-from utils import get_json_plot
+from field_plot import utils
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
-from django.http import JSONResponse
-from almanext_site.common.models import Observation, SpectralWindow, Trace
+from django.http import JsonResponse, HttpResponse
+from common.models import Observation, SpectralWindow, Trace
 
 ra_origin = 0
 dec_origin = 0
 inc = 0
 minF = 0
 maxF = 0
+
+def index(request):
+    return HttpResponse("<h1>Hello world</h1>")
 
 # Create your views here.
 def get_plot(request, var_center, var_size, var_res):
@@ -28,7 +31,7 @@ def get_plot(request, var_center, var_size, var_res):
 #    PLACEHOLDER: THIS PART OF THE CODE WILL FETCH ALL RELEVANT OBSERVATIONS
 #    FROM TRE DATABASE
 
-    obs_set = 
+    obs_set = 15
 # =============================================================================
 
     JSONplot = get_json_plot(center, size, res, obs_set)
