@@ -9,7 +9,7 @@ body {
   justify-content: center;
 }
 
-ul 
+ul
 {
   list-style-type: none;
   margin: 0;
@@ -19,12 +19,12 @@ ul
   background-color: rgb(55, 55, 85);
 }
 
-li 
+li
 {
   float: left;
 }
 
-li a 
+li a
 {
   display: block;
   color: white;
@@ -33,7 +33,7 @@ li a
   text-decoration: none;
 }
 
-li a:hover 
+li a:hover
 {
   background-color: rgb(78, 78, 119);
 }
