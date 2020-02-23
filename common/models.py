@@ -23,18 +23,6 @@ PROJECT_TYPE_CHOICES = (
     ('V', 'V'),
 )
 
-class SpectralWindow(models.Model):
-    start = models.FloatField()
-    end = models.FloatField()
-    resolution = models.FloatField()
-    sensitivity_10kms = models.FloatField()
-    sensitivity_native = models.FloatField()
-    pol_product = models.CharField(max_length=11, choices = POL_PRODUCT_CHOICES)
-
-class Trace(models.Model):
-    ra = models.FloatField()
-    dec = models.FloatField()
-
 # Create your models here.
 class Observation(models.Model):
     project_code = models.CharField(max_length=14)
@@ -47,11 +35,8 @@ class Observation(models.Model):
     spatial_resolution = models.FloatField()
     frequency_resolution = models.FloatField()
     array = models.IntegerField(choices = ARRAY_CHOICES)
-    # to be defined
-    mosaic = models.ForeignKey(Trace, on_delete=models.CASCADE)
     integration_time = models.FloatField()
     release_date = models.DateField()
-    freq_support = models.ForeignKey(SpectralWindow, on_delete=models.CASCADE)
     velocity_resolution = models.FloatField()
     pol_product = models.CharField(max_length=11, choices = POL_PRODUCT_CHOICES)
     observation_date = models.DateTimeField()
@@ -77,3 +62,17 @@ class Observation(models.Model):
 
     def __str__(self):
         return self.project_code
+
+class SpectralWindow(models.Model):
+    start = models.FloatField()
+    end = models.FloatField()
+    resolution = models.FloatField()
+    sensitivity_10kms = models.FloatField()
+    sensitivity_native = models.FloatField()
+    pol_product = models.CharField(max_length=11, choices = POL_PRODUCT_CHOICES)
+    observation = models.ForeignKey(Observation, on_delete=models.CASCADE, null=True)
+
+class Trace(models.Model):
+    ra = models.FloatField()
+    dec = models.FloatField()
+    observation = models.ForeignKey(Observation, on_delete=models.CASCADE, null=True)
