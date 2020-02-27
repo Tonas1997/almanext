@@ -1,4 +1,7 @@
 from django.db import models
+from common.class_observation import ObservationClass
+from common.class_spectral_window import SpectralWindowClass
+from common.class_trace import TraceClass
 
 # =============== CHOICES ===============
 
@@ -63,6 +66,10 @@ class Observation(models.Model):
     def __str__(self):
         return self.project_code
 
+    def to_class(self):
+        return ObservationClass(self.ra, self.dec)
+
+
 class SpectralWindow(models.Model):
     start = models.FloatField()
     end = models.FloatField()
@@ -70,10 +77,19 @@ class SpectralWindow(models.Model):
     sensitivity_10kms = models.FloatField()
     sensitivity_native = models.FloatField()
     pol_product = models.CharField(max_length=11, choices = POL_PRODUCT_CHOICES)
-    observation = models.ForeignKey(Observation, on_delete=models.CASCADE, null=True)
+    observation = models.ForeignKey(Observation, on_delete=models.CASCADE, null=True, related_name='spec_windows')
+
+    def to_class(self):
+        return SpectralWindowClass(self.start, self.end, self.resolution, self.sensitivity_10kms, self.sensitivity_native, self.pol_product)
 
 class Trace(models.Model):
     ra = models.FloatField()
     dec = models.FloatField()
     fov = models.FloatField()
-    observation = models.ForeignKey(Observation, on_delete=models.CASCADE, null=True)
+    observation = models.ForeignKey(Observation, on_delete=models.CASCADE, null=True, related_name='traces')
+
+    def __str__(self):
+        return(str(self.ra) + ", " + str(self.dec) + ", " + str(self.fov) + " arcsec")
+
+    def to_class(self):
+        return TraceClass(self.ra, self.dec, self.fov)

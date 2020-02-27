@@ -1,7 +1,7 @@
 import json
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
-from field_plot.pixel import Pixel
+from field_plot.class_pixel import Pixel
 
 # global vars
 obs_array = None
