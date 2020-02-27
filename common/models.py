@@ -75,4 +75,5 @@ class SpectralWindow(models.Model):
 class Trace(models.Model):
     ra = models.FloatField()
     dec = models.FloatField()
+    fov = models.FloatField()
     observation = models.ForeignKey(Observation, on_delete=models.CASCADE, null=True)

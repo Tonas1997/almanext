@@ -111,6 +111,16 @@ def newObsFromRow(row):
         curr_win.observation = new_observation
         curr_win.save()
 
+    # handle traces
+    new_trace = Trace(
+        ra = row['RA'],
+        dec = row['Dec'],
+        fov = row['Field of view']
+    )
+
+    new_trace.observation = new_observation
+    new_trace.save()
+
 
 class Command(BaseCommand):
     args = '<coiso>'
