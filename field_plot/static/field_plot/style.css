@@ -1,0 +1,144 @@
+#container
+{
+  display: flex;
+}
+
+/* ============= INFO ============= */
+
+#plot-controller
+{
+  display: flex;
+  flex: 1 1 100px;
+  flex-direction: column;
+}
+
+#plot-parameters
+{
+  flex: 0 1 10vh;
+}
+
+.infobox
+{
+  margin: 5px 5px 5px 5px;
+}
+
+#infobox-plot
+{
+  flex: 0 1 15vh;
+}
+
+#infobox-plot-wrapper
+{
+  display: flex;
+  flex: 1 1;
+  flex-direction: row;
+}
+
+#infobox-pixel
+{
+  flex: 1 1;
+}
+
+#infobox-pixel-wrapper
+{
+  display: flex;
+  flex: 1 1;
+  flex-direction: row;
+}
+
+.info-values
+{
+  display: flex;
+  flex: 1 0;
+  flex-direction: row;
+}
+
+.info-values > #coordinates
+{
+  flex: 1 0;
+  flex-wrap: wrap;
+}
+
+.info-values > #properties
+{
+  display: flex;
+  flex: 2.5 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.info-values > #properties > div
+{
+  flex: 1 0 calc(50% - 20px);
+}
+
+.values-container
+{
+  display: flex;
+  flex: 1;
+  margin-left: 10px;
+  margin-top: 10px;
+}
+
+.value-box
+{
+  color: grey;
+  line-height: 1.5;
+  margin: 5px 10px 5px 10px;
+}
+
+.value-box .value
+{
+  color: black;
+  font-size: 20px;
+  margin-left: 15px;
+}
+
+/* Auxiliary styles (including value box) */
+
+.separator .big {
+  content: '';
+  display: block;
+  height: 4px;
+  margin: 1px;
+  border-radius: 2px;
+  background-color: rgb(8, 7, 7);
+}
+
+.sep-horizontal .small {
+  content: '';
+  display: block;
+  height: 1px;
+  margin: 1px;
+  border-radius: 1px;
+  background-color: grey;
+}
+
+.sep-vertical {
+  content: '';
+  display: block;
+  width: 1px;
+  margin: 1px;
+  border-radius: 1px;
+  background-color: grey;
+}
+
+/* ============= PLOT ============= */
+
+#plot
+{
+  align-self: flex-end;
+  right: 0px;
+  height: calc(100vh - 60px);
+  width: calc(100vh - 60px);
+  padding: 0px;
+}
+
+.axis
+{
+  fill: white;
+}
+
+.svg-plot, .canvas-plot {
+  position: absolute;
+}

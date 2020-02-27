@@ -81,15 +81,15 @@ def get_json_plot(center, size, res, obs_set):
 
     # iterate over the QuerySet object
     # fill pixels
-    for index, row in cosmos_field.iterrows(): # this for statement will be changed to use actual model objects
+    for obs in obs_set: # this for statement will be changed to use actual model objects
         print("Processing observation " + str(row["Project code"]) + "(" + str(round(float(count/datasize), 2)*100) + "%)")
-        ra = row["RA"]
-        dec = row["Dec"]
-        fov = row["Field of view"]
-        res = row["Spatial resolution"]
-        sensitivity = row["Line sensitivity (10 km/s)"]
-        source = row["Source name"]
-        int_time = row["Integration"]
+        ra = obs.ra
+        dec = obs.dec
+        fov = obs.field_of_view
+        res = obs.spatial_resolution
+        sensitivity = obs.line_sensitivity
+        source = obs.source_name
+        int_time = obs.integration_time
         fillPixels(ra, dec, fov, res, sensitivity, int_time, source)
         count += 1
 

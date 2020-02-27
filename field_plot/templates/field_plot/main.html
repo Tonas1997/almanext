@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 
+{% load static %}
+
 {% block content %}
+
+<link href="{% static 'field_plot/styles.css' %}" rel="stylesheet" type="text/css" />
 
 <div id="container">
     <div id="plot-controller">
@@ -11,7 +15,7 @@
         <div id="infobox-plot" class="infobox">
             Plot info
             <div id="infobox-plot-wrapper" class="values-container">
-                
+
             </div>
         </div>
         <div class="sep-horizontal big"></div>
@@ -20,7 +24,7 @@
             <div id="infobox-pixel-wrapper" class="values-container">
                 <div class="info-values">
                     <div id="coordinates">
-                        
+
                     </div>
                     <div class="sep-vertical"></div>
                     <div id="properties">
@@ -28,16 +32,11 @@
                     </div>
                 </div>
                 <div id="info-plots">
-                
+
                 </div>
             </div>
         </div>
     </div>
-
-    <div id="plot">
-        <script src="https://d3js.org/d3.v5.min.js"></script>
-        <script src="./plot.js"></script>
-    </div>
-</div>	
+</div>
 
 {% endblock content %}

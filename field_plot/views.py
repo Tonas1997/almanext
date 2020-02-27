@@ -14,7 +14,7 @@ maxF = 0
 
 def index(request):
     #return HttpResponse("<h1>Hello world</h1>")
-    return render(request, 'base.html')
+    return render(request, 'field_plot/main.html')
 
 # Create your views here.
 def get_plot(request, var_center, var_size, var_res, min_freq, max_freq):
@@ -40,37 +40,11 @@ def get_plot(request, var_center, var_size, var_res, min_freq, max_freq):
     # =============================================================================
 
     # get observations (NEEDS OVERHAUL, CURRENTLY IT ONLY FILTERS BY REGION, NOT FREQUENCY SUPPORT)
-    query_result_obs = Observation.objects.filter(ra > min_ra, ra < max_ra,dec > min_dec, dec < max_dec).prefetch_related('spec_windows').prefetch_related('traces')
-
-    # wraps model objects into simpler custom classes
-    obs_set = []
-
-    # iterates through each of the database query result objects
-    for curr_obs in query_result_obs:
-        curr_spec_windows =  curr_obs.spec_windows.all()
-        curr_traces = curr_obs.traces.all()
-
-        # create new (Python) observation, trace and spec_win objects
-        obs = ObservationClass(curr_obs.ra, curr_obs.dec)
-        trace_list = []
-        spec_win_list = []
-
-        # parse traces
-        for trace in curr_traces:
-            trace_list.append(trace.to_class())
-
-        # parse spectral windows
-        for win in curr_spec_windows:
-            spec_win_list.append(win.to_class())
-
-        obs.trace_list = trace_list
-        obs.spectral_window_list = spec_win_list
-
-        obs_set.append(obs)
+    query_result = Observation.objects.filter(ra > min_ra, ra < max_ra,dec > min_dec, dec < max_dec).prefetch_related('spec_windows').prefetch_related('traces')
 
 # =============================================================================
 
-    JSONplot = get_json_plot(center, size, res, obs_set)
+    JSONplot = get_json_plot(center, size, res, query_result)
 
 # =============================================================================
 #     RETURN A JSON OBJECT

@@ -66,10 +66,6 @@ class Observation(models.Model):
     def __str__(self):
         return self.project_code
 
-    def to_class(self):
-        return ObservationClass(self.ra, self.dec)
-
-
 class SpectralWindow(models.Model):
     start = models.FloatField()
     end = models.FloatField()
@@ -90,6 +86,3 @@ class Trace(models.Model):
 
     def __str__(self):
         return(str(self.ra) + ", " + str(self.dec) + ", " + str(self.fov) + " arcsec")
-
-    def to_class(self):
-        return TraceClass(self.ra, self.dec, self.fov)
