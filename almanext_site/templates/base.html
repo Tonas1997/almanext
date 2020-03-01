@@ -2,7 +2,47 @@
 {% load static %}
 <html>
   <head>
-    <link href="{% static 'main.css' %}" rel="stylesheet" type="text/css" />
+    <style>
+      html *
+      {
+         font-family: Verdana, Geneva, sans-serif !important;
+      }
+
+      body {
+        margin: 0px;
+        overflow: hidden;
+        justify-content: center;
+      }
+
+      ul
+      {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        font-size: medium;
+        overflow: hidden;
+        background-color: rgb(55, 55, 85);
+      }
+
+      li
+      {
+        float: left;
+      }
+
+      li a
+      {
+        display: block;
+        color: white;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+      }
+
+      li a:hover
+      {
+        background-color: rgb(78, 78, 119);
+      }
+    </style>
   </head>
   <body>
     <ul>
@@ -10,7 +50,6 @@
       <li><a href="/observations">Observations</a></li>
       <li><a href="/field">Field</a></li>
     </ul>
-    teste
     {% block content %}
     {% endblock content %}
   </body>

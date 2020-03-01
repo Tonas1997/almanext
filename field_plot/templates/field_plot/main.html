@@ -4,21 +4,21 @@
 
 {% block content %}
 
-<link href="{% static 'field_plot/styles.css' %}" rel="stylesheet" type="text/css" />
+<link href="{% static 'field_plot/style.css' %}" rel="stylesheet" type="text/css" />
 
 <div id="container">
     <div id="plot-controller">
         <div id="plot-parameters" class="boxes">
 
         </div>
-        <div class="separator big"></div>
+        <div class="sep-horizontal-big"></div>
         <div id="infobox-plot" class="infobox">
             Plot info
             <div id="infobox-plot-wrapper" class="values-container">
 
             </div>
         </div>
-        <div class="sep-horizontal big"></div>
+        <div class="sep-horizontal-small"></div>
         <div id="infobox-pixel" class="infobox">
             Pixel info
             <div id="infobox-pixel-wrapper" class="values-container">
@@ -36,6 +36,9 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div id="plot">
+
     </div>
 </div>
 

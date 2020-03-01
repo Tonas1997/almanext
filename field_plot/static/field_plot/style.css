@@ -14,7 +14,7 @@
 
 #plot-parameters
 {
-  flex: 0 1 10vh;
+  flex: 0 1 15vh;
 }
 
 .infobox
@@ -96,7 +96,7 @@
 
 /* Auxiliary styles (including value box) */
 
-.separator .big {
+.sep-horizontal-big {
   content: '';
   display: block;
   height: 4px;
@@ -105,7 +105,7 @@
   background-color: rgb(8, 7, 7);
 }
 
-.sep-horizontal .small {
+.sep-horizontal-small {
   content: '';
   display: block;
   height: 1px;
