@@ -1,8 +1,14 @@
 from django.core.management.base import BaseCommand
-from common.models import Observation, Trace, SpectralWindow
+from common.models import Observation, Trace, SpectralWindow, Band
 import re
 
 import pandas as pd
+
+def add_bands():
+    for i in range(3, 11):
+        new_band = Band(designation=i)
+        print(new_band)
+        new_band.save()
 
 def convertDate(str_date):
     date_vals = str_date.split('/')
@@ -70,7 +76,6 @@ def newObsFromRow(row):
         dec = row['Dec'],
         gal_longitude = row['Galactic longitude'],
         gal_latitude = row['Galactic latitude'],
-        band = row['Band'],
         spatial_resolution = row['Spatial resolution'],
         frequency_resolution = row['Frequency resolution'],
         array = int(row['Array'][:-1]),
@@ -104,6 +109,12 @@ def newObsFromRow(row):
     print(new_observation)
     new_observation.save()
 
+    # handle band
+    band_arr = row["Band"].split(" ")
+    for i in range(len(band_arr)):
+        band = Band.objects.get(designation=int(band_arr[i]))
+        new_observation.bands.add(band)
+
     # handle spectral coverage
     new_spectral_windows = newSpecWinFromRow(row['Frequency support'])
     for i in range(len(new_spectral_windows)):
@@ -126,10 +137,11 @@ class Command(BaseCommand):
     args = '<coiso>'
 
     def _populate_test(self):
+
+        add_bands()
+
         asa_file = pd.read_csv('/home/aantunes/Documents/ALMAThesis/almanext_root/Whole_ASAcat_metadata_Oct30th2019.csv')
-        sample = asa_file[(asa_file["Project code"] == "2011.0.00191.S")]
-        print(len(sample))
-        for index, row in sample.iterrows():
+        for index, row in asa_file.iterrows():
             new_obs = newObsFromRow(row)
 
 

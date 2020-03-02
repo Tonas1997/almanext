@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.db import connection
-from common.models import Observation, Trace, SpectralWindow
+from common.models import Observation, Trace, SpectralWindow, Band
 
 class Command(BaseCommand):
     args = '<coiso>'
@@ -9,6 +9,7 @@ class Command(BaseCommand):
         SpectralWindow.objects.all().delete()
         Observation.objects.all().delete()
         Trace.objects.all().delete()
+        Band.objects.all().delete()
 
         cursor = connection.cursor()
         cursor.execute("delete from sqlite_sequence")

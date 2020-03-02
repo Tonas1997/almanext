@@ -26,6 +26,9 @@ PROJECT_TYPE_CHOICES = (
     ('V', 'V'),
 )
 
+class Band(models.Model):
+    designation = models.IntegerField()
+
 # Create your models here.
 class Observation(models.Model):
     project_code = models.CharField(max_length=14)
@@ -34,7 +37,7 @@ class Observation(models.Model):
     dec = models.FloatField()
     gal_longitude = models.FloatField()
     gal_latitude = models.FloatField()
-    band = models.IntegerField()
+    bands = models.ManyToManyField(Band)
     spatial_resolution = models.FloatField()
     frequency_resolution = models.FloatField()
     array = models.IntegerField(choices = ARRAY_CHOICES)
