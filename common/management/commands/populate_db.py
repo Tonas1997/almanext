@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
-from common.models import Observation, Trace, SpectralWindow, Band
+from common.models import Observation, Trace, SpectralWindow, Band, Array
 import re
+import math
 
 import pandas as pd
 
@@ -10,7 +11,15 @@ def add_bands():
         print(new_band)
         new_band.save()
 
+def add_arrays():
+    array_list = {"12", "7", "TP"}
+    for a in array_list:
+        new_array = Array(designation=a)
+        new_array.save()
+
 def convertDate(str_date):
+    if(isinstance(str_date, float) and math.isnan(str_date)):
+        return None
     date_vals = str_date.split('/')
     day = date_vals[0]
     month = date_vals[1]
@@ -46,6 +55,7 @@ def newSpecWinFromRow(freq_string):
         flt_res = float(str_res)
         # ====== sensitivity (10 km/s) ======
         str_sens_10 = str_win_vals[2].split('/')[0][:-3]
+        #print(str_sens_10)
         flt_sens_10 = float(str_sens_10)
         # ====== sensitivity (sensitivity_native) ======
         str_sens_nat = str_win_vals[3].split('/')[0][:-3]
@@ -68,7 +78,15 @@ def newSpecWinFromRow(freq_string):
 
     return(spec_win_list)
 
-def newObsFromRow(row):
+def newObsFromRow(row, index):
+
+    try:
+        new_spectral_windows = newSpecWinFromRow(row['Frequency support'])
+    except:
+        print("Error parsing observation " + str(row["Project code"]) + "'s spectral windows (index " + str(index))
+        return
+
+    print(row['Project code'])
     new_observation = Observation(
         project_code = row['Project code'],
         source_name = row['Source name'],
@@ -78,7 +96,6 @@ def newObsFromRow(row):
         gal_latitude = row['Galactic latitude'],
         spatial_resolution = row['Spatial resolution'],
         frequency_resolution = row['Frequency resolution'],
-        array = int(row['Array'][:-1]),
         # mosaic = ...
         integration_time = row['Integration'],
         release_date = convertDate(row['Release date']),
@@ -106,17 +123,21 @@ def newObsFromRow(row):
         asa_project_code = row['ASA_PROJECT_CODE']
     )
 
-    print(new_observation)
     new_observation.save()
 
     # handle band
-    band_arr = row["Band"].split(" ")
-    for i in range(len(band_arr)):
-        band = Band.objects.get(designation=int(band_arr[i]))
+    band_array = str(row["Band"]).split(" ")
+    for i in range(len(band_array)):
+        band = Band.objects.get(designation=int(band_array[i]))
         new_observation.bands.add(band)
 
+    # handle arrays
+    ant_array = list(filter(None, row["Array"].split("m")))
+    for i in range(len(ant_array)):
+        array = Array.objects.get(designation=ant_array[i])
+        new_observation.arrays.add(array)
+
     # handle spectral coverage
-    new_spectral_windows = newSpecWinFromRow(row['Frequency support'])
     for i in range(len(new_spectral_windows)):
         curr_win = new_spectral_windows[i]
         curr_win.observation = new_observation
@@ -132,18 +153,20 @@ def newObsFromRow(row):
     new_trace.observation = new_observation
     new_trace.save()
 
-
 class Command(BaseCommand):
     args = '<coiso>'
 
-    def _populate_test(self):
+    def _populate_test(self, start_index):
 
         add_bands()
-
+        add_arrays()
         asa_file = pd.read_csv('/home/aantunes/Documents/ALMAThesis/almanext_root/Whole_ASAcat_metadata_Oct30th2019.csv')
-        for index, row in asa_file.iterrows():
-            new_obs = newObsFromRow(row)
+        for index, row in asa_file.iloc[start_index:].iterrows():
+            new_obs = newObsFromRow(row, index)
 
+    def add_arguments(self, parser):
+        parser.add_argument('start', type=int)
 
     def handle(self, *args, **options):
-        self._populate_test()
+        start = options['start']
+        self._populate_test(start)

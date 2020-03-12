@@ -6,8 +6,9 @@ from common.class_trace import TraceClass
 # =============== CHOICES ===============
 
 ARRAY_CHOICES = (
-    (7, '7m'),
-    (12, '12m'),
+    ('12', '12m'),
+    ('7', '7m'),
+    ('TP', 'Total power')
 )
 
 POL_PRODUCT_CHOICES = (
@@ -29,6 +30,9 @@ PROJECT_TYPE_CHOICES = (
 class Band(models.Model):
     designation = models.IntegerField()
 
+class Array(models.Model):
+    designation = models.CharField(max_length=2, choices = ARRAY_CHOICES)
+
 # Create your models here.
 class Observation(models.Model):
     project_code = models.CharField(max_length=14)
@@ -40,9 +44,9 @@ class Observation(models.Model):
     bands = models.ManyToManyField(Band)
     spatial_resolution = models.FloatField()
     frequency_resolution = models.FloatField()
-    array = models.IntegerField(choices = ARRAY_CHOICES)
+    arrays = models.ManyToManyField(Array)
     integration_time = models.FloatField()
-    release_date = models.DateField()
+    release_date = models.DateField(null=True, blank=True)
     velocity_resolution = models.FloatField()
     pol_product = models.CharField(max_length=11, choices = POL_PRODUCT_CHOICES)
     observation_date = models.DateTimeField()
