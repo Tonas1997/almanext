@@ -22,7 +22,6 @@
 {
   display: flex;
   flex-direction: row;
-  margin-bottom: 5px;
 }
 
 .form-controls-area
@@ -81,12 +80,6 @@
 form
 {
   margin-block-end: 0em;
-}
-
-.plot-parameters-textbox
-{
-  margin-right: 5px;
-  margin-top: 5px;
 }
 
 .textbox-label
@@ -162,6 +155,13 @@ form
 {
   font-size: 20px;
 }
+
+.submit-button
+{
+  width: 80px;
+  height: 30px;
+}
+
 
 /* ============= INFO ============= */
 
