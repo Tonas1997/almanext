@@ -2,9 +2,10 @@ import json
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from field_plot.class_pixel import Pixel
+from field_plot.class_observation import Observation, SpecWin
 
 # global vars
-obs_array = None
+pix_array = None
 inc = 0
 ra_origin = 0
 dec_origin = 0
@@ -20,15 +21,16 @@ def gridToCoords(i, j):
 
 # -----------------------------------------------------------------------------------------
 # appends a pixel to the final JSON object
-def appendPixel(x, y, ra, dec, count_obs, avg_res, avg_sens, avg_int_time):
-    json_builder.append({"x" : x,
+def appendPixel(x, y, ra, dec, count_obs, avg_res, avg_sens, avg_int_time, observations):
+    pix_list.append({"x" : x,
                          "y" : y,
                          "RA" : ra,
                          "Dec" : dec,
                          "count_obs" : count_obs,
                          "avg_res" : avg_res,
                          "avg_sens" : avg_sens,
-                         "avg_int_time" : avg_int_time})
+                         "avg_int_time" : avg_int_time,
+                         "observations" : observations})
 
 # -----------------------------------------------------------------------------------------
 # fills the pixels around given ra/dec coordinates and a fov measured in arcsecs
@@ -54,11 +56,11 @@ def fillPixels(ra, dec, fov, res, sens, int_time):
             # see if the current cell falls within the observation fov
             sep = center.separation(currCoord)
             if(sep < fov_degree):
-                pixel = obs_array[y][x]
+                pixel = pix_array[y][x]
                 if(pixel is None):
                     new_pixel = Pixel(x, y, currCoord.ra.degree, currCoord.dec.degree)
-                    obs_array[y][x] = new_pixel
-                obs_array[y][x].change_avgs(res, sens, int_time)
+                    pix_array[y][x] = new_pixel
+                pix_array[y][x].change_avgs(res, sens, int_time)
 
 # =============================================================================
 #       MAIN FUNCTION, EVERYONE ELSE SUCKS
@@ -75,8 +77,9 @@ def get_json_plot(center, size, res, obs_set):
     angle_res = Angle(res, unit=u.arcsec)
     max_len = int(angle_size/angle_res)
 
-    # create 2D plot
-    obs_array = [[None for x in range(max_len)] for y in range(max_len)]
+    # create 2D plot and observation array
+    pix_array = [[None for x in range(max_len)] for y in range(max_len)]
+    obs_array = []
     inc = angle_res.degree
 
     # iterate over the QuerySet object
@@ -91,15 +94,26 @@ def get_json_plot(center, size, res, obs_set):
         source = obs.source_name
         int_time = obs.integration_time
         fillPixels(ra, dec, fov, res, sensitivity, int_time, source)
+        obs_array.append(obs)
         count += 1
 
+    # the root json structure
     json_builder = []
+    # each of the smaller json lists
+    obs_list = []
+    pix_list = []
+
+    for x in range(obs_array):
+        # will convert the observation objects to the respective json representation
+        obs_list.append(obsToDictEntry(obs_array[x])
 
     # convert full 2d array to json
     for x in range(max_len):
         for y in range(max_len):
-            px = obs_array[x][y]
+            px = pix_array[x][y]
             if(px is not None):
-                appendPixel(x,y, px.px_ra, px.px_dec, px.count_obs, px.avg_res, px.avg_sens, px.avg_int_time)
+                appendPixel(x,y, px.px_ra, px.px_dec, px.count_obs, px.avg_res, px.avg_sens, px.avg_int_time, px.observations)
+
+    json_builder = {"observations": obs_list, "pixels": pix_list}
 
     return(json.dump(json_builder, fp, indent=4))
