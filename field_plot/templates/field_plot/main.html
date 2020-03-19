@@ -64,18 +64,18 @@
 							<label for="coiso" class="textbox-label">Redshift</label>
 							<div class="plot-parameters-form-frequency-redshift-slider">
 								<input type="range" id="formfield_redshift" min=0 max=12 value=0 step=0.1 class="zvalue">
-								<div class="redshift-sym textbox-label">&zscr; = <div id="redshift-val"></div></div> 
+								<div class="redshift-sym textbox-label">&zscr; =&nbsp;<div id="redshift-val">0.0</div></div> 
 							</div>
 						</div>
 					</div>
 				</div>
 				<div class="sep-vertical"></div>
 				<div class="plot-parameters-form-plot">
-					<label for="fname">Plot</label>
+					<label for="formfield_res">Plot</label>
 					<div class="form-controls-area">
-						<div class="plot-parameters-textbox-large"><label for="fname" class="textbox-label">Resolution</label><br>
-							<input type="text" id="formfield_res" name="fname"><br></div><br>
-						<input type="submit" class="submit-button" value="Render">
+						<div class="plot-parameters-textbox-large"><label for="formfield_res" class="textbox-label">Resolution</label><br>
+							<input type="text" id="formfield_res" name="formfield_res"><br></div><br>
+						<input type="submit" name="submit" class="submit-button" value="Render">
 					</div>
 				</div>
 				<!--
@@ -124,8 +124,10 @@
 
 	<div id="plot">
 		<script src="https://d3js.org/d3.v5.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 		<script src="./plot.js"></script>
+		<script src="./controller.js"></script>
 	</div>
-</div>
+</div>	
 
 {% endblock content %}
