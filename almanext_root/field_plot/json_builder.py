@@ -2,7 +2,8 @@ import json
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from field_plot.class_pixel import Pixel
-from field_plot.class_observation import Observation, SpecWin
+from common.class_observation import ObservationClass
+from common.class_spectral_window import SpectralWindowClass
 
 # global vars
 pix_array = None
@@ -105,8 +106,8 @@ def get_json_plot(center, size, res, obs_set):
 
     for x in range(obs_array):
         # will convert the observation objects to the respective json representation
-        obs_list.append(obsToDictEntry(obs_array[x])
-
+        obs_list.append(obsToDictEntry(obs_array[x]))
+    
     # convert full 2d array to json
     for x in range(max_len):
         for y in range(max_len):

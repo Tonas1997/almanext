@@ -1,4 +1,4 @@
-puimport numpy as np
+import numpy as np
 from field_plot import json_builder
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
