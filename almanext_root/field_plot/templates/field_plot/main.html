@@ -98,7 +98,18 @@
 		<div id="infobox-plot" class="infobox">
 			Plot info
 			<div id="infobox-plot-wrapper" class="values-container">
-				
+				<div class='value-box';'>Total area<br> 
+					<div id="plot-total-area" class='value-box value'>--.--</div></div> 
+				<div class='value-box';'>Overlapping area<br>
+					<div id="plot-overlap-area" class='value-box value'>--.--</div></div>
+				<div class='value-box';'>Overlapping area (%)<br> 
+					<div id="plot-overlap-area-pct" class='value-box value'>--.--</sup></div></div>
+				<select id="plot-color-property" onchange="updateCanvas(transform_store)">
+					<option value="count_obs">Observation count</option>
+					<option value="avg_res">Average resolution</option>
+					<option value="avg_sens">Average sensitivity (10km/s)</option>
+					<option value="avg_int_time">Average integration time</option>
+				</select>	
 			</div>
 		</div>
 		<div class="sep-horizontal-small"></div>
@@ -125,8 +136,8 @@
 	<div id="plot">
 		<script src="https://d3js.org/d3.v5.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-		<script src="./plot.js"></script>
-		<script src="./controller.js"></script>
+		<script src="{% static 'field_plot/plot.js' %}"></script>
+		<script src="{% static 'field_plot/controller.js' %}"></script>
 	</div>
 </div>	
 

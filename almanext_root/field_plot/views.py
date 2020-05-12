@@ -1,5 +1,5 @@
 import numpy as np
-from field_plot import json_builder
+from field_plot.json_builder import *
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from django.shortcuts import render
@@ -17,31 +17,33 @@ def index(request):
     return render(request, 'field_plot/main.html')
 
 # Create your views here.
-def get_plot(request, var_center, var_size, var_res, min_freq, max_freq):
+def get_plot(request):
 
-    center = ["10h00m24s","+2:00"]
-    size = 2
-    res = 10
-
-    min_freq = 85
-    max_freq = 115
+    print('got here!')
+    ra = float(request.GET.get('ra', None))
+    dec = float(request.GET.get('dec', None))
+    size = float(request.GET.get('size', None))
+    bands = request.GET.get('bands', None)
+    redshift = float(request.GET.get('redshift', None))
+    res = float(request.GET.get('res', None))
 
     # defines the center of the observation in the form of a SkyCoord object
-    center = SkyCoord(var_center[0], var_center[1], unit=(u.hourangle, u.deg))
-    coords = [center.ra.degree, center.dec.degree]
+    center = SkyCoord(ra, dec, unit=(u.deg, u.deg))
 
-    min_ra = 148
-    max_ra = 152
-    min_dec = 0
-    max_dec = 4
+    min_ra = ra - size
+    max_ra = ra + size
+    min_dec = dec - size
+    max_dec = dec + size
 
     obs_set = []
 
     # =============================================================================
 
+    print(str(min_ra) + " , " + str(max_ra) + " , " + str(min_dec) + " , " + str(max_dec))
     # get observations (NEEDS OVERHAUL, CURRENTLY IT ONLY FILTERS BY REGION, NOT FREQUENCY SUPPORT)
-    query_result = Observation.objects.filter(ra > min_ra, ra < max_ra,dec > min_dec, dec < max_dec).prefetch_related('spec_windows').prefetch_related('traces')
+    query_result = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec, field_of_view__lte = 30)#.prefetch_related('spec_windows').prefetch_related('traces')
 
+    print("size:" + str(query_result.count()))
 # =============================================================================
 
     JSONplot = get_json_plot(center, size, res, query_result)
@@ -50,4 +52,4 @@ def get_plot(request, var_center, var_size, var_res, min_freq, max_freq):
 #     RETURN A JSON OBJECT
 # =============================================================================
 
-    return JsonResponse(JSONplot)
+    return JsonResponse(JSONplot, safe=False)

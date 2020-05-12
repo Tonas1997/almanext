@@ -94,7 +94,10 @@ form
   width: 80px;
   margin-top: 5px;
   margin-right: 5px;
-  border-radius: 5px;
+  border-style: solid;
+  border-color: rgb(128, 128, 128);
+  border-width: 1px;
+  border-radius: 3px;
 }
 
 .plot-parameters-checkbutton
@@ -154,7 +157,7 @@ form
 
 .redshift-sym
 {
-  font-size: 20px;
+  display: flex;
   flex-direction: row;
   font-size: 20px;
 }
@@ -181,6 +184,11 @@ form
 #infobox-plot
 {
   flex: 0 0 15vh;
+}
+
+#plot-color-property
+{
+  height: 30px;
 }
 
 #infobox-plot-wrapper

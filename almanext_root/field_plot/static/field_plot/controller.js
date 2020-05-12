@@ -1,3 +1,5 @@
+var parameters = {}
+
 function getBands()
 {
     band_list = []
@@ -11,11 +13,11 @@ function getBands()
     return band_list
 }
 
-function checkParams(data)
+function checkParams()
 {
     var error = false
 
-    var data = {
+    parameters = {
         ra: parseFloat($("#formfield_ra").val()),
         dec: parseFloat($("#formfield_dec").val()),
         size: parseFloat($("#formfield_size").val()),
@@ -24,35 +26,35 @@ function checkParams(data)
         res: parseFloat($("#formfield_res").val())
     }
     // check for the RA value
-    if(isNaN(data.ra))
+    if(isNaN(parameters.ra))
     {
         // handle error
         console.log("RA!")
         error = true
     }
     // check for the Dec value
-    if(isNaN(data.dec))
+    if(isNaN(parameters.dec))
     {
         // handle error
         console.log("Dec!")
         error = true
     }
     // check for the size value
-    if(isNaN(data.size))
+    if(isNaN(parameters.size))
     {
         // handle error
         console.log("Size!")
         error = true
     }
     // check if the user selected at least one band
-    if(data.bands.length == 0)
+    if(parameters.bands.length == 0)
     {
         // handle error
         console.log("Bands!")
         error = true
     }
     // check for the resolution value
-    if(isNaN(data.res))
+    if(isNaN(parameters.res))
     {
         // handle error
         console.log("Res!")
@@ -62,7 +64,7 @@ function checkParams(data)
     if(error)
         return null
     else
-        return data
+        return parameters
 }
 
 $(document).on('input', '#formfield_redshift', function()
@@ -75,11 +77,24 @@ $("#form-plot").on('submit', function(event)
     event.preventDefault()
     // check parameters
     var data = checkParams()
-    console.log(data)
+    console.log(parameters)
     if(data == null)
+    {
+        console.log("cheguei aki")
         return;
+    }   
     else
     {
-        alert(data)
+        console.log("cheguei aqui")
+        $.ajax(    
+            {
+                url: '/get_plot/',
+                data: parameters,
+                data_type: 'json',
+                success: function(data) {
+                    alert('success!')
+                    console.log(data)
+                }
+            })
     }
 });

@@ -31,5 +31,5 @@ class Pixel:
 
         self.count_obs = self.count_obs + 1
 
-    def add_obs(self, obs_index):
+    def add_observation(self, obs_index):
         self.observations.append(obs_index)
