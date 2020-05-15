@@ -19,7 +19,6 @@ def index(request):
 # Create your views here.
 def get_plot(request):
 
-    print('got here!')
     ra = float(request.GET.get('ra', None))
     dec = float(request.GET.get('dec', None))
     size = float(request.GET.get('size', None))
@@ -41,7 +40,7 @@ def get_plot(request):
 
     print(str(min_ra) + " , " + str(max_ra) + " , " + str(min_dec) + " , " + str(max_dec))
     # get observations (NEEDS OVERHAUL, CURRENTLY IT ONLY FILTERS BY REGION, NOT FREQUENCY SUPPORT)
-    query_result = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec, field_of_view__lte = 30)#.prefetch_related('spec_windows').prefetch_related('traces')
+    query_result = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec, field_of_view__lte = 30)#.prefetch_related('spec_windows')#.prefetch_related('traces')
 
     print("size:" + str(query_result.count()))
 # =============================================================================

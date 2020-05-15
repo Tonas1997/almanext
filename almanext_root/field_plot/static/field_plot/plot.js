@@ -1,8 +1,8 @@
 const pointColor = '#3585ff'
 
 const margin = {top: 0, right: 0, bottom: 0, left: 0};
-var outerWidth = 720;
-var outerHeight = 720;
+var outerWidth = $('#plot').height();
+var outerHeight = $('#plot').width();
 var width = outerWidth - margin.left - margin.right;
 var height = outerHeight - margin.top - margin.bottom;
 const container = d3.select('#plot');
@@ -25,14 +25,16 @@ class Pixel
 
 class CanvasProperty
 {
-    constructor(file, size, res)
+    constructor(data, size, res)
     {
-        this.file = file
+        this.data = data
         this.size = size
         this.res = res
         this.pixel_len = size*3600/res
     }
 }
+
+var pixel_len
 
 class Transform
 {
@@ -44,17 +46,15 @@ class Transform
     }
 }
 
-var data = new CanvasProperty("4_deg.json", 2, 10)
-
 var overlap_area = 0;
 var total_area = 0;
 
 var transform_store;
 var context;
 
-// ============= state variables =============
+var pixelData
 
-var selectedPixel = false;
+var selectBox = document.getElementById("plot-color-property")
 
 // ------------------- CODE -------------------
 
@@ -67,7 +67,7 @@ function updateCanvas(transform)
     }
     // store the transform values
     transform_store = transform
-    console.log(transform_store)
+    //console.log(transform_store)
 
     pixel_info = selectBox.options[selectBox.selectedIndex].value
 
@@ -98,6 +98,7 @@ function updateCanvas(transform)
     context.translate(transform.x, transform.y)
     context.scale(transform.k, transform.k)
 
+    var pixelScale = width / pixel_len
     context.beginPath();
     for(var i = 0; i < pixelData.length; i++)
         for(var j = 0; j < pixelData[i].length; j++)
@@ -110,15 +111,16 @@ function updateCanvas(transform)
 
                 context.beginPath()
                 context.fillStyle = colorScale(point[pixel_info]/max_pixel_info_value);
-                context.fillRect( py, px, 1, 1);
+                context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
             }
         }
     //context.fill()
     context.restore();
 }
 
-function updateDataset()
+function updateDataset(plot_json)
 {
+    console.log("fire")
     selectedPixel = false;
     hidePixelInfo()
 
@@ -126,7 +128,7 @@ function updateDataset()
     total_area = 0;
     // Plot info
 
-    pixelData = createArray(data.pixel_len, data.pixel_len)
+    pixelData = createArray(plot_json.pixel_len, plot_json.pixel_len)
     //console.log(document.getElementById('plot').width);
 
     // Init Canvas
@@ -152,32 +154,37 @@ function updateDataset()
     max_avg_int_time = 0
     max_coords = []
 
+    console.log(plot_json.data["pixels"])
+    var dataset = plot_json.data.pixels
     // Copy JSON data to a double array
-    d3.json(data.file).then(function(dataset) {
+    //d3.json(plot_json).then(function(dataset) {
         //Loop over the nodes dataset and draw each circle to the canvas
         for (var i = 0; i < dataset.length; i++) {
             // This is where the fun begins :)
 
             // get the point
             var point = dataset[i]
-
-            // fill the pixel "cache" array with this pixel's info
-            pixelData[point.x][point.y] = new Pixel(
-                parseFloat(point.x), 
-                parseFloat(point.y), 
-                parseFloat(point.RA), 
-                parseFloat(point.Dec),
-                parseInt(point.count_obs),
-                parseFloat(point.avg_res),
-                parseFloat(point.avg_sens),
-                parseFloat(point.avg_int_time)
-            );
             
-            total_area += Math.pow(data.res, 2);
+            // fill the pixel "cache" array with this pixel's info
+            if(point.x < plot_json.pixel_len)
+            {
+                pixelData[point.x][point.y] = new Pixel(
+                    parseFloat(point.x), 
+                    parseFloat(point.y), 
+                    parseFloat(point.RA), 
+                    parseFloat(point.Dec),
+                    parseInt(point.count_obs),
+                    parseFloat(point.avg_res),
+                    parseFloat(point.avg_sens),
+                    parseFloat(point.avg_int_time)
+                );
+            }
+
+            total_area += Math.pow(plot_json.res, 2);
             // if it has more than one observation covering it, add to the acc variable
             if(point.count_obs > 1)
             {
-                overlap_area += Math.pow(data.res, 2);
+                overlap_area += Math.pow(plot_json.res, 2);
             }
 
             if(point.count_obs > max_count_obs)  max_count_obs = point.count_obs;
@@ -187,9 +194,13 @@ function updateDataset()
             //drawPoint(point);
         }
 
+        console.log(pixelData)
+
+        // initial render
         updateCanvas(d3.zoomIdentity)
         updatePlotInfo()
 
+        // zoom event
         d3.select(context.canvas).call(d3.zoom()
             .scaleExtent([1,15])
             .on("zoom", () => updateCanvas(d3.event.transform)));
@@ -240,7 +251,7 @@ function updateDataset()
             trueY = transform_store.invertY(mouseY);
             //trueX = (mouseX / transform_store.k) + (-transform_store.x / transform_store.k)
             //trueY = (mouseY / transform_store.k) + (-transform_store.y / transform_store.k)
-            /* console.log("==============================")
+            console.log("==============================")
             console.log("OFFSET X: " + -transform_store.x / transform_store.k)
             console.log("OFFSET y: " + -transform_store.y / transform_store.k)
             console.log("SCALE F.: " + transform_store.k)
@@ -249,11 +260,9 @@ function updateDataset()
             console.log("currY: " + mouseY)
             console.log("------------------------------")
             console.log("trueX: " + trueX)
-            console.log("trueY: " + trueY) */
+            console.log("trueY: " + trueY)
         }    
-    })
-
-    selectBox = document.getElementById("plot-color-property")
+    //})
 
     // ================ AUX FUNCTIONS ================
 
@@ -265,21 +274,27 @@ function updateDataset()
     }
 }
 
-updateDataset(d3.zoomIdentity)
+function render_data(data, size, res)
+{   
+    plot_json = new CanvasProperty(JSON.parse(data), size, res)
+    pixel_len = plot_json.pixel_len
+    updateDataset(plot_json)
+}
 
 // Init SVG
 
 // ------------------- AUXILIARY FUNCTIONS -------------------
 
 function createArray(length) {
-    var arr = new Array(length || 0),
+    /* var arr = new Array(length || 0),
         i = length;
 
     if (arguments.length > 1) {
         var args = Array.prototype.slice.call(arguments, 1);
         while(i--) arr[length-1 - i] = createArray.apply(this, args);
-    }
+    } */
 
+    arr = a = Array(length).fill(0).map(x => Array(length).fill(0))
     return arr;
 }
 
@@ -318,3 +333,4 @@ function hidePixelInfo()
         "<div class='value-box'>Average int. time " + 
             "<div class='value-box value'> --.-- s</div></div>";
 }
+

@@ -77,15 +77,13 @@ $("#form-plot").on('submit', function(event)
     event.preventDefault()
     // check parameters
     var data = checkParams()
-    console.log(parameters)
     if(data == null)
     {
-        console.log("cheguei aki")
         return;
     }   
     else
     {
-        console.log("cheguei aqui")
+        console.log(parameters)
         $.ajax(    
             {
                 url: '/get_plot/',
@@ -93,7 +91,7 @@ $("#form-plot").on('submit', function(event)
                 data_type: 'json',
                 success: function(data) {
                     alert('success!')
-                    console.log(data)
+                    render_data(data, parameters.size, parameters.res)
                 }
             })
     }

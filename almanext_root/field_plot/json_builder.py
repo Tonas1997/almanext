@@ -4,6 +4,7 @@ from astropy.coordinates import SkyCoord, Angle
 from field_plot.class_pixel import Pixel
 from common.class_observation import ObservationClass
 from common.class_spectral_window import SpectralWindowClass
+from django.core.serializers.json import DjangoJSONEncoder
 
 # global vars
 pix_array = None
@@ -21,6 +22,22 @@ def arcsec_to_angle(arcsec):
 
 def gridToCoords(i, j):
     return((ra_origin + i*inc + inc/2, dec_origin - j*inc + inc/2))
+
+# -----------------------------------------------------------------------------------------
+# converts an observation's frequency list to a JSON-serializable format
+def getFrequencyFromObs(obs):
+    spec_windows = obs.spec_windows.all()
+    spec_win_list = []
+    for s in spec_windows:
+        spec_win_list.append({"start": s.start,
+                            "end": s.end,
+                            "resolution": s.resolution,
+                            "sensitivity_10kms": s.sensitivity_10kms,
+                            "sensitivity_native": s.sensitivity_native,
+                            "pol_product": s.pol_product
+        })
+    return spec_win_list
+    
 
 # -----------------------------------------------------------------------------------------
 # appends a pixel to the final JSON object
@@ -47,6 +64,7 @@ def appendObservation(obs, index):
                     "dec": obs.dec,
                     "gal_longitude": obs.gal_longitude,
                     "gal_latitude": obs.gal_latitude,
+                    "frequency": getFrequencyFromObs(obs),
                     #"bands": obs.bands,
                     "spatial_resolution": obs.spatial_resolution,
                     "frequency_resolution": obs.frequency_resolution,
@@ -80,35 +98,35 @@ def appendObservation(obs, index):
 # fills the pixels around given ra/dec coordinates and a fov measured in arcsecs
 
 def fillPixels(ra, dec, fov, res, sens, int_time, obs):
-    print("#####################")
-    print(ra_origin)
-    print(dec_origin)
-    print("---------------------")
-    print(ra)
-    print(dec)
-    print(fov)
-    print(res)
+    # print("#####################")
+    # print(ra_origin)
+    # print(dec_origin)
+    # print("---------------------")
+    # print(ra)
+    # print(dec)
+    # print(fov)
+    # print(res)
     global pix_array
     # builds an Angle object for convenience
     fov_degree = Angle(fov, unit=u.arcsec)
     fov_degree = fov_degree/2
     # define some support variables and the subgrid
     radius = int(fov_degree.degree / inc)
-    print(radius)
+    # print(radius)
     center = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame='icrs')
     # (ra,dec)
     centerX = int(abs(ra - ra_origin) / inc)
     centerY = int(abs(dec - dec_origin) / inc)
-    print("---------------------")
-    print(centerX)
-    print(centerY)
+    # print("---------------------")
+    # print(centerX)
+    # print(centerY)
     topLeft = [int(max(0, centerX - radius - 1)), int(max(0, centerY - radius - 1))]
     bottomRight = [int(min(max_len - 1, centerX + radius + 1)), int(min(max_len - 1, centerY + radius + 1))]
-    print(topLeft)
-    print(bottomRight)
+    # print(topLeft)
+    # print(bottomRight)
     # fills the pixels of the subgrid
-    for y in range(topLeft[1], bottomRight[1] + 1):
-        for x in range(topLeft[0], bottomRight[0] + 1):
+    for y in range(topLeft[1], bottomRight[1]+1):
+        for x in range(topLeft[0], bottomRight[0]+1):
             # get the current cell coordinates
             coords = gridToCoords(x, y)
             currCoord = SkyCoord(coords[0]*u.degree, coords[1]*u.degree, frame='icrs')
@@ -129,6 +147,9 @@ def fillPixels(ra, dec, fov, res, sens, int_time, obs):
 
 def get_json_plot(center, size, res, obs_set):
 
+    global pix_list, obs_list
+    pix_list = []
+    obs_list = []
     # auxiliary variables
     global ra_origin, dec_origin, angle_size, angle_res, max_len, inc, pix_array
     ra_origin = float(center.ra.degree) - float((size/2)) + arcsec_to_angle(res/2)
@@ -177,9 +198,12 @@ def get_json_plot(center, size, res, obs_set):
             if(px is not None):
                 appendPixel(x,y, px.px_ra, px.px_dec, px.count_obs, px.avg_res, px.avg_sens, px.avg_int_time, px.observations)
 
-    print(obs_list)
+    print("Number of observations: " + str(len(obs_list)))
     json_builder = {"observations": obs_list, "pixels": pix_list}
     print(len(pix_array))
     print(len(json_builder["pixels"]))
 
-    return(json.dumps(json_builder, indent=4))
+    with open('query_result.json', 'w') as outfile:
+        json.dump(json_builder, outfile, cls=DjangoJSONEncoder)
+
+    return(json.dumps(json_builder, cls=DjangoJSONEncoder))
