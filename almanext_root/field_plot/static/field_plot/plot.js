@@ -9,12 +9,12 @@ const container = d3.select('#plot');
 
 class Observation
 {
-    constructor(project_code)
+    constructor(project_code, frequency)
     {
         this.project_code = project_code
+        this.frequency = frequency
     }
 }
-
 
 // Pixel class
 class Pixel
@@ -59,92 +59,37 @@ class Transform
 var overlap_area = 0;
 var total_area = 0;
 
+var max_count_obs = 0
+var max_avg_res = 0
+var max_avg_sens = 0
+var max_avg_int_time = 0
+var max_coords = []
+
+export var canvas_chart
 var transform_store;
 var context;
 
-var pixelData
-var obsData
+var pixel_array
+var observation_array
 
 var selectBox = document.getElementById("plot-color-property")
 
 // ------------------- CODE -------------------
 
-function updateCanvas(transform)
-{
-    // reset button
-    if(transform == undefined)
-    {
-        transform = d3.zoomIdentity.translate(0,0).scale(1)
-    }
-    // store the transform values
-    transform_store = transform
-    //console.log(transform_store)
-
-    pixel_info = selectBox.options[selectBox.selectedIndex].value
-
-    switch(pixel_info)
-    {
-        case "count_obs":
-            colorScale = function(value) {return d3.interpolateViridis(value)};
-            max_pixel_info_value = max_count_obs
-            break
-        case "avg_res":
-            colorScale = function(value) {return d3.interpolateInferno(value)};
-            max_pixel_info_value = max_avg_res
-            break
-        case "avg_sens":
-            colorScale = function(value) {return d3.interpolateBlues(Math.abs(1-value))};
-            max_pixel_info_value = max_avg_sens
-            break
-        case "avg_int_time":
-            colorScale = function(value) {return d3.interpolateCividis(value)};
-            max_pixel_info_value = max_avg_int_time
-            break
-    }
-
-    context.save()
-    context.fillStyle = colorScale(0)
-    context.fillRect( 0, 0, context.canvas.width, context.canvas.height );
-
-    context.translate(transform.x, transform.y)
-    context.scale(transform.k, transform.k)
-
-    var pixelScale = width / pixel_len
-    context.beginPath();
-    for(var i = 0; i < pixelData.length; i++)
-        for(var j = 0; j < pixelData[i].length; j++)
-        {
-            point = pixelData[i][j]
-            if(point != null)
-            {
-                const px = point.x
-                const py = point.y
-
-                context.beginPath()
-                context.fillStyle = colorScale(point[pixel_info]/max_pixel_info_value);
-                context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
-            }
-        }
-    //context.fill()
-    context.restore();
-}
-
 function updateDataset(plot_json)
 {
     console.log("fire")
-    selectedPixel = false;
-    hidePixelInfo()
 
     overlap_area = 0;
     total_area = 0;
     // Plot info
 
-    pixelData = createArray(plot_json.pixel_len, plot_json.pixel_len)
-    obsData = new Array(plot_json.data.observations.length)
+    pixel_array = createArray(plot_json.pixel_len, plot_json.pixel_len)
+    observation_array = new Array(plot_json.data.observations.length)
     //console.log(document.getElementById('plot').width);
 
     // Init Canvas
-    const canvasChart = container.append('canvas').classed('canvasChart', true)
+    canvas_chart = container.append('canvas').classed('canvas_chart', true)
         .attr('width', width)
         .attr('height', height)
         .style('margin-left', margin.left + 'px')
@@ -153,7 +98,7 @@ function updateDataset(plot_json)
         .style('height', document.getElementById('plot').offsetHeight)
         .attr('class', 'canvas-plot');
 
-    context = canvasChart.node().getContext('2d');
+    context = canvas_chart.node().getContext('2d');
 
     // fill canvas with a default background color
     context.beginPath();
@@ -170,7 +115,9 @@ function updateDataset(plot_json)
     var dataset = plot_json.data.pixels
     // Copy observations
     for (var i = 0; i < observations.length; i++) {
-        obsData[i] = new Observation(observations[i].project_code)
+            observation_array[i] = new Observation(
+            observations[i].project_code,
+            observations[i].frequency)
     }
 
     // Copy pixels
@@ -183,7 +130,7 @@ function updateDataset(plot_json)
         // fill the pixel "cache" array with this pixel's info
         if(point.x < plot_json.pixel_len)
         {
-            pixelData[point.x][point.y] = new Pixel(
+            pixel_array[point.x][point.y] = new Pixel(
                 parseFloat(point.x), 
                 parseFloat(point.y), 
                 parseFloat(point.RA), 
@@ -212,152 +159,134 @@ function updateDataset(plot_json)
 
     // initial render
     updateCanvas(d3.zoomIdentity)
-    updatePlotInfo()
 
     // zoom event
     d3.select(context.canvas).call(d3.zoom()
         .scaleExtent([1,15])
+        .translateExtent([[0,0],[width,width]])
         .on("zoom", () => updateCanvas(d3.event.transform)));
 
-    canvasChart.on("mousemove",function()
-    {
-        if(selectedPixel) return;
-        var p = getPixel(d3.mouse(this));
-        
-        if(p != 0)
-        {
-            showPixelInfo(p);
-        }
-        else
-        {
-            hidePixelInfo();
-        }
-    });
-
-    canvasChart.on("mousedown",function()
-    {
-        var p = getPixel(d3.mouse(this));
-        if(p == null)
-        {
-            selectedPixel = false;
-        }
-        else
-        {
-            showPixelInfo(p);
-            selectedPixel = true;
-        }
-    });
-
-    function getPixel(mouse)
-    {
-        // get mouse position
-        var mouseX = mouse[0];
-        var mouseY = mouse[1];
-        if(mouseX < 0 || mouseY < 0)
-            return;
-        // get grid position
-        var element = document.getElementById("plot");
-        var sizeString = getComputedStyle(element).width
-        sizeString = sizeString.substring(0, sizeString.length - 2);
-
-        // plot size in pixels
-        size = parseFloat(sizeString);
-        trueX = transform_store.invertX(mouseX);
-        trueY = transform_store.invertY(mouseY);
-        //trueX = (mouseX / transform_store.k) + (-transform_store.x / transform_store.k)
-        //trueY = (mouseY / transform_store.k) + (-transform_store.y / transform_store.k)
-        /* console.log("==============================")
-        console.log("OFFSET X: " + -transform_store.x / transform_store.k)
-        console.log("OFFSET y: " + -transform_store.y / transform_store.k)
-        console.log("SCALE F.: " + transform_store.k)
-        console.log("------------------------------")
-        console.log("currX: " + mouseX)
-        console.log("currY: " + mouseY)
-        console.log("------------------------------")*/
-        console.log("trueX: " + trueX)
-        console.log("trueY: " + trueY)
-
-        pixelWidth = (outerWidth / pixel_len)
-        gridX = Math.floor(trueX / pixelWidth)
-        gridY = Math.floor(trueY / pixelWidth)
-        pixel = pixelData[gridY][gridX]
-        return pixel
-
-    }    
-
-    // ================ AUX FUNCTIONS ================
-
-    function updatePlotInfo()
-    {
-        document.getElementById('plot-total-area').innerHTML = "~" + total_area + " arcsec<sup>2</sup>"
-        document.getElementById('plot-overlap-area').innerHTML = "~" + overlap_area +  " arcsec<sup>2</sup>"
-        document.getElementById('plot-overlap-area-pct').innerHTML = "~" + (overlap_area/total_area*100).toFixed(2) + "%"
+    return {
+        "total_area": total_area,
+        "overlap_area": overlap_area,
+        "overlap_area_pct": (overlap_area/total_area*100).toFixed(2)
     }
 }
 
-function render_data(data, size, res)
-{   
-    plot_json = new CanvasProperty(JSON.parse(data), size, res)
-    pixel_len = plot_json.pixel_len
-    updateDataset(plot_json)
+// Plot external API
+
+export function updateCanvas(transform)
+{
+    // differentiates between zoom and plot colour update
+    if(transform != undefined)
+    {
+        //transform = d3.zoomIdentity.translate(0,0).scale(1)
+        transform_store = transform
+    }
+
+    var pixel_info = selectBox.options[selectBox.selectedIndex].value
+    var colorScale
+    var max_pixel_info_value
+
+    switch(pixel_info)
+    {
+        case "count_obs":
+            colorScale = function(value) {return d3.interpolateViridis(value)};
+            max_pixel_info_value = max_count_obs
+            break
+        case "avg_res":
+            colorScale = function(value) {return d3.interpolateInferno(value)};
+            max_pixel_info_value = max_avg_res
+            break
+        case "avg_sens":
+            colorScale = function(value) {return d3.interpolateBlues(Math.abs(1-value))};
+            max_pixel_info_value = max_avg_sens
+            break
+        case "avg_int_time":
+            colorScale = function(value) {return d3.interpolateCividis(value)};
+            max_pixel_info_value = max_avg_int_time
+            break
+    }
+
+    context.save()
+    context.fillStyle = colorScale(0)
+    context.fillRect( 0, 0, context.canvas.width, context.canvas.height );
+
+    context.translate(transform_store.x, transform_store.y)
+    context.scale(transform_store.k, transform_store.k)
+
+    var pixelScale = width / pixel_len
+    context.beginPath();
+    for(var i = 0; i < pixel_array.length; i++)
+        for(var j = 0; j < pixel_array[i].length; j++)
+        {
+            var point = pixel_array[i][j]
+            if(point != null)
+            {
+                const px = point.x
+                const py = point.y
+
+                context.beginPath()
+                context.fillStyle = colorScale(point[pixel_info]/max_pixel_info_value);
+                context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
+            }
+        }
+    //context.fill()
+    context.restore();
 }
 
-// Init SVG
+export function renderData(data, size, res)
+{   
+    var plot_json = new CanvasProperty(JSON.parse(data), size, res)
+    pixel_len = plot_json.pixel_len
+    return updateDataset(plot_json)
+}
+
+export function getPixelInfo(mouse)
+{
+    // get mouse position
+    var mouseX = mouse[0];
+    var mouseY = mouse[1];
+    if(mouseX < 0 || mouseY < 0)
+        return;
+    // get grid position
+    var element = document.getElementById("plot");
+    var sizeString = getComputedStyle(element).width
+    sizeString = sizeString.substring(0, sizeString.length - 2);
+
+    // plot size in pixels
+    // var size = parseFloat(sizeString);
+    var trueX = transform_store.invertX(mouseX);
+    var trueY = transform_store.invertY(mouseY);
+
+    var pixelWidth = (outerWidth / pixel_len)
+    var gridX = Math.floor(trueX / pixelWidth)
+    var gridY = Math.floor(trueY / pixelWidth)
+    var pixel = pixel_array[gridY][gridX]
+    
+    if(pixel != 0)
+    {
+        return {
+            "ra": pixel.ra.toFixed(2),
+            "dec": pixel.dec.toFixed(2),
+            "count_obs": pixel.count_obs,
+            "avg_res": pixel.avg_res.toFixed(2),
+            "avg_sens": pixel.avg_sens.toFixed(2),
+            "avg_int_time": pixel.avg_int_time.toFixed(2),
+            "obs": observation_array[pixel.observations[0]].frequency
+        }
+    }
+    else
+    {
+        return null
+    }
+}    
 
 // ------------------- AUXILIARY FUNCTIONS -------------------
 
-function createArray(length) {
-    /* var arr = new Array(length || 0),
-        i = length;
-
-    if (arguments.length > 1) {
-        var args = Array.prototype.slice.call(arguments, 1);
-        while(i--) arr[length-1 - i] = createArray.apply(this, args);
-    } */
-
-    arr = a = Array(length).fill(0).map(x => Array(length).fill(0))
+// creates a double array
+function createArray(length)
+{
+    var arr = Array(length).fill(0).map(x => Array(length).fill(0))
     return arr;
 }
-
-function showPixelInfo(p)
-{
-    project_codes = p.observations
-    for(var i = 0; i < project_codes.length; i++)
-    {
-        console.log(obsData[i].project_code)
-    }
-    
-    document.getElementById('coordinates').innerHTML =
-        "<div class='value-box'>RA<br>" + 
-            "<div class='value-box value'>" + p.ra.toFixed(2) + " deg</div></div>" + 
-        "<div class='value-box'>Dec <br>" + 
-            "<div class='value-box value'>" + p.dec.toFixed(2) + " deg</div></div>";
-    document.getElementById('properties').innerHTML = 
-        "<div class='value-box'>Number of observations " + 
-            "<div class='value-box value'>" + p.count_obs.toFixed(0) + "</div></div>" + 
-        "<div class='value-box'>Average resolution " + 
-            "<div class='value-box value'>" + p.avg_res.toFixed(2) + " arcsec</div></div>" + 
-        "<div class='value-box'>Average sensitivity " + 
-            "<div class='value-box value'>" + p.avg_sens.toFixed(2) + " mJy/beam (10 km/s)</div></div>" + 
-        "<div class='value-box'>Average int. time " + 
-            "<div class='value-box value'>" + p.avg_int_time.toFixed(2) + " s</div></div>";
-}
-
-function hidePixelInfo()
-{
-    document.getElementById('coordinates').innerHTML =
-        "<div class='value-box'>RA<br>" + 
-            "<div class='value-box value'> --.-- deg</div></div>" + 
-        "<div class='value-box'>Dec <br>" + 
-            "<div class='value-box value'> --.-- deg</div></div>";
-    document.getElementById('properties').innerHTML = 
-        "<div class='value-box'>Number of observations " + 
-            "<div class='value-box value'> -- </div></div>" + 
-        "<div class='value-box'>Average resolution " + 
-            "<div class='value-box value'> --.-- arcsec</div></div>" + 
-        "<div class='value-box'>Average sensitivity " + 
-            "<div class='value-box value'> --.-- mJy/beam (10 km/s)</div></div>" + 
-        "<div class='value-box'>Average int. time " + 
-            "<div class='value-box value'> --.-- s</div></div>";
-}
-

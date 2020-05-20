@@ -98,27 +98,32 @@
 		<div id="infobox-plot" class="infobox">
 			Plot info
 			<div id="infobox-plot-wrapper" class="values-container">
-				<div class='value-box';'>Total area<br> 
-					<div id="plot-total-area" class='value-box value'>--.--</div></div> 
-				<div class='value-box';'>Overlapping area<br>
-					<div id="plot-overlap-area" class='value-box value'>--.--</div></div>
-				<div class='value-box';'>Overlapping area (%)<br> 
-					<div id="plot-overlap-area-pct" class='value-box value'>--.--</sup></div></div>
-				<select id="plot-color-property" onchange="updateCanvas(transform_store)">
-					<option value="count_obs">Observation count</option>
-					<option value="avg_res">Average resolution</option>
-					<option value="avg_sens">Average sensitivity (10km/s)</option>
-					<option value="avg_int_time">Average integration time</option>
-				</select>	
+				<div id="infobox-plot-num">
+					<div class='value-box'><div class='text'>Total area</div>
+						<div class='value'><div id="plot-total-area">30000</div>&nbsp arcsec<sup>2</sup></div></div>
+					<div class='value-box'><div class='text'>Overlapping area</div>
+						<div class='value'><div id="plot-overlap-area">300</div>&nbsp arcsec<sup>2</sup></div></div>
+					<div class='value-box'><div class='text'>Overlapping area (%)</div>
+						<div class='value'><div id="plot-overlap-area-pct">100</div>&nbsp %</div></div>
+				</div>
+				<div id="infobox-plot-graph">
+					<select id="plot-color-property">
+						<option value="count_obs">Observation count</option>
+						<option value="avg_res">Average resolution</option>
+						<option value="avg_sens">Average sensitivity (10km/s)</option>
+						<option value="avg_int_time">Average integration time</option>
+					</select>
+				</div>	
 			</div>
 		</div>
+		<div class="sep-horizontal-small"></div>
 		<div class="sep-horizontal-small"></div>
 		<!-- ----------------------------------------------------------------- -->
 		<div id="infobox-pixel" class="infobox">
 			Pixel info
 			<div id="infobox-pixel-wrapper" class="values-container">
 				<div class="info-values">
-					<div id="coordinates">
+					<div id="pixel-values">
 						
 					</div>
 					<div class="sep-vertical"></div>
@@ -126,6 +131,7 @@
 
 					</div>
 				</div>
+				<div class="sep-horizontal-small"></div>
 				<div id="info-plots">
 				
 				</div>
@@ -136,8 +142,9 @@
 	<div id="plot">
 		<script src="https://d3js.org/d3.v5.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-		<script src="{% static 'field_plot/plot.js' %}"></script>
-		<script src="{% static 'field_plot/controller.js' %}"></script>
+		<script type="module" src="{% static 'field_plot/plot.js' %}"></script>
+		<script type="module" src="{% static 'field_plot/freq_histogram.js' %}"></script>
+		<script type="module" src="{% static 'field_plot/controller.js' %}"></script>
 	</div>
 </div>	
 

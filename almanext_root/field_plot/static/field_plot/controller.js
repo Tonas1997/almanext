@@ -1,11 +1,22 @@
-var parameters = {}
+import
+{
+    renderData, // initial render
+    updateCanvas, // plot update
+    getPixelInfo, // gets the selected pixel
+    canvas_chart // canvas object
+} from "./plot.js"
 
+// ========================================================
+// ============== PLOT PARAMETERS MANAGEMENT ==============
+// ========================================================
+
+var parameters = {}
 function getBands()
 {
-    band_list = []
-    for (i = 3; i < 11; i++)
+    var band_list = []
+    for (var i = 3; i < 11; i++)
     {
-        element_id = "#formfield_band" + i
+        var element_id = "#formfield_band" + i
         if($(element_id).is(":checked"))
             band_list.push(i)
     }
@@ -90,9 +101,76 @@ $("#form-plot").on('submit', function(event)
                 data: parameters,
                 data_type: 'json',
                 success: function(data) {
-                    alert('success!')
-                    render_data(data, parameters.size, parameters.res)
+                    initializePlotView(data, parameters.size, parameters.res)
                 }
-            })
+            }
+        )
     }
 });
+
+// ========================================================
+// ================= PLOT USER INTERFACE ==================
+// ========================================================
+
+function initializePlotView(data, size, res)
+{
+    alert('success!')
+    var plot_data = renderData(data, size, res)        
+
+    initializePlotInfo(plot_data)
+    initializePixelInfo()
+
+    canvas_chart.on("mousemove",function()
+    {
+        var info = getPixelInfo(d3.mouse(this));
+        
+        if(info != null)
+        {
+            document.getElementById('pixel-ra').innerHTML = info.ra
+            document.getElementById('pixel-dec').innerHTML = info.dec
+            document.getElementById('pixel-n-obs').innerHTML = info.count_obs
+            document.getElementById('pixel-avg-res').innerHTML = info.avg_res
+            document.getElementById('pixel-avg-sens').innerHTML = info.avg_sens
+            document.getElementById('pixel-avg-int-time').innerHTML = info.avg_int_time
+            console.log(info.obs)
+        }
+        else
+        {
+            var nan = "--.--"
+            document.getElementById('pixel-ra').innerHTML = nan
+            document.getElementById('pixel-dec').innerHTML = nan
+            document.getElementById('pixel-n-obs').innerHTML = nan
+            document.getElementById('pixel-avg-res').innerHTML = nan
+            document.getElementById('pixel-avg-sens').innerHTML = nan
+            document.getElementById('pixel-avg-int-time').innerHTML = nan
+        }
+    });
+
+    $("#plot-color-property").on('change', (function() {
+        updateCanvas()
+    }))
+}
+
+function initializePlotInfo(plot_data)
+{
+    document.getElementById('plot-total-area').innerHTML = "~" + plot_data.total_area
+    document.getElementById('plot-overlap-area').innerHTML = "~" + plot_data.overlap_area
+    document.getElementById('plot-overlap-area-pct').innerHTML = "~" + (plot_data.overlap_area/plot_data.total_area*100).toFixed(2)
+}
+
+function initializePixelInfo()
+{
+    document.getElementById('pixel-values').innerHTML =
+    "<div class='value-box'><div class='text'>RA</div>" +
+        "<div class='value'><div id='pixel-ra'> --.-- </div>&nbsp deg</div></div>" + 
+    "<div class='value-box'><div class='text'>Dec</div>" +
+        "<div class='value'><div id='pixel-dec'> --.-- </div>&nbsp deg</div></div>" + 
+    "<div class='value-box'><div class='text'>Number of observations</div>" +
+        "<div class='value'><div id='pixel-n-obs'> --.-- </div></div></div>" +
+    "<div class='value-box'><div class='text'>Average resolution</div>" +
+        "<div class='value'><div id='pixel-avg-res'> --.-- </div>&nbsp arcsec<sup>2</sup></div></div>" +
+    "<div class='value-box'><div class='text'>Average sensitivity</div>" +
+        "<div class='value'><div id='pixel-avg-sens'> --.-- </div>&nbsp mJy/beam</div></div>" +
+    "<div class='value-box'><div class='text'>Average int. time</div>" +
+        "<div class='value'><div id='pixel-avg-int-time'> --.-- </div>&nbsp s</div></div>"
+}

@@ -186,6 +186,16 @@ form
   flex: 0 0 15vh;
 }
 
+#infobox-plot-num
+{
+  flex: 1 0 15vh;
+}
+
+#infobox-plot-graph
+{
+  flex: 1.5 0 15vh;
+}
+
 #plot-color-property
 {
   height: 30px;
@@ -207,7 +217,7 @@ form
 {
   display: flex;
   flex: 1 1;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 .info-values
@@ -217,7 +227,7 @@ form
   flex-direction: row;
 }
 
-.info-values > #coordinates
+.info-values > #pixel-values
 {
   flex: 1 0;
   flex-wrap: wrap;
@@ -226,7 +236,7 @@ form
 .info-values > #properties
 {
   display: flex;
-  flex: 2.5 0;
+  flex: 1 0;
   flex-direction: row;
   flex-wrap: wrap;
 }
@@ -235,6 +245,8 @@ form
 {
   flex: 1 0 calc(50% - 20px);
 }
+
+/* Auxiliary styles (including value box) */
 
 .values-container
 {
@@ -246,19 +258,29 @@ form
 
 .value-box 
 {
-  color: grey;
+  display: flex;
+  flex: 1;
+  flex-direction: row;
   line-height: 1.5;
-  margin: 5px 10px 5px 10px;
+  font-size: 14px;
+  margin: 5px 0px 5px 0px;
+}
+
+.value-box .text
+{
+  display: flex;
+  flex: 1 1 60%;
+  color: grey;
 }
 
 .value-box .value
 {
+  display: flex;
+  flex: 1 1 40%;
+  width: 100%;
+  text-align: right;
   color: black;
-  font-size: 18px; 
-  margin-left: 15px; 
 }
-
-/* Auxiliary styles (including value box) */
 
 .separator {
   content: '';
