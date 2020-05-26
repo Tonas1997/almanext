@@ -233,7 +233,7 @@ form
   flex-wrap: wrap;
 }
 
-.info-values > #properties
+.info-values > #pixel-freq
 {
   display: flex;
   flex: 1 0;
@@ -241,7 +241,7 @@ form
   flex-wrap: wrap;
 }
 
-.info-values > #properties > div
+.info-values > #pixel-freq > div
 {
   flex: 1 0 calc(50% - 20px);
 }

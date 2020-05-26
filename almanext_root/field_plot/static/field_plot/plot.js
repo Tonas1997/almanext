@@ -105,9 +105,13 @@ function updateDataset(plot_json)
     context.fillStyle = d3.interpolateViridis(0);
     context.fillRect( 0, 0, context.canvas.width, context.canvas.height );
 
+    var min_count_obs = 9999
     max_count_obs = 0
+    var min_avg_res = 9999
     max_avg_res = 0
+    var min_avg_sens = 9999
     max_avg_sens = 0
+    var min_avg_int_time = 9999
     max_avg_int_time = 0
     max_coords = []
 
@@ -150,9 +154,13 @@ function updateDataset(plot_json)
             overlap_area += Math.pow(plot_json.res, 2);
         }
 
+        if(point.count_obs < min_count_obs)  min_count_obs = point.count_obs;
         if(point.count_obs > max_count_obs)  max_count_obs = point.count_obs;
+        if(point.avg_res < min_avg_res)  min_avg_res = point.avg_res;
         if(point.avg_res > max_avg_res)  max_avg_res = point.avg_res;
+        if(point.avg_sens < min_avg_sens)  min_avg_sens = point.avg_sens;
         if(point.avg_sens > max_avg_sens)  max_avg_sens = point.avg_sens;
+        if(point.avg_int_time < min_avg_int_time)  min_avg_int_time = point.avg_int_time;
         if(point.avg_int_time > max_avg_int_time)  max_avg_int_time = point.avg_int_time;
         //drawPoint(point);
     }
@@ -169,7 +177,15 @@ function updateDataset(plot_json)
     return {
         "total_area": total_area,
         "overlap_area": overlap_area,
-        "overlap_area_pct": (overlap_area/total_area*100).toFixed(2)
+        "overlap_area_pct": (overlap_area/total_area*100).toFixed(2),
+        "min_count_obs": min_count_obs,
+        "max_count_obs": max_count_obs,
+        "min_avg_res": min_avg_res,
+        "max_avg_res": max_avg_res,
+        "min_avg_sens": min_avg_sens,
+        "max_avg_sens": max_avg_sens,
+        "min_avg_int_time": min_avg_int_time,
+        "max_avg_int_time": max_avg_int_time
     }
 }
 
@@ -221,7 +237,7 @@ export function updateCanvas(transform)
         for(var j = 0; j < pixel_array[i].length; j++)
         {
             var point = pixel_array[i][j]
-            if(point != null)
+            if(point != 0)
             {
                 const px = point.x
                 const py = point.y
@@ -273,7 +289,7 @@ export function getPixelInfo(mouse)
             "avg_res": pixel.avg_res.toFixed(2),
             "avg_sens": pixel.avg_sens.toFixed(2),
             "avg_int_time": pixel.avg_int_time.toFixed(2),
-            "obs": observation_array[pixel.observations[0]].frequency
+            "obs": getPixelObservation(pixel.observations)
         }
     }
     else
@@ -289,4 +305,20 @@ function createArray(length)
 {
     var arr = Array(length).fill(0).map(x => Array(length).fill(0))
     return arr;
+}
+
+function getPixelObservation(observations)
+{
+    var windows = []
+    for(var i = 0; i < observations.length; i++)
+    {
+        var obs_code = observation_array[i].project_code
+        var obs_windows = observation_array[i].frequency
+        windows.push(
+        {
+            "project_code": obs_code,
+            "freq_windows": obs_windows
+        })
+    }
+    return windows
 }

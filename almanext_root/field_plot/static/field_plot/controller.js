@@ -6,6 +6,18 @@ import
     canvas_chart // canvas object
 } from "./plot.js"
 
+import
+{
+    showFreqHistogram, // initial render
+    updateFreqHistogram // plot update
+} from "./freq_histogram.js"
+
+// ========================================================
+// =================== STATE VARIABLES ====================
+// ========================================================
+
+var is_rendered_freq_histogram = false
+
 // ========================================================
 // ============== PLOT PARAMETERS MANAGEMENT ==============
 // ========================================================
@@ -119,11 +131,21 @@ function initializePlotView(data, size, res)
 
     initializePlotInfo(plot_data)
     initializePixelInfo()
+    
+    var minF = 85
+    var maxF = 115
+    if(!is_rendered_freq_histogram)
+    {
+        console.log(plot_data)
+        initializeFreqHistogram(minF, maxF, plot_data.min_avg_sens, plot_data.max_avg_sens)
+        is_rendered_freq_histogram = true
+    }
 
     canvas_chart.on("mousemove",function()
     {
         var info = getPixelInfo(d3.mouse(this));
         
+        // update pixel info
         if(info != null)
         {
             document.getElementById('pixel-ra').innerHTML = info.ra
@@ -132,7 +154,7 @@ function initializePlotView(data, size, res)
             document.getElementById('pixel-avg-res').innerHTML = info.avg_res
             document.getElementById('pixel-avg-sens').innerHTML = info.avg_sens
             document.getElementById('pixel-avg-int-time').innerHTML = info.avg_int_time
-            console.log(info.obs)
+            updateFreqHistogram(info.obs)
         }
         else
         {
@@ -143,6 +165,7 @@ function initializePlotView(data, size, res)
             document.getElementById('pixel-avg-res').innerHTML = nan
             document.getElementById('pixel-avg-sens').innerHTML = nan
             document.getElementById('pixel-avg-int-time').innerHTML = nan
+            updateFreqHistogram(null)
         }
     });
 
@@ -173,4 +196,9 @@ function initializePixelInfo()
         "<div class='value'><div id='pixel-avg-sens'> --.-- </div>&nbsp mJy/beam</div></div>" +
     "<div class='value-box'><div class='text'>Average int. time</div>" +
         "<div class='value'><div id='pixel-avg-int-time'> --.-- </div>&nbsp s</div></div>"
+}
+
+function initializeFreqHistogram(minF, maxF, minS, maxS)
+{
+    showFreqHistogram(minF, maxF, minS, maxS)
 }

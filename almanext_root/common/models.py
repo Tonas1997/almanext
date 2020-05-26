@@ -73,6 +73,7 @@ class Observation(models.Model):
     def __str__(self):
         return self.project_code
 
+
 class SpectralWindow(models.Model):
     start = models.FloatField()
     end = models.FloatField()
