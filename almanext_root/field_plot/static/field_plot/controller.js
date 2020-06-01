@@ -9,7 +9,8 @@ import
 import
 {
     showFreqHistogram, // initial render
-    updateFreqHistogram // plot update
+    updateFreqHistogram,
+    updateFreqHistogramAxis // plot update
 } from "./freq_histogram.js"
 
 // ========================================================
@@ -113,7 +114,7 @@ $("#form-plot").on('submit', function(event)
                 data: parameters,
                 data_type: 'json',
                 success: function(data) {
-                    initializePlotView(data, parameters.size, parameters.res)
+                    initializePlotView(JSON.parse(data))
                 }
             }
         )
@@ -124,21 +125,28 @@ $("#form-plot").on('submit', function(event)
 // ================= PLOT USER INTERFACE ==================
 // ========================================================
 
-function initializePlotView(data, size, res)
+function initializePlotView(data)
 {
     alert('success!')
-    var plot_data = renderData(data, size, res)        
+    console.log(data)
+    console.log(data.properties)
+    var plot_data = renderData(data)        
 
     initializePlotInfo(plot_data)
     initializePixelInfo()
     
-    var minF = 85
-    var maxF = 115
+    var minF = data.properties.min_frequency
+    var maxF = data.properties.max_frequency
+    console.log(maxF)
     if(!is_rendered_freq_histogram)
     {
         console.log(plot_data)
-        initializeFreqHistogram(minF, maxF, plot_data.min_avg_sens, plot_data.max_avg_sens)
+        showFreqHistogram(minF, maxF, plot_data.min_avg_sens, plot_data.max_avg_sens)
         is_rendered_freq_histogram = true
+    }
+    else if(data.observations.length != 0)
+    {
+        updateFreqHistogramAxis(minF, maxF)
     }
 
     canvas_chart.on("mousemove",function()
@@ -196,9 +204,4 @@ function initializePixelInfo()
         "<div class='value'><div id='pixel-avg-sens'> --.-- </div>&nbsp mJy/beam</div></div>" +
     "<div class='value-box'><div class='text'>Average int. time</div>" +
         "<div class='value'><div id='pixel-avg-int-time'> --.-- </div>&nbsp s</div></div>"
-}
-
-function initializeFreqHistogram(minF, maxF, minS, maxS)
-{
-    showFreqHistogram(minF, maxF, minS, maxS)
 }

@@ -29,6 +29,8 @@ PROJECT_TYPE_CHOICES = (
 
 class Band(models.Model):
     designation = models.IntegerField()
+    start = models.FloatField()
+    end = models.FloatField()
 
 class Array(models.Model):
     designation = models.CharField(max_length=2, choices = ARRAY_CHOICES)

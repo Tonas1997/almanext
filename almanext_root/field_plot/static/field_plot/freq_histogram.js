@@ -15,8 +15,8 @@ export function showFreqHistogram(minF, maxF, minSens, maxSens)
     ratio = width / (maxF - minF)
     margin = 5;
 
-    console.log(minSens)
-    console.log(maxSens)
+    console.log(minF)
+    console.log(maxF)
 
     // we are appending SVG first
     svg = d3.select("#pixel-freq")
@@ -36,28 +36,35 @@ export function showFreqHistogram(minF, maxF, minSens, maxSens)
     xAxis = d3.axisBottom()
         .scale(xScale)
 
-    svg.append("g")
+    g = svg.append("g")
         .attr('transform', 'translate(0 ' + (height-padding_bottom) + ')')
         .call(xAxis)
     
 }
 
+export function updateFreqHistogramAxis(minF, maxF)
+{
+    xScale.domain([minF, maxF])
+    ratio = width / (maxF - minF)
+    g.transition().duration(2000).call(xAxis)
+}
+
 var scale = 1
 
-export function updateFreqHistogram(observations, max_val)
+export function updateFreqHistogram(observations)
 {
-    console.log(observations)
+    //console.log(observations)
     svg.selectAll('rect').remove()
 
     if(observations != null)
     {
-        console.log("======================================")
+        //console.log("======================================")
         svg.selectAll('rect')
         .data(observations)
         .enter()
         .each(function(o) {
-            console.log("=============")
-            console.log(o)
+            //console.log("=============")
+            //console.log(o)
 
             svg.selectAll('asd')
             .data(o.freq_windows)
@@ -70,7 +77,6 @@ export function updateFreqHistogram(observations, max_val)
             .attr("stroke-width", 0)
             .attr("fill", "#373755")
             .attr("opacity", function(w) { 
-                console.log(colorScale.domain())
                 return (colorScale(w.sensitivity_10kms))})
         })
     }

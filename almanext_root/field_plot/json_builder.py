@@ -15,6 +15,10 @@ curr_freq = 0
 pix_list = []
 obs_list = []
 
+# dataset properties
+min_freq = 9999
+max_freq = -9999
+
 # -----------------------------------------------------------------------------------------
 # simple converter, might be discontinued
 def arcsec_to_angle(arcsec):
@@ -37,6 +41,13 @@ def getFrequencyFromObs(obs):
                             "pol_product": s.pol_product
         })
     return spec_win_list
+
+def getBandsFromObs(obs):
+    bands = obs.bands.all()
+    band_list = []
+    for b in bands:
+        band_list.append({"band": b.designation})
+    return band_list
     
 
 # -----------------------------------------------------------------------------------------
@@ -56,7 +67,11 @@ def appendPixel(x, y, ra, dec, count_obs, avg_res, avg_sens, avg_int_time, obser
 # -----------------------------------------------------------------------------------------
 # appends an observation to the final JSON object
 def appendObservation(obs, index):
-    global obs_list
+    global obs_list, min_freq, max_freq
+    for w in obs.spec_windows.all():
+        if w.start < min_freq: min_freq = w.start
+        if w.end > max_freq: max_freq = w.end
+
     obs_list.append({"index": index,
                     "project_code": obs.project_code,
                     "source_name": obs.source_name,
@@ -65,7 +80,7 @@ def appendObservation(obs, index):
                     "gal_longitude": obs.gal_longitude,
                     "gal_latitude": obs.gal_latitude,
                     "frequency": getFrequencyFromObs(obs),
-                    #"bands": obs.bands,
+                    "bands": getBandsFromObs(obs),
                     "spatial_resolution": obs.spatial_resolution,
                     "frequency_resolution": obs.frequency_resolution,
                     #"arrays": obs.arrays,
@@ -98,30 +113,19 @@ def appendObservation(obs, index):
 # fills the pixels around given ra/dec coordinates and a fov measured in arcsecs
 
 def fillPixels(ra, dec, fov, res, sens, int_time, obs):
-    # print("#####################")
-    # print(ra_origin)
-    # print(dec_origin)
-    # print("---------------------")
-    # print(ra)
-    # print(dec)
-    # print(fov)
-    # print(res)
     global pix_array
     # builds an Angle object for convenience
     fov_degree = Angle(fov, unit=u.arcsec)
     fov_degree = fov_degree/2
     # define some support variables and the subgrid
     radius = int(fov_degree.degree / inc)
-    # print(radius)
+
     center = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame='icrs')
-    # (ra,dec)
     centerX = int(abs(ra - ra_origin) / inc)
     centerY = int(abs(dec - dec_origin) / inc)
-    # print("---------------------")
-    # print(centerX)
-    # print(centerY)
+
     topLeft = [int(max(0, centerX - radius - 1)), int(max(0, centerY - radius - 1))]
-    bottomRight = [int(min(max_len - 1, centerX + radius + 1)), int(min(max_len - 1, centerY + radius + 1))]
+    bottomRight = [int(min(pixel_len - 1, centerX + radius + 1)), int(min(pixel_len - 1, centerY + radius + 1))]
     # print(topLeft)
     # print(bottomRight)
     # fills the pixels of the subgrid
@@ -145,25 +149,28 @@ def fillPixels(ra, dec, fov, res, sens, int_time, obs):
 #       returns a json file with all relevant information
 # =============================================================================
 
-def get_json_plot(center, size, res, obs_set):
+def get_json_plot(center, plot_size, plot_res, obs_set):
 
-    global pix_list, obs_list
+    global pix_list, obs_list, min_freq, max_freq
+
     pix_list = []
     obs_list = []
+    min_freq = 9999
+    max_freq = -9999
+
     # auxiliary variables
-    global ra_origin, dec_origin, angle_size, angle_res, max_len, inc, pix_array
-    ra_origin = float(center.ra.degree) - float((size/2)) + arcsec_to_angle(res/2)
+    global ra_origin, dec_origin, angle_size, angle_res, pixel_len, inc, pix_array
+    ra_origin = float(center.ra.degree) - float((plot_size/2)) + arcsec_to_angle(plot_res/2)
     print(ra_origin)
-    dec_origin = float(center.dec.degree) + float((size/2)) - arcsec_to_angle(res/2)
+    dec_origin = float(center.dec.degree) + float((plot_size/2)) - arcsec_to_angle(plot_res/2)
 
     # get number of pixels
-    angle_size = Angle(size, unit=u.degree)
-    angle_res = Angle(res, unit=u.arcsec)
-    max_len = int(angle_size/angle_res)
-    print(max_len)
+    angle_size = Angle(plot_size, unit=u.degree)
+    angle_res = Angle(plot_res, unit=u.arcsec)
+    pixel_len = int(angle_size/angle_res)
 
     # create 2D plot and observation array
-    pix_array = [[None for x in range(max_len)] for y in range(max_len)]
+    pix_array = [[None for x in range(pixel_len)] for y in range(pixel_len)]
     obs_array = []
     inc = angle_res.degree
 
@@ -185,25 +192,29 @@ def get_json_plot(center, size, res, obs_set):
 
     # the root json structure
     json_builder = []
-    # each of the smaller json lists
+    # properties list
+    properties_list = {
+        "angular_size": plot_size,
+        "resolution": plot_res,
+        "pixel_len": pixel_len,
+        "min_frequency": min_freq,
+        "max_frequency": max_freq
+    }
 
-    #for x in range(len(obs_array)):
-        # will convert the observation objects to the respective json representation
-    #    obs_list.append(obsToDictEntry(obs_array[x]))
+    print(properties_list)
     
     # convert full 2d array to json
-    for x in range(max_len):
-        for y in range(max_len):
+    for x in range(pixel_len):
+        for y in range(pixel_len):
             px = pix_array[x][y]
             if(px is not None):
                 appendPixel(x,y, px.px_ra, px.px_dec, px.count_obs, px.avg_res, px.avg_sens, px.avg_int_time, px.observations)
 
     print("Number of observations: " + str(len(obs_list)))
-    json_builder = {"observations": obs_list, "pixels": pix_list}
-    print(len(pix_array))
-    print(len(json_builder["pixels"]))
+    json_builder = {"properties": properties_list, "observations": obs_list, "pixels": pix_list}
+    print(len(json_builder))
 
     with open('query_result.json', 'w') as outfile:
-        json.dump(json_builder, outfile, cls=DjangoJSONEncoder)
+        json.dump(json_builder, outfile, indent=4, cls=DjangoJSONEncoder)
 
     return(json.dumps(json_builder, cls=DjangoJSONEncoder))

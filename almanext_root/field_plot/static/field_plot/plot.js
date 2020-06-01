@@ -9,10 +9,11 @@ const container = d3.select('#plot');
 
 class Observation
 {
-    constructor(project_code, frequency)
+    constructor(project_code, frequency, bands)
     {
         this.project_code = project_code
         this.frequency = frequency
+        this.bands = bands
     }
 }
 
@@ -30,17 +31,6 @@ class Pixel
         this.avg_sens = avg_sens;
         this.avg_int_time = avg_int_time;
         this.observations = observations
-    }
-}
-
-class CanvasProperty
-{
-    constructor(data, size, res)
-    {
-        this.data = data
-        this.size = size
-        this.res = res
-        this.pixel_len = size*3600/res
     }
 }
 
@@ -84,8 +74,9 @@ function updateDataset(plot_json)
     total_area = 0;
     // Plot info
 
-    pixel_array = createArray(plot_json.pixel_len, plot_json.pixel_len)
-    observation_array = new Array(plot_json.data.observations.length)
+    pixel_len = plot_json.properties.pixel_len
+    pixel_array = createArray(pixel_len, pixel_len)
+    observation_array = new Array(plot_json.observations.length)
     //console.log(document.getElementById('plot').width);
 
     // Init Canvas
@@ -115,13 +106,14 @@ function updateDataset(plot_json)
     max_avg_int_time = 0
     max_coords = []
 
-    var observations = plot_json.data.observations
-    var dataset = plot_json.data.pixels
+    var observations = plot_json.observations
+    var dataset = plot_json.pixels
     // Copy observations
     for (var i = 0; i < observations.length; i++) {
             observation_array[i] = new Observation(
             observations[i].project_code,
-            observations[i].frequency)
+            observations[i].frequency,
+            observations[i].bands)
     }
 
     // Copy pixels
@@ -132,7 +124,7 @@ function updateDataset(plot_json)
         var point = dataset[i]
         
         // fill the pixel "cache" array with this pixel's info
-        if(point.x < plot_json.pixel_len)
+        if(point.x < pixel_len)
         {
             pixel_array[point.x][point.y] = new Pixel(
                 parseFloat(point.x), 
@@ -147,11 +139,11 @@ function updateDataset(plot_json)
             );
         }
 
-        total_area += Math.pow(plot_json.res, 2);
+        total_area += Math.pow(plot_json.properties.resolution, 2);
         // if it has more than one observation covering it, add to the acc variable
         if(point.count_obs > 1)
         {
-            overlap_area += Math.pow(plot_json.res, 2);
+            overlap_area += Math.pow(plot_json.properties.resolution, 2);
         }
 
         if(point.count_obs < min_count_obs)  min_count_obs = point.count_obs;
@@ -251,11 +243,9 @@ export function updateCanvas(transform)
     context.restore();
 }
 
-export function renderData(data, size, res)
+export function renderData(data)
 {   
-    var plot_json = new CanvasProperty(JSON.parse(data), size, res)
-    pixel_len = plot_json.pixel_len
-    return updateDataset(plot_json)
+    return updateDataset(data)
 }
 
 export function getPixelInfo(mouse)
@@ -279,10 +269,11 @@ export function getPixelInfo(mouse)
     var gridX = Math.floor(trueX / pixelWidth)
     var gridY = Math.floor(trueY / pixelWidth)
     var pixel = pixel_array[gridY][gridX]
+    console.log(pixel)
     
     if(pixel != 0)
     {
-        return {
+        var result = {
             "ra": pixel.ra.toFixed(2),
             "dec": pixel.dec.toFixed(2),
             "count_obs": pixel.count_obs,
@@ -291,6 +282,8 @@ export function getPixelInfo(mouse)
             "avg_int_time": pixel.avg_int_time.toFixed(2),
             "obs": getPixelObservation(pixel.observations)
         }
+        console.log(result)
+        return result
     }
     else
     {
@@ -310,15 +303,18 @@ function createArray(length)
 function getPixelObservation(observations)
 {
     var windows = []
+
     for(var i = 0; i < observations.length; i++)
     {
-        var obs_code = observation_array[i].project_code
-        var obs_windows = observation_array[i].frequency
+        var observation = observation_array[observations[i]]
+        var obs_code = observation.project_code
+        var obs_windows = observation.frequency
         windows.push(
         {
             "project_code": obs_code,
             "freq_windows": obs_windows
         })
     }
+
     return windows
 }
