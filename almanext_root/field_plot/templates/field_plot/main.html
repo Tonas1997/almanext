@@ -99,13 +99,14 @@
 			Plot info
 			<div id="infobox-plot-wrapper" class="values-container">
 				<div id="infobox-plot-num">
-					<div class='value-box'><div class='text'>Total area</div>
-						<div class='value'><div id="plot-total-area">30000</div>&nbsp arcsec<sup>2</sup></div></div>
-					<div class='value-box'><div class='text'>Overlapping area</div>
-						<div class='value'><div id="plot-overlap-area">300</div>&nbsp arcsec<sup>2</sup></div></div>
-					<div class='value-box'><div class='text'>Overlapping area (%)</div>
-						<div class='value'><div id="plot-overlap-area-pct">100</div>&nbsp %</div></div>
+					<div class='value-box'><div class='value-box field label'>Total area</div>
+						<div class='field value'><div id="plot-total-area">30000</div>&nbsp arcsec<sup>2</sup></div></div>
+					<div class='value-box'><div class='value-box field label'>Overlapping area</div>
+						<div class='field value'><div id="plot-overlap-area">300</div>&nbsp arcsec<sup>2</sup></div></div>
+					<div class='value-box'><div class='value-box field label'>Overlapping area (%)</div>
+						<div class='field value'><div id="plot-overlap-area-pct">100</div>&nbsp %</div></div>
 				</div>
+				<div class="sep-vertical"></div>
 				<div id="infobox-plot-graph">
 					<select id="plot-color-property">
 						<option value="count_obs">Observation count</option>
@@ -113,7 +114,10 @@
 						<option value="avg_sens">Average sensitivity (10km/s)</option>
 						<option value="avg_int_time">Average integration time</option>
 					</select>
-					
+					<div id="options-wrapper">
+						<input type="checkbox" id="highlightOverlap">
+						<label for="checkbox" class="field label">Highlight overlapping regions</label>
+					</div>
 				</div>	
 			</div>
 		</div>

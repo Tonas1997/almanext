@@ -12,12 +12,15 @@ inc = 0
 ra_origin = 0
 dec_origin = 0
 curr_freq = 0
+
 pix_list = []
 obs_list = []
 
-# dataset properties
 min_freq = 9999
 max_freq = -9999
+
+cs_list = []
+cs_list_size = 0
 
 # -----------------------------------------------------------------------------------------
 # simple converter, might be discontinued
@@ -29,10 +32,26 @@ def gridToCoords(i, j):
 
 # -----------------------------------------------------------------------------------------
 # converts an observation's frequency list to a JSON-serializable format
-def getFrequencyFromObs(obs):
+def getFrequencyFromObs(obs, index):
     spec_windows = obs.spec_windows.all()
     spec_win_list = []
+    cs = obs.continuum_sensitivity
     for s in spec_windows:
+        # first, replace the continuum sensitivity values for this frequency (if needed)
+        start = s.start
+        curr_freq = start
+        end = s.end
+        # run through the spectral window in 10MHz increments
+        while(curr_freq <= end):
+            if((curr_freq >= min_freq) and (curr_freq <= max_freq)):
+                pos = int((curr_freq - min_freq)*100)
+                curr = cs_list[pos]
+                if((curr != None and cs < curr["cs"]) or (curr == None and cs != 0)):
+                    cs_list[pos] = {
+                        "freq": curr_freq,
+                        "cs": cs
+                    } 
+            curr_freq += 0.01 
         spec_win_list.append({"start": s.start,
                             "end": s.end,
                             "resolution": s.resolution,
@@ -67,10 +86,7 @@ def appendPixel(x, y, ra, dec, count_obs, avg_res, avg_sens, avg_int_time, obser
 # -----------------------------------------------------------------------------------------
 # appends an observation to the final JSON object
 def appendObservation(obs, index):
-    global obs_list, min_freq, max_freq
-    for w in obs.spec_windows.all():
-        if w.start < min_freq: min_freq = w.start
-        if w.end > max_freq: max_freq = w.end
+    global obs_list
 
     obs_list.append({"index": index,
                     "project_code": obs.project_code,
@@ -79,7 +95,7 @@ def appendObservation(obs, index):
                     "dec": obs.dec,
                     "gal_longitude": obs.gal_longitude,
                     "gal_latitude": obs.gal_latitude,
-                    "frequency": getFrequencyFromObs(obs),
+                    "frequency": getFrequencyFromObs(obs, index),
                     "bands": getBandsFromObs(obs),
                     "spatial_resolution": obs.spatial_resolution,
                     "frequency_resolution": obs.frequency_resolution,
@@ -112,8 +128,17 @@ def appendObservation(obs, index):
 # -----------------------------------------------------------------------------------------
 # fills the pixels around given ra/dec coordinates and a fov measured in arcsecs
 
-def fillPixels(ra, dec, fov, res, sens, int_time, obs):
+def fillPixels(obs, counter):
     global pix_array
+
+    ra = obs.ra
+    dec = obs.dec
+    fov = obs.field_of_view
+    res = obs.spatial_resolution
+    sens = obs.line_sensitivity
+    source = obs.source_name
+    int_time = obs.integration_time
+
     # builds an Angle object for convenience
     fov_degree = Angle(fov, unit=u.arcsec)
     fov_degree = fov_degree/2
@@ -129,6 +154,12 @@ def fillPixels(ra, dec, fov, res, sens, int_time, obs):
     # print(topLeft)
     # print(bottomRight)
     # fills the pixels of the subgrid
+
+    if(obs.project_code == "2016.1.01546.S"):
+        print("########################")
+        print("radius: " + str(radius))
+        print("centerX: " + str(centerX))
+        print("centerY: " + str(centerY))
     for y in range(topLeft[1], bottomRight[1]+1):
         for x in range(topLeft[0], bottomRight[0]+1):
             # get the current cell coordinates
@@ -142,21 +173,24 @@ def fillPixels(ra, dec, fov, res, sens, int_time, obs):
                     new_pixel = Pixel(x, y, currCoord.ra.degree, currCoord.dec.degree)
                     pix_array[y][x] = new_pixel
                 pix_array[y][x].change_avgs(res, sens, int_time)
-                pix_array[y][x].add_observation(obs)
+                pix_array[y][x].add_observation(counter)
 
 # =============================================================================
 #       MAIN FUNCTION, EVERYONE ELSE SUCKS
 #       returns a json file with all relevant information
 # =============================================================================
 
-def get_json_plot(center, plot_size, plot_res, obs_set):
+def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
 
-    global pix_list, obs_list, min_freq, max_freq
+    global pix_list, obs_list, cs_list, cs_list_size, min_freq, max_freq
 
     pix_list = []
     obs_list = []
-    min_freq = 9999
-    max_freq = -9999
+
+    min_freq = min_f
+    max_freq = max_f
+    cs_list_size = int((max_freq - min_freq) * 100)
+    cs_list = [None for x in range(cs_list_size)]
 
     # auxiliary variables
     global ra_origin, dec_origin, angle_size, angle_res, pixel_len, inc, pix_array
@@ -179,14 +213,7 @@ def get_json_plot(center, plot_size, plot_res, obs_set):
     counter = 0
     for obs in obs_set: # this for statement will be changed to use actual model objects
         #print("Processing observation " + str(index) + "(" + str(round(float(index/obs_set.count()), 2)*100) + "%)")
-        ra = obs.ra
-        dec = obs.dec
-        fov = obs.field_of_view
-        res = obs.spatial_resolution
-        sensitivity = obs.line_sensitivity
-        source = obs.source_name
-        int_time = obs.integration_time
-        fillPixels(ra, dec, fov, res, sensitivity, int_time, counter)
+        fillPixels(obs, counter)
         appendObservation(obs, counter)
         counter += 1
 
@@ -211,7 +238,7 @@ def get_json_plot(center, plot_size, plot_res, obs_set):
                 appendPixel(x,y, px.px_ra, px.px_dec, px.count_obs, px.avg_res, px.avg_sens, px.avg_int_time, px.observations)
 
     print("Number of observations: " + str(len(obs_list)))
-    json_builder = {"properties": properties_list, "observations": obs_list, "pixels": pix_list}
+    json_builder = {"properties": properties_list, "observations": obs_list, "continuum_sensitivity": cs_list, "pixels": pix_list}
     print(len(json_builder))
 
     with open('query_result.json', 'w') as outfile:

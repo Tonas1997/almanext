@@ -3,7 +3,9 @@ import
     renderData, // initial render
     updateCanvas, // plot update
     getPixelInfo, // gets the selected pixel
-    canvas_chart // canvas object
+    setHighlightOverlap, // sets a given plot option
+    canvas_chart, // canvas object
+    setRenderMode
 } from "./plot.js"
 
 import
@@ -96,6 +98,16 @@ $(document).on('input', '#formfield_redshift', function()
     $('#redshift-val').html( parseFloat($(this).val()).toFixed(1) )
 });
 
+// placeholder until I figure out a better way to preset the parameters
+$("#plot-color-property").on('change', (function() {
+    setRenderMode(this.value)
+}))
+
+$('#highlightOverlap').on('change', (function() {
+    setHighlightOverlap(this.checked)
+}))
+
+
 $("#form-plot").on('submit', function(event)
 {
     event.preventDefault()
@@ -178,6 +190,12 @@ function initializePlotView(data)
     });
 
     $("#plot-color-property").on('change', (function() {
+        setRenderMode(this.value)
+        updateCanvas()
+    }))
+
+    $('#highlightOverlap').on('change', (function() {
+        setHighlightOverlap(this.checked)
         updateCanvas()
     }))
 }
@@ -192,16 +210,16 @@ function initializePlotInfo(plot_data)
 function initializePixelInfo()
 {
     document.getElementById('pixel-values').innerHTML =
-    "<div class='value-box'><div class='text'>RA</div>" +
-        "<div class='value'><div id='pixel-ra'> --.-- </div>&nbsp deg</div></div>" + 
-    "<div class='value-box'><div class='text'>Dec</div>" +
-        "<div class='value'><div id='pixel-dec'> --.-- </div>&nbsp deg</div></div>" + 
-    "<div class='value-box'><div class='text'>Number of observations</div>" +
-        "<div class='value'><div id='pixel-n-obs'> --.-- </div></div></div>" +
-    "<div class='value-box'><div class='text'>Average resolution</div>" +
-        "<div class='value'><div id='pixel-avg-res'> --.-- </div>&nbsp arcsec<sup>2</sup></div></div>" +
-    "<div class='value-box'><div class='text'>Average sensitivity</div>" +
-        "<div class='value'><div id='pixel-avg-sens'> --.-- </div>&nbsp mJy/beam</div></div>" +
-    "<div class='value-box'><div class='text'>Average int. time</div>" +
-        "<div class='value'><div id='pixel-avg-int-time'> --.-- </div>&nbsp s</div></div>"
+    "<div class='value-box'><div class='value-box field label'>RA</div>" +
+        "<div class='field value'><div id='pixel-ra'> --.-- </div>&nbsp deg</div></div>" + 
+    "<div class='value-box'><div class='value-box field label'>Dec</div>" +
+        "<div class='field value'><div id='pixel-dec'> --.-- </div>&nbsp deg</div></div>" + 
+    "<div class='value-box'><div class='value-box field label'>Number of observations</div>" +
+        "<div class='field value'><div id='pixel-n-obs'> --.-- </div></div></div>" +
+    "<div class='value-box'><div class='value-box field label'>Average resolution</div>" +
+        "<div class='field value'><div id='pixel-avg-res'> --.-- </div>&nbsp arcsec<sup>2</sup></div></div>" +
+    "<div class='value-box'><div class='value-box field label'>Average sensitivity</div>" +
+        "<div class='field value'><div id='pixel-avg-sens'> --.-- </div>&nbsp mJy/beam</div></div>" +
+    "<div class='value-box'><div class='value-box field label'>Average int. time</div>" +
+        "<div class='field value'><div id='pixel-avg-int-time'> --.-- </div>&nbsp s</div></div>"
 }

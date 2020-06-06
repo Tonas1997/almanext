@@ -12,6 +12,7 @@ inc = 0
 minF = 0
 maxF = 0
 
+# determines if an observation has coverage on the listed (and redshifted) bands
 def coversBands(z_bands, o):
     for b in z_bands:
         for w in o.spec_windows.iterator():
@@ -26,7 +27,7 @@ def index(request):
     #return HttpResponse("<h1>Hello world</h1>")
     return render(request, 'field_plot/main.html')
 
-# Create your views here.
+# returns the json file generated with the given request
 def get_plot(request):
 
     ra = float(request.GET.get('ra', None))
@@ -54,14 +55,23 @@ def get_plot(request):
     print("size 1:" + str(obs_result.count()))
     if(z == 0):
         obs_result = obs_result.filter(bands__designation__in = bands)
+        bands_qs = Band.objects.filter(designation__in = bands)
+        min_freq = bands_qs.first().start
+        max_freq = bands_qs.last().end
+    # otherwise, apply the given redshift to the selected bands
     else:
-        z_bands = [] 
+        z_bands = []
+        min_freq = 9999
+        max_freq = -9999 
         for b in Band.objects.filter(designation__in = bands):
-            z_bands.append({
+            new_z_band = {
                 "start": b.start / (1+z), # cosmological redshift
                 "end": b.end / (1+z)
-            })
-            print(bands)
+            }
+            if(new_z_band.start < min_freq): min_freq = new_z_band.start
+            if(new_z_band.end > max_freq): max_freq = new_z_band.end
+            z_bands.append(new_z_band)
+            
         for o in obs_result:
             covers = coversBands(z_bands, o)
             if(not covers):
@@ -72,7 +82,7 @@ def get_plot(request):
     print("size 2:" + str(obs_result.count()))
 # =============================================================================
 
-    JSONplot = get_json_plot(center, size, res, obs_result)
+    JSONplot = get_json_plot(center, size, res, obs_result, min_freq, max_freq)
 
 # =============================================================================
 #     RETURN A JSON OBJECT

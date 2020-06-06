@@ -59,10 +59,23 @@ export var canvas_chart
 var transform_store;
 var context;
 
+var highlight_overlap = false
+var render_mode = "count_obs"
+
 var pixel_array
 var observation_array
 
 var selectBox = document.getElementById("plot-color-property")
+
+export function setHighlightOverlap(bool)
+{
+    highlight_overlap = bool
+}
+
+export function setRenderMode(mode)
+{
+    render_mode = mode
+}
 
 // ------------------- CODE -------------------
 
@@ -192,11 +205,10 @@ export function updateCanvas(transform)
         transform_store = transform
     }
 
-    var pixel_info = selectBox.options[selectBox.selectedIndex].value
     var colorScale
     var max_pixel_info_value
 
-    switch(pixel_info)
+    switch(render_mode)
     {
         case "count_obs":
             colorScale = function(value) {return d3.interpolateViridis(value)};
@@ -235,7 +247,11 @@ export function updateCanvas(transform)
                 const py = point.y
 
                 context.beginPath()
-                context.fillStyle = colorScale(point[pixel_info]/max_pixel_info_value);
+                context.fillStyle = colorScale(point[render_mode]/max_pixel_info_value);
+                if(point.observations.length == 1 && highlight_overlap)
+                    context.globalAlpha = 0.1
+                else
+                    context.globalAlpha = 1.0
                 context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
             }
         }
@@ -273,16 +289,19 @@ export function getPixelInfo(mouse)
     
     if(pixel != 0)
     {
-        var result = {
-            "ra": pixel.ra.toFixed(2),
-            "dec": pixel.dec.toFixed(2),
-            "count_obs": pixel.count_obs,
-            "avg_res": pixel.avg_res.toFixed(2),
-            "avg_sens": pixel.avg_sens.toFixed(2),
-            "avg_int_time": pixel.avg_int_time.toFixed(2),
-            "obs": getPixelObservation(pixel.observations)
-        }
-        console.log(result)
+        var result
+        if(highlight_overlap && pixel.observations.length == 1)
+            result = null
+        else
+            var result = {
+                "ra": pixel.ra.toFixed(2),
+                "dec": pixel.dec.toFixed(2),
+                "count_obs": pixel.count_obs,
+                "avg_res": pixel.avg_res.toFixed(2),
+                "avg_sens": pixel.avg_sens.toFixed(2),
+                "avg_int_time": pixel.avg_int_time.toFixed(2),
+                "obs": getPixelObservation(pixel.observations)
+            }
         return result
     }
     else

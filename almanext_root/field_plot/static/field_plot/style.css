@@ -183,7 +183,7 @@ form
 
 #infobox-plot
 {
-  flex: 0 0 15vh;
+  flex: 0 0 35vh;
 }
 
 #infobox-plot-num
@@ -210,7 +210,7 @@ form
 
 #infobox-pixel
 {
-  flex: 1 0 40vh;
+  flex: 1 0 20vh;
 }
 
 #infobox-pixel-wrapper
@@ -256,21 +256,34 @@ form
   margin-top: 10px;
 }
 
+.field
+{
+  font-size: 14px;
+}
+
+.field.label
+{
+  color: grey;
+}
+
+.field.value
+{
+  color: black;
+}
+
 .value-box 
 {
   display: flex;
   flex: 1;
   flex-direction: row;
   line-height: 1.5;
-  font-size: 14px;
-  margin: 5px 0px 5px 0px;
+  margin: 0px 0px 2px 0px;
 }
 
-.value-box .text
+.value-box.field.label
 {
   display: flex;
   flex: 1 1 60%;
-  color: grey;
 }
 
 .value-box .value
@@ -279,7 +292,6 @@ form
   flex: 1 1 40%;
   width: 100%;
   text-align: right;
-  color: black;
 }
 
 .separator {
