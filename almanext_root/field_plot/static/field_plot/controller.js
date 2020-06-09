@@ -15,6 +15,11 @@ import
     updateFreqHistogramAxis // plot update
 } from "./freq_histogram.js"
 
+import
+{
+    showCSHistogram // initial render
+} from "./cs_histogram.js"
+
 // ========================================================
 // =================== STATE VARIABLES ====================
 // ========================================================
@@ -41,6 +46,7 @@ function getBands()
 
 function checkParams()
 {
+
     var error = false
 
     parameters = {
@@ -209,7 +215,7 @@ function initializePlotInfo(plot_data)
 
 function initializePixelInfo()
 {
-    document.getElementById('pixel-values').innerHTML =
+    document.getElementById('info-first-row-pixel').innerHTML =
     "<div class='value-box'><div class='value-box field label'>RA</div>" +
         "<div class='field value'><div id='pixel-ra'> --.-- </div>&nbsp deg</div></div>" + 
     "<div class='value-box'><div class='value-box field label'>Dec</div>" +

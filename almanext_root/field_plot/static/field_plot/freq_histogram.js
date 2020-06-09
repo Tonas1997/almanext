@@ -1,7 +1,7 @@
-var width = $('#pixel-freq').width();
-var height = $('#pixel-freq').height();
+var width = $('#info-second-row').width();
+var height = $('#info-second-row').height();
 var ratio = width / (115 - 85)
-var margin = 5;
+var margin = {left: 0, top: 20};
 var padding_bottom = 30;
 
 var svg, xScale, yScale, xAxis, yAxis, g
@@ -10,20 +10,20 @@ var colorScale;
 
 export function showFreqHistogram(minF, maxF, minSens, maxSens)
 {
-    width = $('#pixel-freq').width();
-    height = $('#pixel-freq').height();
+    width = $('#info-second-row').width();
+    height = $('#info-second-row').height();
     ratio = width / (maxF - minF)
-    margin = 5;
+    //margin = 5;
 
     console.log(minF)
     console.log(maxF)
 
     // we are appending SVG first
-    svg = d3.select("#pixel-freq")
+    svg = d3.select("#info-second-row")
         .append("svg")
         .attr("width", width)
         .attr("height", height)
-        //.style("margin", margin);
+        .style("margin-top", margin.top);
     
     xScale = d3.scaleLinear()
         .domain([minF, maxF])

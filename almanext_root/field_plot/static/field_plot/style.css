@@ -181,9 +181,48 @@ form
   margin-left: 20px;
 }
 
-#infobox-plot
+#info-wrapper
 {
-  flex: 0 0 35vh;
+  display: flex;
+  flex: 1 0 55vh;
+  flex-direction: column;
+  margin: 10px 5px 5px 10px
+}
+
+#info-first-row
+{
+  display: flex;
+  flex: 0 1;
+  flex-direction: row;
+}
+
+#info-first-row-plot
+{
+  display: flex;
+  flex: 1 1 50%;
+  flex-direction: column;
+}
+
+#info-first-row-plot-options
+{
+  display: flex;
+  flex: 1 1 50%;
+  margin-top: 10px;
+  flex-direction: column;
+}
+
+#info-first-row-pixel
+{
+  display: flex;
+  flex: 1 1 50%;
+  flex-direction: column;
+}
+
+#info-second-row
+{
+  display: flex;
+  flex: 0 1 25vh;
+  flex-direction: column;
 }
 
 #infobox-plot-num
@@ -191,21 +230,17 @@ form
   flex: 1 0 15vh;
 }
 
-#infobox-plot-graph
-{
-  flex: 1.5 0 15vh;
-}
-
 #plot-color-property
 {
   height: 30px;
 }
 
-#infobox-plot-wrapper
+#infobox-plot-graph
 {
   display: flex;
-  flex: 1 1;
+  flex: 0 1 5vh;
   flex-direction: row;
+  flex-wrap: wrap;
 }
 
 #infobox-pixel
@@ -251,7 +286,7 @@ form
 .values-container
 {
   display: flex;
-  flex: 1;
+  flex-direction: column;
   margin-left: 10px;
   margin-top: 10px;
 }
@@ -317,6 +352,7 @@ form
   display: block;
   width: 1px;
   margin: 5px;
+  margin-left: 10px;
   margin-right: 10px;
   border-radius: 1px;
   background-color: grey;
@@ -326,6 +362,7 @@ form
 
 #plot
 {
+  flex-shrink: 0;
   align-self: flex-end;
   right: 0px;
   height: calc(100vh - 60px);

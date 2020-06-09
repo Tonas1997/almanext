@@ -78,53 +78,78 @@
 						<input type="submit" name="submit" class="submit-button" value="Render">
 					</div>
 				</div>
+				<!--
+				<select id="plot-sizes" onchange="updateDataset(this)">
+					<option value="zoomout">4 deg<sup>2</sup>, 10 arcsec</option>
+					<option value="zoomin">0.25 deg<sup>2</sup>, 5 arcsec</option>
+				</select>
+
+				<select id="plot-color-property" onchange="updateCanvas(this)">
+					<option value="count_obs">Observation count</option>
+					<option value="avg_res">Average resolution</option>
+					<option value="avg_sens">Average sensitivity (10km/s)</option>
+					<option value="avg_int_time">Average integration time</option>
+				</select>
+				-->
 			</form>
 		</div>
 		<!-- ----------------------------------------------------------------- -->
 		<div class="separator big"></div>
-		
-		<div class="infobox">
-			Plot information
-			<div id="info-wrapper" class="infobox">
-				<div id="info-first-row">
-					<div id="info-first-row-plot">
-						<div id="info-first-row-plot-info">
-							<div id="infobox-plot-num">
-								<div class='value-box'><div class='value-box field label'>Total area</div>
-									<div class='field value'><div id="plot-total-area">30000</div>&nbsp arcsec<sup>2</sup></div></div>
-								<div class='value-box'><div class='value-box field label'>Overlapping area</div>
-									<div class='field value'><div id="plot-overlap-area">300</div>&nbsp arcsec<sup>2</sup></div></div>
-								<div class='value-box'><div class='value-box field label'>Overlapping area (%)</div>
-									<div class='field value'><div id="plot-overlap-area-pct">100</div>&nbsp %</div></div>
-							</div>
-						</div>
+		<div id="infobox-plot" class="infobox">
+			Plot info
+			<div class="values-container">
+			<div id="infobox-plot-top-row">
+				<div id="infobox-plot-num">
+					<div class='value-box'><div class='value-box field label'>Total area</div>
+						<div class='field value'><div id="plot-total-area">30000</div>&nbsp arcsec<sup>2</sup></div></div>
+					<div class='value-box'><div class='value-box field label'>Overlapping area</div>
+						<div class='field value'><div id="plot-overlap-area">300</div>&nbsp arcsec<sup>2</sup></div></div>
+					<div class='value-box'><div class='value-box field label'>Overlapping area (%)</div>
+						<div class='field value'><div id="plot-overlap-area-pct">100</div>&nbsp %</div></div>
+				</div>
+				<div class="sep-vertical"></div>
+				<div id="infobox-plot-options">
+					<select id="plot-color-property">
+						<option value="count_obs">Observation count</option>
+						<option value="avg_res">Average resolution</option>
+						<option value="avg_sens">Average sensitivity (10km/s)</option>
+						<option value="avg_int_time">Average integration time</option>
+					</select>
+					<div id="options-wrapper">
+						<input type="checkbox" id="highlightOverlap">
+						<label for="checkbox" class="field label">Highlight overlapping regions</label>
+					</div>
+				</div>
+			</div>
+			<div id="infobox-plot-graph">
+				
+
+			</div>
+		</div>
+		</div>
+		<div class="sep-horizontal-small"></div>
+		<div class="sep-horizontal-small"></div>
+		<!-- ----------------------------------------------------------------- -->
+		<div id="infobox-pixel" class="infobox">
+			Pixel info
+			<div id="infobox-pixel-wrapper" class="values-container">
+				<div class="info-values">
+					<div id="pixel-values">
 						
-						<div id="info-first-row-plot-options">
-							<select id="plot-color-property">
-								<option value="count_obs">Observation count</option>
-								<option value="avg_res">Average resolution</option>
-								<option value="avg_sens">Average sensitivity (10km/s)</option>
-								<option value="avg_int_time">Average integration time</option>
-							</select>
-							<div id="options-wrapper">
-								<input type="checkbox" id="highlightOverlap">
-								<label for="checkbox" class="field label">Highlight overlapping regions</label>
-							</div>
-						</div>
 					</div>
 					<div class="sep-vertical"></div>
-					<div id="info-first-row-pixel">
-						<!-- RA, Dec, Number of observations... -->
+					<div id="pixel-freq">
+
 					</div>
 				</div>
 				<div class="sep-horizontal-small"></div>
-				<div id="info-second-row">
-					
+				<div id="info-plots">
+				
 				</div>
 			</div>
-		</div>	
+		</div>
 	</div>
-	
+
 	<div id="plot">
 		<script src="https://d3js.org/d3.v5.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
