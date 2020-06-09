@@ -149,17 +149,17 @@ def fillPixels(obs, counter):
     centerX = int(abs(ra - ra_origin) / inc)
     centerY = int(abs(dec - dec_origin) / inc)
 
+    if(obs.project_code == "2016.1.01546.S"):
+        print(center)
+        print(centerX)
+        print(centerY)
+
     topLeft = [int(max(0, centerX - radius - 1)), int(max(0, centerY - radius - 1))]
     bottomRight = [int(min(pixel_len - 1, centerX + radius + 1)), int(min(pixel_len - 1, centerY + radius + 1))]
     # print(topLeft)
     # print(bottomRight)
     # fills the pixels of the subgrid
 
-    if(obs.project_code == "2016.1.01546.S"):
-        print("########################")
-        print("radius: " + str(radius))
-        print("centerX: " + str(centerX))
-        print("centerY: " + str(centerY))
     for y in range(topLeft[1], bottomRight[1]+1):
         for x in range(topLeft[0], bottomRight[0]+1):
             # get the current cell coordinates
@@ -205,6 +205,8 @@ def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
 
     # create 2D plot and observation array
     pix_array = [[None for x in range(pixel_len)] for y in range(pixel_len)]
+    print("pix_len: " + str(pixel_len))
+    print(ra_origin + (pixel_len - 1) * arcsec_to_angle(plot_res))
     obs_array = []
     inc = angle_res.degree
 

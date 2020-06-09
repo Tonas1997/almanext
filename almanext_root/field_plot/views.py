@@ -42,10 +42,10 @@ def get_plot(request):
     # defines the center of the observation in the form of a SkyCoord object
     center = SkyCoord(ra, dec, unit=(u.deg, u.deg))
 
-    min_ra = ra - size
-    max_ra = ra + size
-    min_dec = dec - size
-    max_dec = dec + size
+    min_ra = ra - (size / 2)
+    max_ra = ra + (size / 2)
+    min_dec = dec - (size / 2)
+    max_dec = dec + (size / 2)
 
     # =============================================================================
     print(str(min_ra) + " , " + str(max_ra) + " , " + str(min_dec) + " , " + str(max_dec))
@@ -68,8 +68,9 @@ def get_plot(request):
                 "start": b.start / (1+z), # cosmological redshift
                 "end": b.end / (1+z)
             }
-            if(new_z_band.start < min_freq): min_freq = new_z_band.start
-            if(new_z_band.end > max_freq): max_freq = new_z_band.end
+            print(new_z_band)
+            if(new_z_band["start"] < min_freq): min_freq = new_z_band["start"]
+            if(new_z_band["end"] > max_freq): max_freq = new_z_band["end"]
             z_bands.append(new_z_band)
             
         for o in obs_result:
