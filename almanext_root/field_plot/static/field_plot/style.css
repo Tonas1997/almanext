@@ -171,14 +171,14 @@ form
 
 /* ============= INFO ============= */
 
-.infobox
+.infobox-frame
 {
   margin: 10px 5px 5px 10px;
 }
 
-.infobox.parameters
+#plot-information
 {
-  margin-left: 20px;
+  flex: 1
 }
 
 #info-wrapper
@@ -221,7 +221,7 @@ form
 #info-second-row
 {
   display: flex;
-  flex: 0 1 25vh;
+  flex: 1 1 30vh;
   flex-direction: column;
 }
 
@@ -282,6 +282,12 @@ form
 }
 
 /* Auxiliary styles (including value box) */
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+}
 
 .values-container
 {

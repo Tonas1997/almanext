@@ -62,6 +62,7 @@ var render_mode = "count_obs"
 
 var pixel_array
 var observation_array
+var plot_properties
 
 var selectBox = document.getElementById("plot-color-property")
 
@@ -107,24 +108,15 @@ function updateDataset(plot_json)
     context.fillStyle = d3.interpolateViridis(0);
     context.fillRect( 0, 0, context.canvas.width, context.canvas.height );
 
-    var min_count_obs = 9999
-    max_count_obs = 0
-    var min_avg_res = 9999
-    max_avg_res = 0
-    var min_avg_sens = 9999
-    max_avg_sens = 0
-    var min_avg_int_time = 9999
-    max_avg_int_time = 0
-    max_coords = []
-
     var observations = plot_json.observations
     var dataset = plot_json.pixels
     // Copy observations
     for (var i = 0; i < observations.length; i++) {
-            observation_array[i] = new Observation(
+            observation_array[i] = observations[i]
+            /*new Observation(
             observations[i].project_code,
             observations[i].frequency,
-            observations[i].bands)
+            observations[i].bands)*/
     }
 
     // Copy pixels
@@ -156,19 +148,10 @@ function updateDataset(plot_json)
         {
             overlap_area += Math.pow(plot_json.properties.resolution, 2);
         }
-
-        if(point.count_obs < min_count_obs)  min_count_obs = point.count_obs;
-        if(point.count_obs > max_count_obs)  max_count_obs = point.count_obs;
-        if(point.avg_res < min_avg_res)  min_avg_res = point.avg_res;
-        if(point.avg_res > max_avg_res)  max_avg_res = point.avg_res;
-        if(point.avg_sens < min_avg_sens)  min_avg_sens = point.avg_sens;
-        if(point.avg_sens > max_avg_sens)  max_avg_sens = point.avg_sens;
-        if(point.avg_int_time < min_avg_int_time)  min_avg_int_time = point.avg_int_time;
-        if(point.avg_int_time > max_avg_int_time)  max_avg_int_time = point.avg_int_time;
-        //drawPoint(point);
     }
 
     // initial render
+    plot_properties = plot_json.properties
     updateCanvas(d3.zoomIdentity)
 
     // zoom event
@@ -177,19 +160,7 @@ function updateDataset(plot_json)
         .translateExtent([[0,0],[width,width]])
         .on("zoom", () => updateCanvas(d3.event.transform)));
 
-    return {
-        "total_area": total_area,
-        "overlap_area": overlap_area,
-        "overlap_area_pct": (overlap_area/total_area*100).toFixed(2),
-        "min_count_obs": min_count_obs,
-        "max_count_obs": max_count_obs,
-        "min_avg_res": min_avg_res,
-        "max_avg_res": max_avg_res,
-        "min_avg_sens": min_avg_sens,
-        "max_avg_sens": max_avg_sens,
-        "min_avg_int_time": min_avg_int_time,
-        "max_avg_int_time": max_avg_int_time
-    }
+    return plot_properties
 }
 
 // Plot external API
@@ -210,19 +181,19 @@ export function updateCanvas(transform)
     {
         case "count_obs":
             colorScale = function(value) {return d3.interpolateViridis(value)};
-            max_pixel_info_value = max_count_obs
+            max_pixel_info_value = plot_properties.max_count_obs
             break
         case "avg_res":
             colorScale = function(value) {return d3.interpolateInferno(value)};
-            max_pixel_info_value = max_avg_res
+            max_pixel_info_value = plot_properties.max_avg_res
             break
         case "avg_sens":
             colorScale = function(value) {return d3.interpolateBlues(Math.abs(1-value))};
-            max_pixel_info_value = max_avg_sens
+            max_pixel_info_value = plot_properties.max_avg_sens
             break
         case "avg_int_time":
             colorScale = function(value) {return d3.interpolateCividis(value)};
-            max_pixel_info_value = max_avg_int_time
+            max_pixel_info_value = plot_properties.max_avg_int_time
             break
     }
 
@@ -317,13 +288,13 @@ function createArray(length)
     return arr;
 }
 
-function getPixelObservation(observations)
+function getPixelObservation(px_observations)
 {
     var windows = []
 
-    for(var i = 0; i < observations.length; i++)
+    for(var i = 0; i < px_observations.length; i++)
     {
-        var observation = observation_array[observations[i]]
+        var observation = observation_array[px_observations[i]]
         var obs_code = observation.project_code
         var obs_windows = observation.frequency
         windows.push(

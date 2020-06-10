@@ -145,26 +145,22 @@ $("#form-plot").on('submit', function(event)
 
 function initializePlotView(data)
 {
-    alert('success!')
-    console.log(data)
-    console.log(data.properties)
-    var plot_data = renderData(data)        
+    //alert('success!')
+    var plot_properties = renderData(data)
+    var plot_cs = data.continuum_sensitivity        
 
-    initializePlotInfo(plot_data)
+    initializePlotInfo(plot_properties)
     initializePixelInfo()
     
-    var minF = data.properties.min_frequency
-    var maxF = data.properties.max_frequency
-    console.log(maxF)
     if(!is_rendered_freq_histogram)
     {
-        console.log(plot_data)
-        showFreqHistogram(minF, maxF, plot_data.min_avg_sens, plot_data.max_avg_sens)
+        console.log(plot_properties)
+        showFreqHistogram(plot_properties, plot_cs)
         is_rendered_freq_histogram = true
     }
     else if(data.observations.length != 0)
     {
-        updateFreqHistogramAxis(minF, maxF)
+        updateFreqHistogramAxis(plot_properties, plot_cs)
     }
 
     canvas_chart.on("mousemove",function()
@@ -206,11 +202,12 @@ function initializePlotView(data)
     }))
 }
 
-function initializePlotInfo(plot_data)
+function initializePlotInfo(plot_properties)
 {
-    document.getElementById('plot-total-area').innerHTML = "~" + plot_data.total_area
-    document.getElementById('plot-overlap-area').innerHTML = "~" + plot_data.overlap_area
-    document.getElementById('plot-overlap-area-pct').innerHTML = "~" + (plot_data.overlap_area/plot_data.total_area*100).toFixed(2)
+    console.log(plot_properties)
+    document.getElementById('plot-total-area').innerHTML = "~" + plot_properties.total_area
+    document.getElementById('plot-overlap-area').innerHTML = "~" + plot_properties.overlap_area
+    document.getElementById('plot-overlap-area-pct').innerHTML = "~" + (plot_properties.overlap_area/plot_properties.total_area*100).toFixed(2)
 }
 
 function initializePixelInfo()
