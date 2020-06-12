@@ -166,7 +166,6 @@ function initializePlotView(data)
     canvas_chart.on("mousemove",function()
     {
         var info = getPixelInfo(d3.mouse(this));
-        
         // update pixel info
         if(info != null)
         {

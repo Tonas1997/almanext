@@ -28,6 +28,7 @@ class Pixel
         this.avg_res = avg_res;
         this.avg_sens = avg_sens;
         this.avg_int_time = avg_int_time;
+        this.
         this.observations = observations
     }
 }
@@ -46,12 +47,6 @@ class Transform
 
 var overlap_area = 0;
 var total_area = 0;
-
-var max_count_obs = 0
-var max_avg_res = 0
-var max_avg_sens = 0
-var max_avg_int_time = 0
-var max_coords = []
 
 export var canvas_chart
 var transform_store;
@@ -87,6 +82,9 @@ function updateDataset(plot_json)
     // Plot info
 
     pixel_len = plot_json.properties.pixel_len
+    total_area = plot_json.properties.total_area
+    overlap_area = plot_json.properties.overlap_area
+
     pixel_array = createArray(pixel_len, pixel_len)
     observation_array = new Array(plot_json.observations.length)
     //console.log(document.getElementById('plot').width);
@@ -129,6 +127,9 @@ function updateDataset(plot_json)
         // fill the pixel "cache" array with this pixel's info
         if(point.x < pixel_len)
         {
+            pixel_array[point.x][point.y] = point
+            
+            /*
             pixel_array[point.x][point.y] = new Pixel(
                 parseFloat(point.x), 
                 parseFloat(point.y), 
@@ -139,14 +140,7 @@ function updateDataset(plot_json)
                 parseFloat(point.avg_sens),
                 parseFloat(point.avg_int_time),
                 point.observations
-            );
-        }
-
-        total_area += Math.pow(plot_json.properties.resolution, 2);
-        // if it has more than one observation covering it, add to the acc variable
-        if(point.count_obs > 1)
-        {
-            overlap_area += Math.pow(plot_json.properties.resolution, 2);
+            );*/
         }
     }
 
@@ -194,6 +188,10 @@ export function updateCanvas(transform)
         case "avg_int_time":
             colorScale = function(value) {return d3.interpolateCividis(value)};
             max_pixel_info_value = plot_properties.max_avg_int_time
+            break
+        case "snr":
+            colorScale = function(value) {return d3.interpolateGreys(Math.abs(1-value))};
+            max_pixel_info_value = plot_properties.max_snr
             break
     }
 
@@ -269,6 +267,7 @@ export function getPixelInfo(mouse)
                 "avg_res": pixel.avg_res.toFixed(2),
                 "avg_sens": pixel.avg_sens.toFixed(2),
                 "avg_int_time": pixel.avg_int_time.toFixed(2),
+                "snr": pixel.snr,
                 "obs": getPixelObservation(pixel.observations)
             }
         return result

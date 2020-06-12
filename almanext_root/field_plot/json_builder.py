@@ -1,4 +1,5 @@
 import json
+import math
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from field_plot.class_pixel import Pixel
@@ -32,6 +33,8 @@ properties_list = {
     "max_avg_sens": 0,
     "min_avg_int_time": 0,
     "max_avg_int_time": 0,
+    "min_snr": 0,
+    "max_snr": 0
 }
 pixel_list = []
 observations_list = []
@@ -98,17 +101,23 @@ def getBandsFromObs(obs):
 
 # -----------------------------------------------------------------------------------------
 # appends a pixel to the final JSON object
-def appendPixel(x, y, ra, dec, count_obs, avg_res, avg_sens, avg_int_time, observations):
-    global pixel_list, plot_properties
+def appendPixel(x, y, px):
+    global pixel_list, properties_list
+    # we have to set min and max values for the snr here
+    snr_total = math.sqrt(px.snr)
+    if(snr_total > properties_list["max_snr"]): properties_list["max_snr"] = snr_total
+    if(snr_total < properties_list["min_snr"]): properties_list["min_snr"] = snr_total
+    # append the pixel to the pixel list
     pixel_list.append({"x" : x,
                     "y" : y,
-                    "RA" : ra,
-                    "Dec" : dec,
-                    "count_obs" : count_obs,
-                    "avg_res" : avg_res,
-                    "avg_sens" : avg_sens,
-                    "avg_int_time" : avg_int_time,
-                    "observations" : observations})
+                    "ra" : px.px_ra,
+                    "dec" : px.px_dec,
+                    "count_obs" : px.count_obs,
+                    "avg_res" : px.avg_res,
+                    "avg_sens" : px.avg_sens,
+                    "avg_int_time" : px.avg_int_time,
+                    "snr" : math.sqrt(px.snr),
+                    "observations" : px.observations})
 
 # -----------------------------------------------------------------------------------------
 # appends an observation to the final JSON object
@@ -197,6 +206,7 @@ def fillPixels(obs, counter):
                 elif(len(pixel.observations) == 1):
                     properties_list["overlap_area"] += properties_list["resolution"] ** 2
                 pixel_array[y][x].change_avgs(res, sens, int_time)
+                pixel_array[y][x].add_snr(1 - (sep/fov_degree)**2)
                 pixel_array[y][x].add_observation(counter)
 
                 # update plot area
@@ -209,7 +219,7 @@ def fillPixels(obs, counter):
                 if(curr_px.avg_sens < properties_list["min_avg_sens"]): properties_list["min_avg_sens"] = curr_px.avg_sens
                 if(curr_px.avg_sens > properties_list["max_avg_sens"]): properties_list["max_avg_sens"] = curr_px.avg_sens
                 if(curr_px.avg_int_time < properties_list["min_avg_int_time"]): properties_list["min_avg_int_time"] = curr_px.avg_int_time
-                if(curr_px.avg_int_time > properties_list["min_avg_int_time"]): properties_list["min_avg_int_time"] = curr_px.avg_int_time
+                if(curr_px.avg_int_time > properties_list["max_avg_int_time"]): properties_list["max_avg_int_time"] = curr_px.avg_int_time
 
 # resets the properties list to its initial values
 def resetPropertiesList(plot_size, plot_res, min_f, max_f):
@@ -233,6 +243,8 @@ def resetPropertiesList(plot_size, plot_res, min_f, max_f):
     properties_list["max_avg_sens"] = -9999
     properties_list["min_avg_int_time"] = 9999
     properties_list["max_avg_int_time"] = -9999
+    properties_list["min_snr"] : 9999
+    properties_list["max_snr"] : -9999
 
 def fill_cs_list(min_freq, max_freq):
     global cs_list, cs_list_size
@@ -312,7 +324,7 @@ def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
         for y in range(pixel_len):
             px = pixel_array[x][y]
             if(px is not None):
-                appendPixel(x,y, px.px_ra, px.px_dec, px.count_obs, px.avg_res, px.avg_sens, px.avg_int_time, px.observations)
+                appendPixel(x, y, px)
 
     print("Number of observations: " + str(len(observations_list)))
     json_builder = {"properties": properties_list, "observations": observations_list, "continuum_sensitivity": cs_list, "pixels": pixel_list}

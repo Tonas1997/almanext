@@ -105,7 +105,7 @@ export function updateFreqHistogram(observations)
             .attr("width", function(w) { return (w.end - w.start) * ratio})
             .attr("height", height-margin.bottom-margin.top)
             .attr("stroke-width", 0)
-            .attr("fill", "#373755")
+            .attr("fill", "#000000")
             .attr("opacity", function(w) { 
                 return (colorScale(w.sensitivity_10kms))})
         })

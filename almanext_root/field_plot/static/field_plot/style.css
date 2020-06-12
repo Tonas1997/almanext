@@ -285,7 +285,7 @@ form
 
 .line {
   fill: none;
-  stroke: steelblue;
+  stroke: rgb(55, 55, 85);
   stroke-width: 2px;
 }
 

@@ -10,6 +10,8 @@ class Pixel:
     avg_res = 0
     avg_sens = 0
     avg_int_time = 0
+    snr = 0
+    
     observations = []
 
     def __init__(self, x, y, ra, dec):
@@ -30,6 +32,9 @@ class Pixel:
         self.avg_int_time = new_avg_int_time
 
         self.count_obs = self.count_obs + 1
+
+    def add_snr(self, snr):
+        self.snr += snr
 
     def add_observation(self, obs_index):
         self.observations.append(obs_index)
