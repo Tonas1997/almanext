@@ -283,10 +283,17 @@ form
 
 /* Auxiliary styles (including value box) */
 
-.line {
+.line 
+{
   fill: none;
   stroke: rgb(55, 55, 85);
-  stroke-width: 2px;
+  stroke-width: 1px;
+}
+
+.axis-label 
+{
+  font-size: 10px;
+  color: darkgrey;
 }
 
 .values-container

@@ -33,13 +33,15 @@ export function showFreqHistogram(plot_properties, plot_cs)
         .domain([minF, maxF])
         .range([margin.left, width - margin.right]);
     xAxis = d3.axisBottom()
+        .ticks(10)
         .scale(xScale)
 
     yScale = d3.scaleLinear()
-        .domain([0, maxC])
+        .domain([maxC, minC])
         .range([height - margin.bottom, margin.top])
     yAxis = d3.axisLeft()
-        .scale(yScale)
+        
+        .scale(yScale).ticks(10)
 
     colorScale = d3.scaleLinear()
         .domain([minS, maxS])
@@ -53,10 +55,18 @@ export function showFreqHistogram(plot_properties, plot_cs)
         .style("margin-top", margin.top)
 
     g = svg.append("g")
+        .attr('id', 'x-axis')
         .attr('transform', 'translate(0,' + (height-margin.bottom) + ')')
         .call(xAxis)
+    g = svg.append("text")             
+        .attr("transform", "translate(" + (width/2) + " ," + (height + margin.bottom) + ")")
+        .attr("class", "axis-label")
+        .style("text-anchor", "middle")
+        .text("Date");
+
     g = svg.append("g")
-        .attr("transform", 'translate(' + margin.left + ',0)')
+        .attr('id', 'y-axis')
+        .attr('transform', 'translate(' + margin.left + ',0)')
         .call(yAxis)
 
     // draw the CS graph
@@ -68,16 +78,20 @@ export function updateFreqHistogramAxis(plot_properties, plot_cs)
     // get the new plot's properties
     minF = plot_properties.min_frequency
     maxF = plot_properties.max_frequency
+    console.log(minF)
+    console.log(minF)
     minC = plot_properties.min_cs
     maxC = plot_properties.max_cs
     minS = plot_properties.min_avg_sens
     maxS = plot_properties.max_avg_sens
     // update the axis (with animations!)
     xScale.domain([minF, maxF])
-    yScale.domain([minC, maxC])
+    yScale.domain([maxC, minC])
     ratio = width / (maxF - minF)
-    g.transition().duration(2000).call(xAxis)
-    g.transition().duration(2000).call(yAxis)
+    
+    svg.select("#x-axis").transition().duration(2000).call(xAxis)
+    svg.select("#y-axis").transition().duration(2000).call(yAxis)
+    
     // redraw the CS graph
     drawCSPoints(plot_cs)
 }
@@ -106,8 +120,8 @@ export function updateFreqHistogram(observations)
             .attr("height", height-margin.bottom-margin.top)
             .attr("stroke-width", 0)
             .attr("fill", "#000000")
-            .attr("opacity", function(w) { 
-                return (colorScale(w.sensitivity_10kms))})
+            .attr("opacity", 0.1)//function(w) { 
+                //return (colorScale(w.sensitivity_10kms))})
         })
     }
 }
@@ -116,14 +130,15 @@ function drawCSPoints(plot_cs)
 {
     console.log(yScale.domain())
     svg.selectAll('path').remove()
-    var cs_line = d3.line()
-        .x(function(d) { return xScale(d.freq)})
-        .y(function(d) { return d.cs == 0? yScale(minC): yScale(d.cs)})
 
-    console.log(plot_cs)
+    var cs_line = d3.line()
+        .defined(function(d) { return d.cs != null })
+        .x(function(d) { return xScale(d.freq)})
+        .y(function(d) { return yScale(d.cs)})
+
     svg.append('path')
-        .data([plot_cs])
+        //.data([plot_cs].filter(cs_line.defined()))
         .attr('class', 'line')
-        .attr('d', cs_line)
+        .attr('d', cs_line(plot_cs))
 }
 

@@ -3,9 +3,10 @@ import math
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from field_plot.class_pixel import Pixel
-from common.class_observation import ObservationClass
-from common.class_spectral_window import SpectralWindowClass
+#from common.class_observation import ObservationClass
+#from common.class_spectral_window import SpectralWindowClass
 from django.core.serializers.json import DjangoJSONEncoder
+from field_plot.utils import *
 
 # global vars
 pixel_array = None
@@ -57,7 +58,7 @@ def gridToCoords(i, j):
 
 # -----------------------------------------------------------------------------------------
 # converts an observation's frequency list to a JSON-serializable format
-def getFrequencyFromObs(obs, index):
+def get_frequency_from_obs(obs, index):
     global properties_list
     min_freq = properties_list["min_frequency"]
     max_freq = properties_list["max_frequency"]
@@ -77,7 +78,7 @@ def getFrequencyFromObs(obs, index):
             if((curr_freq >= min_freq) and (curr_freq <= max_freq)):
                 pos = int((curr_freq - min_freq)*100)
                 curr = cs_list[pos]
-                if(cs > curr["cs"]):
+                if(curr["cs"] == None or cs > curr["cs"]):
                     cs_list[pos]["cs"] = cs
                     if(cs > max_cs): properties_list["max_cs"] = cs
                     if(cs < min_cs): properties_list["min_cs"] = cs 
@@ -91,7 +92,18 @@ def getFrequencyFromObs(obs, index):
         })
     return spec_win_list
 
-def getBandsFromObs(obs):
+# -----------------------------------------------------------------------------------------
+# extracts the arrays list from an observation
+def get_arrays_from_obs(obs):
+    arrays = obs.arrays.all()
+    array_list = []
+    for a in arrays:
+        array_list.append({"array": a.designation})
+    return array_list
+
+# -----------------------------------------------------------------------------------------
+# extracts the bands list from an observation
+def get_bands_from_obs(obs):
     bands = obs.bands.all()
     band_list = []
     for b in bands:
@@ -100,8 +112,19 @@ def getBandsFromObs(obs):
     
 
 # -----------------------------------------------------------------------------------------
+# gets the mean frequency of a given observation
+def get_mean_freq(freq_list):
+    mean_freq = 0
+    for f in freq_list:
+        start = f["start"]
+        end = f["end"]
+        mean_freq += float(start) + (float(end)-float(start)) / 2
+    mean_freq = mean_freq / len(freq_list)
+    return mean_freq
+
+# -----------------------------------------------------------------------------------------
 # appends a pixel to the final JSON object
-def appendPixel(x, y, px):
+def append_pixel(x, y, px):
     global pixel_list, properties_list
     # we have to set min and max values for the snr here
     snr_total = math.sqrt(px.snr)
@@ -121,59 +144,56 @@ def appendPixel(x, y, px):
 
 # -----------------------------------------------------------------------------------------
 # appends an observation to the final JSON object
-def appendObservation(obs, index):
-    global observations_list
-
-    observations_list.append({"index": index,
-                    "project_code": obs.project_code,
-                    "source_name": obs.source_name,
-                    "ra": obs.ra,
-                    "dec": obs.dec,
-                    "gal_longitude": obs.gal_longitude,
-                    "gal_latitude": obs.gal_latitude,
-                    "frequency": getFrequencyFromObs(obs, index),
-                    "bands": getBandsFromObs(obs),
-                    "spatial_resolution": obs.spatial_resolution,
-                    "frequency_resolution": obs.frequency_resolution,
-                    #"arrays": obs.arrays,
-                    "integration_time": obs.integration_time,
-                    "release_date": obs.release_date,
-                    "velocity_resolution": obs.velocity_resolution,
-                    "pol_product": obs.pol_product,
-                    "observation_date": obs.observation_date,
-                    "pi_name": obs.pi_name,
-                    "sb_name": obs.sb_name,
-                    "proposal_authors": obs.proposal_authors,
-                    "line_sensitivity": obs.line_sensitivity,
-                    "continuum_sensitivity": obs.continuum_sensitivity,
-                    "pwv": obs.pwv,
-                    "group_ous_id": obs.group_ous_id,
-                    "member_ous_id": obs.member_ous_id,
-                    "asdm_uid": obs.asdm_uid,
-                    "project_title": obs.project_title,
-                    "project_type": obs.project_type,
-                    "scan_intent": obs.scan_intent,
-                    "field_of_view": obs.field_of_view,
-                    "largest_angular_scale": obs.largest_angular_scale,
-                    "qa2_status": obs.qa2_status,
-                    "count" : obs.count,
-                    "science_keywords": obs.science_keywords,
-                    "scientific_cat": obs.scientific_cat,
-                    "asa_project_code": obs.asa_project_code})
+def observation_to_json(obs, index):
+    return({"index": index,
+            "project_code": obs.project_code,
+            "source_name": obs.source_name,
+            "ra": obs.ra,
+            "dec": obs.dec,
+            "gal_longitude": obs.gal_longitude,
+            "gal_latitude": obs.gal_latitude,
+            "frequency": get_frequency_from_obs(obs, index),
+            "bands": get_bands_from_obs(obs),
+            "spatial_resolution": obs.spatial_resolution,
+            "frequency_resolution": obs.frequency_resolution,
+            "arrays": get_arrays_from_obs(obs),
+            "integration_time": obs.integration_time,
+            "release_date": obs.release_date,
+            "velocity_resolution": obs.velocity_resolution,
+            "pol_product": obs.pol_product,
+            "observation_date": obs.observation_date,
+            "pi_name": obs.pi_name,
+            "sb_name": obs.sb_name,
+            "proposal_authors": obs.proposal_authors,
+            "line_sensitivity": obs.line_sensitivity,
+            "continuum_sensitivity": obs.continuum_sensitivity,
+            "pwv": obs.pwv,
+            "group_ous_id": obs.group_ous_id,
+            "member_ous_id": obs.member_ous_id,
+            "asdm_uid": obs.asdm_uid,
+            "project_title": obs.project_title,
+            "project_type": obs.project_type,
+            "scan_intent": obs.scan_intent,
+            "field_of_view": obs.field_of_view,
+            "largest_angular_scale": obs.largest_angular_scale,
+            "qa2_status": obs.qa2_status,
+            "count" : obs.count,
+            "science_keywords": obs.science_keywords,
+            "scientific_cat": obs.scientific_cat,
+            "asa_project_code": obs.asa_project_code})
 
 # -----------------------------------------------------------------------------------------
 # fills the pixels around given ra/dec coordinates and a fov measured in arcsecs
-
-def fillPixels(obs, counter):
+# ARGS: the json representation of the observation, the mean frequency, the antenna array and the observation counter
+def fill_pixels(obs_json, mean_freq, array, counter):
     global pixel_array, properties_list
 
-    ra = obs.ra
-    dec = obs.dec
-    fov = obs.field_of_view
-    res = obs.spatial_resolution
-    sens = obs.line_sensitivity
-    source = obs.source_name
-    int_time = obs.integration_time
+    ra = obs_json["ra"]
+    dec = obs_json["dec"]
+    fov = obs_json["field_of_view"]
+    res = obs_json["spatial_resolution"]
+    sens = obs_json["line_sensitivity"]
+    int_time = obs_json["integration_time"]
 
     # builds an Angle object for convenience
     fov_degree = Angle(fov, unit=u.arcsec)
@@ -181,16 +201,16 @@ def fillPixels(obs, counter):
     # define some support variables and the subgrid
     radius = int(fov_degree.degree / inc)
 
+    # sets the center plot grid coordinates 
     center = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame='icrs')
     centerX = int(abs(ra - ra_origin) / inc)
     centerY = int(abs(dec - dec_origin) / inc)
 
+    # sets the top-left and bottom-right plot grid coordinates
     topLeft = [int(max(0, centerX - radius - 1)), int(max(0, centerY - radius - 1))]
     bottomRight = [int(min(pixel_len - 1, centerX + radius + 1)), int(min(pixel_len - 1, centerY + radius + 1))]
-    # print(topLeft)
-    # print(bottomRight)
-    # fills the pixels of the subgrid
 
+    # fills the pixels of the subgrid
     for y in range(topLeft[1], bottomRight[1]+1):
         for x in range(topLeft[0], bottomRight[0]+1):
             # get the current cell coordinates
@@ -200,13 +220,23 @@ def fillPixels(obs, counter):
             sep = center.separation(currCoord)
             if(sep < fov_degree):
                 pixel = pixel_array[y][x]
+                # if there's no pixel in that region, create one
                 if(pixel is None):
                     new_pixel = Pixel(x, y, currCoord.ra.degree, currCoord.dec.degree)
                     pixel_array[y][x] = new_pixel
+                # else, increment the plot's overlapping area counter
                 elif(len(pixel.observations) == 1):
                     properties_list["overlap_area"] += properties_list["resolution"] ** 2
+                # change the average values
                 pixel_array[y][x].change_avgs(res, sens, int_time)
-                pixel_array[y][x].add_snr(1 - (sep/fov_degree)**2)
+                # add the signal-to-noise level
+                distance_ratio = sep/fov_degree
+                if(array == "12"):
+                    snr = gaussian12m(distance_ratio*100, mean_freq)
+                else:
+                    snr = gaussian7m(distance_ratio*100, mean_freq)
+                pixel_array[y][x].add_snr(snr**2)
+                # add the observation to the pixel
                 pixel_array[y][x].add_observation(counter)
 
                 # update plot area
@@ -221,8 +251,9 @@ def fillPixels(obs, counter):
                 if(curr_px.avg_int_time < properties_list["min_avg_int_time"]): properties_list["min_avg_int_time"] = curr_px.avg_int_time
                 if(curr_px.avg_int_time > properties_list["max_avg_int_time"]): properties_list["max_avg_int_time"] = curr_px.avg_int_time
 
+# -----------------------------------------------------------------------------------------
 # resets the properties list to its initial values
-def resetPropertiesList(plot_size, plot_res, min_f, max_f):
+def reset_properties_list(plot_size, plot_res, min_f, max_f):
     global properties_list
     properties_list["n_observations"] = 0
     properties_list["angular_size"] = plot_size
@@ -246,6 +277,8 @@ def resetPropertiesList(plot_size, plot_res, min_f, max_f):
     properties_list["min_snr"] : 9999
     properties_list["max_snr"] : -9999
 
+# -----------------------------------------------------------------------------------------
+# populates the continuum sensitivity list
 def fill_cs_list(min_freq, max_freq):
     global cs_list, cs_list_size
 
@@ -253,9 +286,10 @@ def fill_cs_list(min_freq, max_freq):
     ls = []
     curr_freq = min_freq
     for i in range(0, cs_list_size):
+        # append a new entry
         ls.append({
             "freq": curr_freq,
-            "cs": 0
+            "cs": None
         })
         curr_freq += 0.01
     cs_list = ls
@@ -272,7 +306,7 @@ def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
     pixel_list = []
     observations_list = []
 
-    resetPropertiesList(plot_size, plot_res, min_f, max_f)
+    reset_properties_list(plot_size, plot_res, min_f, max_f)
 
     min_freq = min_f
     max_freq = max_f
@@ -306,8 +340,12 @@ def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
     counter = 0
     for obs in obs_set: # this for statement will be changed to use actual model objects
         #print("Processing observation " + str(index) + "(" + str(round(float(index/obs_set.count()), 2)*100) + "%)")
-        fillPixels(obs, counter)
-        appendObservation(obs, counter)
+        obs_json = observation_to_json(obs, counter)
+        mean_freq = get_mean_freq(obs_json["frequency"])
+        print(mean_freq)
+        array = obs_json["arrays"][0]
+        fill_pixels(obs_json, mean_freq, array, counter)
+        observations_list.append(obs_json)
         counter += 1
         properties_list["n_observations"] = counter
 
@@ -324,7 +362,7 @@ def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
         for y in range(pixel_len):
             px = pixel_array[x][y]
             if(px is not None):
-                appendPixel(x, y, px)
+                append_pixel(x, y, px)
 
     print("Number of observations: " + str(len(observations_list)))
     json_builder = {"properties": properties_list, "observations": observations_list, "continuum_sensitivity": cs_list, "pixels": pixel_list}

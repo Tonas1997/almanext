@@ -109,12 +109,9 @@ function updateDataset(plot_json)
     var observations = plot_json.observations
     var dataset = plot_json.pixels
     // Copy observations
-    for (var i = 0; i < observations.length; i++) {
-            observation_array[i] = observations[i]
-            /*new Observation(
-            observations[i].project_code,
-            observations[i].frequency,
-            observations[i].bands)*/
+    for (var i = 0; i < observations.length; i++) 
+    {
+        observation_array[i] = observations[i]
     }
 
     // Copy pixels
@@ -124,23 +121,10 @@ function updateDataset(plot_json)
         // get the point
         var point = dataset[i]
         
-        // fill the pixel "cache" array with this pixel's info
+        // fill the pixel "cache" array with this pixel
         if(point.x < pixel_len)
         {
             pixel_array[point.x][point.y] = point
-            
-            /*
-            pixel_array[point.x][point.y] = new Pixel(
-                parseFloat(point.x), 
-                parseFloat(point.y), 
-                parseFloat(point.RA), 
-                parseFloat(point.Dec),
-                parseInt(point.count_obs),
-                parseFloat(point.avg_res),
-                parseFloat(point.avg_sens),
-                parseFloat(point.avg_int_time),
-                point.observations
-            );*/
         }
     }
 
@@ -170,33 +154,39 @@ export function updateCanvas(transform)
 
     var colorScale
     var max_pixel_info_value
+    var background
 
     switch(render_mode)
     {
         case "count_obs":
             colorScale = function(value) {return d3.interpolateViridis(value)};
             max_pixel_info_value = plot_properties.max_count_obs
+            background = 0
             break
         case "avg_res":
-            colorScale = function(value) {return d3.interpolateInferno(value)};
+            colorScale = function(value) {return d3.interpolateInferno(Math.abs(1-value))};
             max_pixel_info_value = plot_properties.max_avg_res
+            background = 1
             break
         case "avg_sens":
-            colorScale = function(value) {return d3.interpolateBlues(Math.abs(1-value))};
+            colorScale = function(value) {return d3.interpolateYlGnBu(value)};
             max_pixel_info_value = plot_properties.max_avg_sens
+            background = 1
             break
         case "avg_int_time":
             colorScale = function(value) {return d3.interpolateCividis(value)};
             max_pixel_info_value = plot_properties.max_avg_int_time
+            background = 0
             break
         case "snr":
             colorScale = function(value) {return d3.interpolateGreys(Math.abs(1-value))};
             max_pixel_info_value = plot_properties.max_snr
+            background = 0
             break
     }
 
     context.save()
-    context.fillStyle = colorScale(0)
+    context.fillStyle = colorScale(background)
     context.fillRect( 0, 0, context.canvas.width, context.canvas.height );
 
     context.translate(transform_store.x, transform_store.y)

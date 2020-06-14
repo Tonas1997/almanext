@@ -46,7 +46,6 @@ function getBands()
 
 function checkParams()
 {
-
     var error = false
 
     parameters = {
