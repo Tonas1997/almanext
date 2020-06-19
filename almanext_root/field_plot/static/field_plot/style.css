@@ -173,7 +173,7 @@ form
 
 .infobox-frame
 {
-  margin: 10px 5px 5px 10px;
+  margin: 10px 0px 5px 10px;
 }
 
 #plot-information
@@ -367,6 +367,14 @@ form
   margin: 5px;
   margin-left: 10px;
   margin-right: 10px;
+  border-radius: 1px;
+  background-color: grey;
+}
+
+.sep-vertical-plot {
+  content: '';
+  display: block;
+  width: 1px;
   border-radius: 1px;
   background-color: grey;
 }

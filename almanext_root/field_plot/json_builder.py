@@ -353,8 +353,10 @@ def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
     json_builder = []
     # updates the properties list
     properties_list["pixel_len"] = pixel_len
-    properties_list["overlap_area_pct"] = properties_list["overlap_area"] / properties_list["total_area"]
-
+    if(properties_list["total_area"] > 0):
+        properties_list["overlap_area_pct"] = properties_list["overlap_area"] / properties_list["total_area"]
+    else:
+        properties_list["overlap_area_pct"] = "0"
     print(properties_list)
     
     # convert full 2d array to json

@@ -186,7 +186,7 @@ export function updateCanvas(transform)
     }
 
     context.save()
-    context.fillStyle = colorScale(background)
+    context.fillStyle = "#FFFFFF" //colorScale(background)
     context.fillRect( 0, 0, context.canvas.width, context.canvas.height );
 
     context.translate(transform_store.x, transform_store.y)

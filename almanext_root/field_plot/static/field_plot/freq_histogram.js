@@ -1,7 +1,7 @@
 var width = $('#info-second-row').width();
 var height = $('#info-second-row').height();
 var ratio = 0
-var margin = {left: 50, right: 20, top: 20, bottom: 20};
+var margin = {left: 50, right: 20, top: 20, bottom: 20, xlabel: 10, ylabel: 10};
 
 var svg, xScale, yScale, xAxis, yAxis, g
 
@@ -51,7 +51,7 @@ export function showFreqHistogram(plot_properties, plot_cs)
     svg = d3.select("#info-second-row")
         .append("svg")
         .attr("width", width)
-        .attr("height", height)
+        .attr("height", height + margin.bottom)
         .style("margin-top", margin.top)
 
     g = svg.append("g")
@@ -59,15 +59,20 @@ export function showFreqHistogram(plot_properties, plot_cs)
         .attr('transform', 'translate(0,' + (height-margin.bottom) + ')')
         .call(xAxis)
     g = svg.append("text")             
-        .attr("transform", "translate(" + (width/2) + " ," + (height + margin.bottom) + ")")
+        .attr("transform", "translate(" + (width/2) + " ," + (height + margin.xlabel) + ")")
         .attr("class", "axis-label")
         .style("text-anchor", "middle")
-        .text("Date");
+        .text("Frequency (GHz)");
 
     g = svg.append("g")
         .attr('id', 'y-axis')
         .attr('transform', 'translate(' + margin.left + ',0)')
         .call(yAxis)
+    g = svg.append("text")             
+        .attr("transform", "translate(" + margin.ylabel + "," + (height/2) + ")rotate(-90)")
+        .attr("class", "axis-label")
+        .style("text-anchor", "middle")
+        .text("Line sensitivity (mJy/beam)");
 
     // draw the CS graph
     drawCSPoints(plot_cs)   
@@ -96,8 +101,6 @@ export function updateFreqHistogramAxis(plot_properties, plot_cs)
     drawCSPoints(plot_cs)
 }
 
-var scale = 1
-
 export function updateFreqHistogram(observations)
 {
     //console.log(observations)
@@ -115,13 +118,12 @@ export function updateFreqHistogram(observations)
             .enter()
             .append('rect')
             .attr("x", function(w) { return xScale(w.start)})
-            .attr("y", function() { return height - (scale*height) + margin.top})
+            .attr("y", function() { return margin.top})
             .attr("width", function(w) { return (w.end - w.start) * ratio})
             .attr("height", height-margin.bottom-margin.top)
             .attr("stroke-width", 0)
             .attr("fill", "#000000")
-            .attr("opacity", 0.1)//function(w) { 
-                //return (colorScale(w.sensitivity_10kms))})
+            .attr("opacity", 0.1)
         })
     }
 }
