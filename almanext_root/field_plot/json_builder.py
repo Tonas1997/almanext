@@ -243,6 +243,7 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                 properties_list["total_area"] += properties_list["resolution"] ** 2
                 curr_px = pixel_array[y][x]
                 # update max/min values for each of the pixel's fields
+                if(curr_px.count_obs < properties_list["min_count_obs"]): properties_list["min_count_obs"] = curr_px.count_obs
                 if(curr_px.count_obs > properties_list["max_count_obs"]): properties_list["max_count_obs"] = curr_px.count_obs
                 if(curr_px.avg_res < properties_list["min_avg_res"]): properties_list["min_avg_res"] = curr_px.avg_res
                 if(curr_px.avg_res > properties_list["max_avg_res"]): properties_list["max_avg_res"] = curr_px.avg_res

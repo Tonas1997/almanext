@@ -91,11 +91,11 @@
 						<div id="info-first-row-plot-info">
 							<div id="infobox-plot-num">
 								<div class='value-box'><div class='value-box field label'>Total area</div>
-									<div class='field value'><div id="plot-total-area">30000</div>&nbsp arcsec<sup>2</sup></div></div>
+									<div class='field value'><div id="plot-total-area">--.--</div>&nbsp arcsec<sup>2</sup></div></div>
 								<div class='value-box'><div class='value-box field label'>Overlapping area</div>
-									<div class='field value'><div id="plot-overlap-area">300</div>&nbsp arcsec<sup>2</sup></div></div>
+									<div class='field value'><div id="plot-overlap-area">--.--</div>&nbsp arcsec<sup>2</sup></div></div>
 								<div class='value-box'><div class='value-box field label'>Overlapping area (%)</div>
-									<div class='field value'><div id="plot-overlap-area-pct">100</div>&nbsp %</div></div>
+									<div class='field value'><div id="plot-overlap-area-pct">--.--</div>&nbsp %</div></div>
 							</div>
 						</div>
 						
@@ -132,6 +132,7 @@
 		<script type="module" src="{% static 'field_plot/plot.js' %}"></script>
 		<script type="module" src="{% static 'field_plot/freq_histogram.js' %}"></script>
 		<script type="module" src="{% static 'field_plot/controller.js' %}"></script>
+		<svg id="plot-color-scale"></svg>
 	</div>
 </div>	
 

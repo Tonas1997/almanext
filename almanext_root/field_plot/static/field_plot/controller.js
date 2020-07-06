@@ -15,11 +15,6 @@ import
     updateFreqHistogramAxis // plot update
 } from "./freq_histogram.js"
 
-import
-{
-    showCSHistogram // initial render
-} from "./cs_histogram.js"
-
 // ========================================================
 // =================== STATE VARIABLES ====================
 // ========================================================

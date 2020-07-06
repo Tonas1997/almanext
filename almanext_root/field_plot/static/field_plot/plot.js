@@ -1,65 +1,33 @@
-const margin = {top: 0, right: 0, bottom: 0, left: 0};
+// plot rendering variables
+const plot_margin = {top: 0, right: 0, bottom: 0, left: 0};
 var outerWidth = $('#plot').height();
 var outerHeight = $('#plot').width();
-var width = outerWidth - margin.left - margin.right;
-var height = outerHeight - margin.top - margin.bottom;
+var width = outerWidth - plot_margin.left - plot_margin.right;
+var height = outerHeight - plot_margin.top - plot_margin.bottom;
 const container = d3.select('#plot');
 
-class Observation
-{
-    constructor(project_code, frequency, bands)
-    {
-        this.project_code = project_code
-        this.frequency = frequency
-        this.bands = bands
-    }
-}
+// color legend variables
+const scale_margin = {top: 0, right: 0, bottom: 0, left: 0};
+const scale_size = {height: 10, radius: 5};
+var scaleSvg;
 
-// Pixel class
-class Pixel
-{
-    constructor(x, y, ra, dec, count_obs, avg_res, avg_sens, avg_int_time, observations)
-    {
-        this.x = x;
-        this.y = y;
-        this.ra = ra;
-        this.dec = dec;
-        this.count_obs = count_obs;
-        this.avg_res = avg_res;
-        this.avg_sens = avg_sens;
-        this.avg_int_time = avg_int_time;
-        this.
-        this.observations = observations
-    }
-}
-
-var pixel_len
-
-class Transform
-{
-    constructor(x, y, k)
-    {
-        this.x = x
-        this.y = y
-        this.k = k
-    }
-}
-
-var overlap_area = 0;
-var total_area = 0;
-
-export var canvas_chart
-var transform_store;
-var context;
-
-var highlight_overlap = false
-var render_mode = "count_obs"
+// data variables
+var pixel_len;
+var overlap_area;
+var total_area;
 
 var pixel_array
 var observation_array
 var plot_properties
 
-var selectBox = document.getElementById("plot-color-property")
+// interface variables
+export var canvas_chart
+var transform_store;
+var context;
+var color_scale = {scale: null, worst: 0, best: 0, ref: 0};
+
+var highlight_overlap = false
+var render_mode = "count_obs"
 
 export function setHighlightOverlap(bool)
 {
@@ -93,8 +61,8 @@ function updateDataset(plot_json)
     canvas_chart = container.append('canvas').classed('canvas_chart', true)
         .attr('width', width)
         .attr('height', height)
-        .style('margin-left', margin.left + 'px')
-        .style('margin-top', margin.top + 'px')
+        .style('margin-left', plot_margin.left + 'px')
+        .style('margin-top', plot_margin.top + 'px')
         .style('z-index', 0)
         .style('height', document.getElementById('plot').offsetHeight)
         .attr('class', 'canvas-plot');
@@ -152,41 +120,57 @@ export function updateCanvas(transform)
         transform_store = transform
     }
 
-    var colorScale
-    var max_pixel_info_value
     var background
+    var inverse // this will later help us define the direction of the scale's gradient
 
     switch(render_mode)
     {
         case "count_obs":
-            colorScale = function(value) {return d3.interpolateViridis(value)};
-            max_pixel_info_value = plot_properties.max_count_obs
+            color_scale.scale = function(value) {return d3.interpolateViridis(value)};
+            color_scale.worst = plot_properties.min_count_obs
+            color_scale.best = plot_properties.max_count_obs
+            color_scale.ref = plot_properties.max_count_obs
+            inverse = false
             background = 0
             break
         case "avg_res":
-            colorScale = function(value) {return d3.interpolateInferno(Math.abs(1-value))};
-            max_pixel_info_value = plot_properties.max_avg_res
+            color_scale.scale = function(value) {return d3.interpolateInferno(Math.abs(1-value))};
+            color_scale.worst = plot_properties.max_avg_res
+            color_scale.best = plot_properties.min_avg_res
+            color_scale.ref = plot_properties.max_avg_res
+            inverse = true
             background = 1
             break
         case "avg_sens":
-            colorScale = function(value) {return d3.interpolateYlGnBu(value)};
-            max_pixel_info_value = plot_properties.max_avg_sens
+            color_scale.scale = function(value) {return d3.interpolateYlGnBu(value)};
+            color_scale.worst = plot_properties.max_avg_sens
+            color_scale.best = plot_properties.min_avg_sens
+            color_scale.ref = plot_properties.max_avg_sens
+            inverse = true
             background = 1
             break
         case "avg_int_time":
-            colorScale = function(value) {return d3.interpolateCividis(value)};
-            max_pixel_info_value = plot_properties.max_avg_int_time
+            color_scale.scale = function(value) {return d3.interpolateCividis(value)};
+            color_scale.worst = plot_properties.min_agv_int_time
+            color_scale.best = plot_properties.max_avg_int_time
+            color_scale.ref = plot_properties.max_avg_int_time
+            inverse = false
             background = 0
             break
         case "snr":
-            colorScale = function(value) {return d3.interpolateGreys(Math.abs(1-value))};
-            max_pixel_info_value = plot_properties.max_snr
+            color_scale.scale = function(value) {return d3.interpolateGreys(Math.abs(1-value))};
+            color_scale.worst = plot_properties.min_snr
+            color_scale.best = plot_properties.max_snr
+            color_scale.ref = plot_properties.max_snr
+            inverse = false
             background = 0
             break
     }
 
+    var ref = color_scale.ref
+    var scale = color_scale.scale
     context.save()
-    context.fillStyle = "#FFFFFF" //colorScale(background)
+    context.fillStyle = "#FFFFFF" //color_scale(background)
     context.fillRect( 0, 0, context.canvas.width, context.canvas.height );
 
     context.translate(transform_store.x, transform_store.y)
@@ -204,7 +188,7 @@ export function updateCanvas(transform)
                 const py = point.y
 
                 context.beginPath()
-                context.fillStyle = colorScale(point[render_mode]/max_pixel_info_value);
+                context.fillStyle = scale(point[render_mode]/ref);
                 if(point.observations.length == 1 && highlight_overlap)
                     context.globalAlpha = 0.1
                 else
@@ -212,8 +196,66 @@ export function updateCanvas(transform)
                 context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
             }
         }
-    //context.fill()
+    
+    updateColorScale(inverse)
     context.restore();
+}
+
+function updateColorScale(inverse)
+{
+    if(scaleSvg != null)
+    {
+        //scaleSvg.selectAll('*').remove();
+        $("#plot-color-scale").empty()
+    }
+
+    scaleSvg = d3.select('#plot-color-scale')
+        .attr('width', '100%')
+        .attr('height', '100%')
+    //.append('g')
+      //  .attr('id', 'group')
+    
+    // defines the direction of the gradient
+    var min, max
+    if(!inverse) { min = '0%'; max = '100%' }
+    else { min = '100%'; max = '0%' }
+
+    var gradient = scaleSvg.append('defs')
+        .append('linearGradient')
+        .attr('id', 'gradient')
+        .attr('x1', min) // left
+        .attr('y1', '0%')
+        .attr('x2', max) // right
+        .attr('y2', '0%')
+        .attr('spreadMethod', 'pad');
+
+    for(var i = 0; i <= 1; i += 0.1)
+    {
+        gradient.append('stop')
+            .attr('offset', Math.round(i * 100) + "%")
+            .attr('stop-color', color_scale.scale(i))
+            .attr('stop-opacity', 1);
+    }
+
+    scaleSvg.append('rect')
+        .attr('x1', 0)
+        .attr('y1', 0)
+        .attr('width', '100%')
+        .attr('height', scale_size.height)
+        .attr('rx', scale_size.radius)
+        .attr('ry', scale_size.radius)
+        .style('fill', 'url(#gradient)');
+
+    var legendScale = d3.scaleLinear()
+        .domain([color_scale.worst, color_scale.best])
+        .range([0, $("#plot-color-scale").width()]);
+
+    var legendAxis = d3.axisBottom()
+        .scale(legendScale)
+
+    scaleSvg.append("g")
+        .attr("transform", "translate(0, " + scale_size.height + ")")
+        .call(legendAxis);
 }
 
 export function renderData(data)
@@ -242,7 +284,6 @@ export function getPixelInfo(mouse)
     var gridX = Math.floor(trueX / pixelWidth)
     var gridY = Math.floor(trueY / pixelWidth)
     var pixel = pixel_array[gridY][gridX]
-    console.log(pixel)
     
     if(pixel != 0)
     {

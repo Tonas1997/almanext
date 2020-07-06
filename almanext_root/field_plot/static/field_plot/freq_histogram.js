@@ -1,6 +1,5 @@
 var width = $('#info-second-row').width();
 var height = $('#info-second-row').height();
-var ratio = 0
 var margin = {left: 50, right: 20, top: 20, bottom: 20, xlabel: 10, ylabel: 10};
 
 var svg, xScale, yScale, xAxis, yAxis, g
@@ -25,7 +24,6 @@ export function showFreqHistogram(plot_properties, plot_cs)
 
     width = $('#info-second-row').width();
     height = $('#info-second-row').height();
-    ratio = width / (maxF - minF)
     //margin = 5;
     
     // X axis and scale (frequency)
@@ -92,7 +90,6 @@ export function updateFreqHistogramAxis(plot_properties, plot_cs)
     // update the axis (with animations!)
     xScale.domain([minF, maxF])
     yScale.domain([maxC, minC])
-    ratio = width / (maxF - minF)
     
     svg.select("#x-axis").transition().duration(2000).call(xAxis)
     svg.select("#y-axis").transition().duration(2000).call(yAxis)
@@ -119,7 +116,7 @@ export function updateFreqHistogram(observations)
             .append('rect')
             .attr("x", function(w) { return xScale(w.start)})
             .attr("y", function() { return margin.top})
-            .attr("width", function(w) { return (w.end - w.start) * ratio})
+            .attr("width", function(w) { return (xScale(w.end) - xScale(w.start))})
             .attr("height", height-margin.bottom-margin.top)
             .attr("stroke-width", 0)
             .attr("fill", "#000000")
