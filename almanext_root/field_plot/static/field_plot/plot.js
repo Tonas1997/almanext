@@ -27,7 +27,7 @@ var context;
 var color_scale = {scale: null, worst: 0, best: 0, ref: 0};
 
 var highlight_overlap = false
-var render_mode = "count_obs"
+var render_mode = "count_pointings"
 
 export function setHighlightOverlap(bool)
 {
@@ -125,11 +125,11 @@ export function updateCanvas(transform)
 
     switch(render_mode)
     {
-        case "count_obs":
+        case "count_pointings":
             color_scale.scale = function(value) {return d3.interpolateViridis(value)};
-            color_scale.worst = plot_properties.min_count_obs
-            color_scale.best = plot_properties.max_count_obs
-            color_scale.ref = plot_properties.max_count_obs
+            color_scale.worst = plot_properties.min_count_pointings
+            color_scale.best = plot_properties.max_count_pointings
+            color_scale.ref = plot_properties.max_count_pointings
             inverse = false
             background = 0
             break
@@ -189,7 +189,7 @@ export function updateCanvas(transform)
 
                 context.beginPath()
                 context.fillStyle = scale(point[render_mode]/ref);
-                if(point.observations.length == 1 && highlight_overlap)
+                if(point.count_pointings == 1 && highlight_overlap)
                     context.globalAlpha = 0.1
                 else
                     context.globalAlpha = 1.0
@@ -288,13 +288,13 @@ export function getPixelInfo(mouse)
     if(pixel != 0)
     {
         var result
-        if(highlight_overlap && pixel.observations.length == 1)
+        if(highlight_overlap && pixel.count_pointings == 1)
             result = null
         else
             var result = {
                 "ra": pixel.ra.toFixed(2),
                 "dec": pixel.dec.toFixed(2),
-                "count_obs": pixel.count_obs,
+                "count_pointings": pixel.count_pointings,
                 "avg_res": pixel.avg_res.toFixed(2),
                 "avg_sens": pixel.avg_sens.toFixed(2),
                 "avg_int_time": pixel.avg_int_time.toFixed(2),

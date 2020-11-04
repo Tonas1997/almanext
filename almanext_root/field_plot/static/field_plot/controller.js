@@ -93,9 +93,8 @@ function checkParams()
         return parameters
 }
 
-$(document).on('input', '#formfield_redshift', function()
-{
-    $('#redshift-val').html( parseFloat($(this).val()).toFixed(1) )
+$(function() {
+    $("#infotabs").tabs();
 });
 
 // placeholder until I figure out a better way to preset the parameters
@@ -144,7 +143,6 @@ function initializePlotView(data)
     var plot_cs = data.continuum_sensitivity        
 
     initializePlotInfo(plot_properties)
-    initializePixelInfo()
     
     if(!is_rendered_freq_histogram)
     {
@@ -165,7 +163,7 @@ function initializePlotView(data)
         {
             document.getElementById('pixel-ra').innerHTML = info.ra
             document.getElementById('pixel-dec').innerHTML = info.dec
-            document.getElementById('pixel-n-obs').innerHTML = info.count_obs
+            document.getElementById('pixel-n-pointings').innerHTML = info.count_pointings
             document.getElementById('pixel-avg-res').innerHTML = info.avg_res
             document.getElementById('pixel-avg-sens').innerHTML = info.avg_sens
             document.getElementById('pixel-avg-int-time').innerHTML = info.avg_int_time
@@ -176,7 +174,7 @@ function initializePlotView(data)
             var nan = "--.--"
             document.getElementById('pixel-ra').innerHTML = nan
             document.getElementById('pixel-dec').innerHTML = nan
-            document.getElementById('pixel-n-obs').innerHTML = nan
+            document.getElementById('pixel-n-pointings').innerHTML = nan
             document.getElementById('pixel-avg-res').innerHTML = nan
             document.getElementById('pixel-avg-sens').innerHTML = nan
             document.getElementById('pixel-avg-int-time').innerHTML = nan
@@ -201,21 +199,4 @@ function initializePlotInfo(plot_properties)
     document.getElementById('plot-total-area').innerHTML = "~" + plot_properties.total_area
     document.getElementById('plot-overlap-area').innerHTML = "~" + plot_properties.overlap_area
     document.getElementById('plot-overlap-area-pct').innerHTML = "~" + (plot_properties.overlap_area/plot_properties.total_area*100).toFixed(2)
-}
-
-function initializePixelInfo()
-{
-    document.getElementById('info-first-row-pixel').innerHTML =
-    "<div class='value-box'><div class='value-box field label'>RA</div>" +
-        "<div class='field value'><div id='pixel-ra'> --.-- </div>&nbsp deg</div></div>" + 
-    "<div class='value-box'><div class='value-box field label'>Dec</div>" +
-        "<div class='field value'><div id='pixel-dec'> --.-- </div>&nbsp deg</div></div>" + 
-    "<div class='value-box'><div class='value-box field label'>Number of observations</div>" +
-        "<div class='field value'><div id='pixel-n-obs'> --.-- </div></div></div>" +
-    "<div class='value-box'><div class='value-box field label'>Average resolution</div>" +
-        "<div class='field value'><div id='pixel-avg-res'> --.-- </div>&nbsp arcsec<sup>2</sup></div></div>" +
-    "<div class='value-box'><div class='value-box field label'>Average sensitivity</div>" +
-        "<div class='field value'><div id='pixel-avg-sens'> --.-- </div>&nbsp mJy/beam</div></div>" +
-    "<div class='value-box'><div class='value-box field label'>Average int. time</div>" +
-        "<div class='field value'><div id='pixel-avg-int-time'> --.-- </div>&nbsp s</div></div>"
 }

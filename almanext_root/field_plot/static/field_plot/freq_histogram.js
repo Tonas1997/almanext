@@ -37,8 +37,7 @@ export function showFreqHistogram(plot_properties, plot_cs)
     yScale = d3.scaleLinear()
         .domain([maxC, minC])
         .range([height - margin.bottom, margin.top])
-    yAxis = d3.axisLeft()
-        
+    yAxis = d3.axisLeft() 
         .scale(yScale).ticks(10)
 
     colorScale = d3.scaleLinear()
@@ -46,7 +45,7 @@ export function showFreqHistogram(plot_properties, plot_cs)
         .range([0, 1])
 
     // Create an SVG object
-    svg = d3.select("#info-second-row")
+    svg = d3.select("#tab-frequency-coverage")
         .append("svg")
         .attr("width", width)
         .attr("height", height + margin.bottom)

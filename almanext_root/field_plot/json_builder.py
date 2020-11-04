@@ -26,8 +26,8 @@ properties_list = {
     "total_area": 0,
     "overlap_area": 0,
     "overlap_area_pct": 0,
-    "min_count_obs": 0,
-    "max_count_obs": 0,
+    "min_count_pointings": 0,
+    "max_count_pointings": 0,
     "min_avg_res": 0,
     "max_avg_res": 0,
     "min_avg_sens": 0,
@@ -58,7 +58,7 @@ def gridToCoords(i, j):
 
 # -----------------------------------------------------------------------------------------
 # converts an observation's frequency list to a JSON-serializable format
-def get_frequency_from_obs(obs, index):
+def get_frequency_from_obs(obs):
     global properties_list
     min_freq = properties_list["min_frequency"]
     max_freq = properties_list["max_frequency"]
@@ -109,6 +109,17 @@ def get_bands_from_obs(obs):
     for b in bands:
         band_list.append({"band": b.designation})
     return band_list
+
+# -----------------------------------------------------------------------------------------
+# extracts the trace list from an observation
+def get_traces_from_obs(obs):
+    traces = obs.traces.all()
+    trace_list = []
+    for t in traces:
+        trace_list.append({"ra": t.ra,
+                            "dec": t.dec,
+                            "fov": t.fov})
+    return trace_list
     
 
 # -----------------------------------------------------------------------------------------
@@ -135,7 +146,7 @@ def append_pixel(x, y, px):
                     "y" : y,
                     "ra" : px.px_ra,
                     "dec" : px.px_dec,
-                    "count_obs" : px.count_obs,
+                    "count_pointings" : px.count_pointings,
                     "avg_res" : px.avg_res,
                     "avg_sens" : px.avg_sens,
                     "avg_int_time" : px.avg_int_time,
@@ -150,9 +161,11 @@ def observation_to_json(obs, index):
             "source_name": obs.source_name,
             "ra": obs.ra,
             "dec": obs.dec,
+            "mosaic": obs.mosaic,
+            "traces": get_traces_from_obs(obs),
             "gal_longitude": obs.gal_longitude,
             "gal_latitude": obs.gal_latitude,
-            "frequency": get_frequency_from_obs(obs, index),
+            "frequency": get_frequency_from_obs(obs),
             "bands": get_bands_from_obs(obs),
             "spatial_resolution": obs.spatial_resolution,
             "frequency_resolution": obs.frequency_resolution,
@@ -188,69 +201,78 @@ def observation_to_json(obs, index):
 def fill_pixels(obs_json, mean_freq, array, counter):
     global pixel_array, properties_list
 
-    ra = obs_json["ra"]
-    dec = obs_json["dec"]
-    fov = obs_json["field_of_view"]
     res = obs_json["spatial_resolution"]
     sens = obs_json["line_sensitivity"]
     int_time = obs_json["integration_time"]
 
-    # builds an Angle object for convenience
-    fov_degree = Angle(fov, unit=u.arcsec)
-    fov_degree = fov_degree/2
-    # define some support variables and the subgrid
-    radius = int(fov_degree.degree / inc)
+    # iterate over the osbervation's traces
+    for t in obs_json["traces"]:
+        ra = t["ra"]
+        dec = t["dec"]
+        fov = t["fov"]
 
-    # sets the center plot grid coordinates 
-    center = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame='icrs')
-    centerX = int(abs(ra - ra_origin) / inc)
-    centerY = int(abs(dec - dec_origin) / inc)
+        # ignore this trace if it's faulty (e.g. the observation is a mosaic and
+        # this trace has the same fov as the observation)
+        if(fov > 220):
+            continue
 
-    # sets the top-left and bottom-right plot grid coordinates
-    topLeft = [int(max(0, centerX - radius - 1)), int(max(0, centerY - radius - 1))]
-    bottomRight = [int(min(pixel_len - 1, centerX + radius + 1)), int(min(pixel_len - 1, centerY + radius + 1))]
+        # builds an Angle object for convenience
+        fov_degree = Angle(fov, unit=u.arcsec)
+        fov_degree = fov_degree/2
+        # define some support variables and the subgrid
+        radius = int(fov_degree.degree / inc)
 
-    # fills the pixels of the subgrid
-    for y in range(topLeft[1], bottomRight[1]+1):
-        for x in range(topLeft[0], bottomRight[0]+1):
-            # get the current cell coordinates
-            coords = gridToCoords(x, y)
-            currCoord = SkyCoord(coords[0]*u.degree, coords[1]*u.degree, frame='icrs')
-            # see if the current cell falls within the observation fov
-            sep = center.separation(currCoord)
-            if(sep < fov_degree):
-                pixel = pixel_array[y][x]
-                # if there's no pixel in that region, create one
-                if(pixel is None):
-                    new_pixel = Pixel(x, y, currCoord.ra.degree, currCoord.dec.degree)
-                    pixel_array[y][x] = new_pixel
-                # else, increment the plot's overlapping area counter
-                elif(len(pixel.observations) == 1):
-                    properties_list["overlap_area"] += properties_list["resolution"] ** 2
-                # change the average values
-                pixel_array[y][x].change_avgs(res, sens, int_time)
-                # add the signal-to-noise level
-                distance_ratio = sep/fov_degree
-                if(array == "12"):
-                    snr = gaussian12m(distance_ratio*100, mean_freq)
-                else:
-                    snr = gaussian7m(distance_ratio*100, mean_freq)
-                pixel_array[y][x].add_snr(snr**2)
-                # add the observation to the pixel
-                pixel_array[y][x].add_observation(counter)
+        # sets the center plot grid coordinates 
+        center = SkyCoord(ra, dec, unit=(u.deg, u.deg), frame='icrs')
+        centerX = int(abs(ra - ra_origin) / inc)
+        centerY = int(abs(dec - dec_origin) / inc)
 
-                # update plot area
-                properties_list["total_area"] += properties_list["resolution"] ** 2
-                curr_px = pixel_array[y][x]
-                # update max/min values for each of the pixel's fields
-                if(curr_px.count_obs < properties_list["min_count_obs"]): properties_list["min_count_obs"] = curr_px.count_obs
-                if(curr_px.count_obs > properties_list["max_count_obs"]): properties_list["max_count_obs"] = curr_px.count_obs
-                if(curr_px.avg_res < properties_list["min_avg_res"]): properties_list["min_avg_res"] = curr_px.avg_res
-                if(curr_px.avg_res > properties_list["max_avg_res"]): properties_list["max_avg_res"] = curr_px.avg_res
-                if(curr_px.avg_sens < properties_list["min_avg_sens"]): properties_list["min_avg_sens"] = curr_px.avg_sens
-                if(curr_px.avg_sens > properties_list["max_avg_sens"]): properties_list["max_avg_sens"] = curr_px.avg_sens
-                if(curr_px.avg_int_time < properties_list["min_avg_int_time"]): properties_list["min_avg_int_time"] = curr_px.avg_int_time
-                if(curr_px.avg_int_time > properties_list["max_avg_int_time"]): properties_list["max_avg_int_time"] = curr_px.avg_int_time
+        # sets the top-left and bottom-right plot grid coordinates
+        topLeft = [int(max(0, centerX - radius - 1)), int(max(0, centerY - radius - 1))]
+        bottomRight = [int(min(pixel_len - 1, centerX + radius + 1)), int(min(pixel_len - 1, centerY + radius + 1))]
+
+        # fills the pixels of the subgrid
+        for y in range(topLeft[1], bottomRight[1]+1):
+            for x in range(topLeft[0], bottomRight[0]+1):
+                # get the current cell coordinates
+                coords = gridToCoords(x, y)
+                currCoord = SkyCoord(coords[0]*u.degree, coords[1]*u.degree, frame='icrs')
+                # see if the current cell falls within the observation fov
+                sep = center.separation(currCoord)
+                if(sep < fov_degree):
+                    pixel = pixel_array[y][x]
+                    # if there's no pixel in that region, create one
+                    if(pixel is None):
+                        new_pixel = Pixel(x, y, currCoord.ra.degree, currCoord.dec.degree)
+                        pixel_array[y][x] = new_pixel
+                    # else, increment the plot's overlapping area counter
+                    elif(len(pixel.observations) == 1):
+                        properties_list["overlap_area"] += properties_list["resolution"] ** 2
+                    # change the average values
+                    pixel_array[y][x].change_avgs(res, sens, int_time)
+                    # add the signal-to-noise level
+                    distance_ratio = sep/fov_degree
+                    if(array == "12"):
+                        snr = gaussian12m(distance_ratio*100, mean_freq)
+                    else:
+                        snr = gaussian7m(distance_ratio*100, mean_freq)
+                    pixel_array[y][x].add_snr(snr**2)
+                    # add the observation to the pixel, if it's not already covered by this observation
+                    if(not pixel_array[y][x].has_observation(counter)):
+                        pixel_array[y][x].add_observation(counter)
+
+                    # update plot area
+                    properties_list["total_area"] += properties_list["resolution"] ** 2
+                    curr_px = pixel_array[y][x]
+                    # update max/min values for each of the pixel's fields
+                    if(curr_px.count_pointings < properties_list["min_count_pointings"]): properties_list["min_count_pointings"] = curr_px.count_pointings
+                    if(curr_px.count_pointings > properties_list["max_count_pointings"]): properties_list["max_count_pointings"] = curr_px.count_pointings
+                    if(curr_px.avg_res < properties_list["min_avg_res"]): properties_list["min_avg_res"] = curr_px.avg_res
+                    if(curr_px.avg_res > properties_list["max_avg_res"]): properties_list["max_avg_res"] = curr_px.avg_res
+                    if(curr_px.avg_sens < properties_list["min_avg_sens"]): properties_list["min_avg_sens"] = curr_px.avg_sens
+                    if(curr_px.avg_sens > properties_list["max_avg_sens"]): properties_list["max_avg_sens"] = curr_px.avg_sens
+                    if(curr_px.avg_int_time < properties_list["min_avg_int_time"]): properties_list["min_avg_int_time"] = curr_px.avg_int_time
+                    if(curr_px.avg_int_time > properties_list["max_avg_int_time"]): properties_list["max_avg_int_time"] = curr_px.avg_int_time
 
 # -----------------------------------------------------------------------------------------
 # resets the properties list to its initial values
@@ -267,8 +289,8 @@ def reset_properties_list(plot_size, plot_res, min_f, max_f):
     properties_list["total_area"] = 0 
     properties_list["overlap_area"] = 0
     properties_list["overlap_area_pct"] = 0
-    properties_list["min_count_obs"] = 9999
-    properties_list["max_count_obs"] = -9999
+    properties_list["min_count_pointings"] = 9999
+    properties_list["max_count_pointings"] = -9999
     properties_list["min_avg_res"] = 9999
     properties_list["max_avg_res"] = -9999
     properties_list["min_avg_sens"] = 9999

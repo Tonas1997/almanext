@@ -172,20 +172,22 @@ form
 
 /* ============= INFO ============= */
 
-.infobox-frame
+.pane-frame
 {
-  margin: 10px 0px 5px 10px;
+  margin: 10px 0px 10px 10px;
 }
 
 #plot-information
 {
-  flex: 1
+  display: flex;
+  flex: 0 1;
+  flex-direction: column;
 }
 
-#info-wrapper
+.info-wrapper
 {
   display: flex;
-  flex: 1 0 55vh;
+  flex: 1 0 20vh;
   flex-direction: column;
   margin: 10px 5px 5px 10px
 }
@@ -193,7 +195,7 @@ form
 #info-first-row
 {
   display: flex;
-  flex: 0 1;
+  flex: 0 1 20vh;
   flex-direction: row;
 }
 
@@ -282,27 +284,11 @@ form
   flex: 1 0 calc(50% - 20px);
 }
 
-/* Auxiliary styles (including value box) */
-
-.line 
-{
-  fill: none;
-  stroke: rgb(55, 55, 85);
-  stroke-width: 1px;
-}
-
+/* Non-specific, auxiliary styles (including value box) */
 .axis-label 
 {
   font-size: 10px;
   color: darkgrey;
-}
-
-.values-container
-{
-  display: flex;
-  flex-direction: column;
-  margin-left: 10px;
-  margin-top: 10px;
 }
 
 .field
@@ -318,6 +304,67 @@ form
 .field.value
 {
   color: black;
+}
+
+.line 
+{
+  fill: none;
+  stroke: rgb(55, 55, 85);
+  stroke-width: 1px;
+}
+
+.options-wrapper
+{
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.separator {
+  content: '';
+  display: block;
+  height: 4px;
+  margin: 1px;
+  border-radius: 2px;
+  background-color: rgb(70, 70, 70);
+}
+
+.sep-horizontal-small {
+  content: '';
+  display: block;
+  height: 1px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  margin-left: 1px;
+  margin-right: 1px;
+  border-radius: 1px;
+  background-color: grey;
+}
+
+.sep-vertical {
+  content: '';
+  display: block;
+  width: 1px;
+  margin: 5px;
+  margin-left: 10px;
+  margin-right: 10px;
+  border-radius: 1px;
+  background-color: grey;
+}
+
+.sep-vertical-plot {
+  content: '';
+  display: block;
+  width: 1px;
+  border-radius: 1px;
+  background-color: grey;
+}
+
+.values-container
+{
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+  margin-top: 10px;
 }
 
 .value-box 
@@ -343,41 +390,38 @@ form
   text-align: right;
 }
 
-.separator {
-  content: '';
-  display: block;
-  height: 4px;
-  margin: 1px;
-  border-radius: 2px;
-  background-color: rgb(70, 70, 70);
+/* Used for the "pixel info" tab menu */
+.ui-widget * { outline: none; }
+
+div#infotabs ul
+{
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: white;
 }
 
-.sep-horizontal-small {
-  content: '';
-  display: block;
-  height: 1px;
-  margin: 1px;
-  border-radius: 1px;
-  background-color: grey;
+div#infotabs li
+{
+  float: left;
+  cursor: pointer;
 }
 
-.sep-vertical {
-  content: '';
+div#infotabs li a
+{
   display: block;
-  width: 1px;
-  margin: 5px;
-  margin-left: 10px;
-  margin-right: 10px;
-  border-radius: 1px;
-  background-color: grey;
+  color: black;
+  text-align: center;
+  font-size: 14px;
+  align-items: center;
+  padding: 10px 14px;
+  text-decoration: none;
 }
 
-.sep-vertical-plot {
-  content: '';
-  display: block;
-  width: 1px;
-  border-radius: 1px;
-  background-color: grey;
+div#infotabs li a:hover
+{
+  background-color: lightgray;
 }
 
 /* ============= PLOT ============= */

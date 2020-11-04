@@ -47,6 +47,7 @@ class Observation(models.Model):
     spatial_resolution = models.FloatField()
     frequency_resolution = models.FloatField()
     arrays = models.ManyToManyField(Array)
+    mosaic = models.BooleanField(default=False)
     integration_time = models.FloatField()
     release_date = models.DateField(null=True, blank=True)
     velocity_resolution = models.FloatField()

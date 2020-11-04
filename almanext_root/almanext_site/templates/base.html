@@ -13,7 +13,7 @@
         justify-content: center;
       }
 
-      ul
+      div#navbar ul
       {
         list-style-type: none;
         margin: 0;
@@ -24,12 +24,12 @@
         background-color: rgb(55, 55, 85);
       }
 
-      li
+      div#navbar li
       {
         float: left;
       }
 
-      li a
+      div#navbar li a
       {
         display: block;
         color: white;
@@ -39,18 +39,20 @@
         text-decoration: none;
       }
 
-      li a:hover
+      div#navbar li a:hover
       {
         background-color: rgb(78, 78, 119);
       }
     </style>
   </head>
   <body>
-    <ul id="navbar">
-      <li><a href="/home">Home</a></li>
-      <li><a href="/observations">Observations</a></li>
-      <li><a href="/field">Field</a></li>
-    </ul>
+    <div id="navbar">
+      <ul>
+        <li><a href="/home">Home</a></li>
+        <li><a href="/observations">Observations</a></li>
+        <li><a href="/field">Field</a></li>
+      </ul>
+    </div>
     {% block content %}
     {% endblock content %}
   </body>

@@ -5,6 +5,9 @@ import math
 
 import pandas as pd
 
+asa_file = None
+traces_file = None
+
 def addBands():
     for i in range(1, 11):
         if(i == 1):
@@ -114,7 +117,7 @@ def newObsFromRow(row, index):
         gal_latitude = row['Galactic latitude'],
         spatial_resolution = row['Spatial resolution'],
         frequency_resolution = row['Frequency resolution'],
-        # mosaic = ...
+        mosaic = (True if (row['Mosaic'] == "mosaic") else False),
         integration_time = row['Integration'],
         release_date = convertDate(row['Release date']),
         velocity_resolution = row['Velocity resolution'],
@@ -162,23 +165,39 @@ def newObsFromRow(row, index):
         curr_win.save()
 
     # handle traces
-    new_trace = Trace(
-        ra = row['RA'],
-        dec = row['Dec'],
-        fov = row['Field of view']
-    )
-
-    new_trace.observation = new_observation
-    new_trace.save()
+    # if the observation's not a mosaic, just use the ASA ra/dec values
+    if(new_observation.mosaic == False):
+        new_trace = Trace(
+            ra = row['RA'],
+            dec = row['Dec'],
+            fov = row['Field of view']
+        )
+        new_trace.observation = new_observation
+        new_trace.save()
+    # else, find pointings in the mosaic file
+    else:
+        traces = traces_file.loc[(traces_file["project_code"] == new_observation.project_code) & (traces_file["asdm_uid"] == new_observation.asdm_uid) & (traces_file["source_name"] == new_observation.source_name)]
+        if(traces.size == 0):
+            print("error!")
+        else:
+            for index, t in traces.iterrows():
+                new_trace = Trace(
+                    ra = t['ra'],
+                    dec = t['dec'],
+                    fov = t['fov']
+                )
+                new_trace.observation = new_observation
+                new_trace.save()
 
 class Command(BaseCommand):
     args = '<coiso>'
 
     def _populate_test(self, start_index):
-
+        global traces_file
         addBands()
         addArrays()
         asa_file = pd.read_csv('C:/Users/anton/Documents/Faculdade/Tese/Projecto/almanext/Whole_ASAcat_metadata_Oct30th2019.csv')
+        traces_file = pd.read_table('C:/Users/anton/Documents/Faculdade/Tese/Projecto/almanext/alma_ssios_pace_asa_project.dat', delimiter = "|", names = ['project_code', 'member_ous_id', 'asdm_uid', 'source_name', 'ra', 'dec', 'fov', 'start_time', 'end_time', 'int_time', 'band_list', 'comments'])
         for index, row in asa_file.iloc[start_index:].iterrows():
             new_obs = newObsFromRow(row, index)
 
