@@ -15,6 +15,11 @@ import
     updateFreqHistogramAxis // plot update
 } from "./freq_histogram.js"
 
+import
+{
+    createObservationList
+} from "./obs_list.js"
+
 // ========================================================
 // =================== STATE VARIABLES ====================
 // ========================================================
@@ -159,12 +164,15 @@ $("#form-plot").on('submit', function(event)
  */
 function initializePlotView(data)
 {
-    //alert('success!')
+    // defines some variables
     var plot_properties = renderData(data)
     var plot_cs = data.continuum_sensitivity        
 
+    // initializes the HTML handles for the plot properties
     initializePlotInfo(plot_properties)
     
+    // keeps duplicate plots from being rendered
+    // TODO
     if(!is_rendered_freq_histogram)
     {
         console.log(plot_properties)
@@ -176,6 +184,7 @@ function initializePlotView(data)
         updateFreqHistogramAxis(plot_properties, plot_cs)
     }
 
+    // sets the behaviour for mouse panning on the plot
     canvas_chart.on("mousemove",function()
     {
         var info = getPixelInfo(d3.mouse(this));
@@ -203,15 +212,19 @@ function initializePlotView(data)
         }
     });
 
+    // defines the "change render mode" behaviour
     $("#plot-color-property").on('change', (function() {
         setRenderMode(this.value)
         updateCanvas()
     }))
 
+    // defines the "highlight overlapping observations" behaviour
     $('#highlightOverlap').on('change', (function() {
         setHighlightOverlap(this.checked)
         updateCanvas()
     }))
+
+    createObservationList(data)
 }
 
 /**

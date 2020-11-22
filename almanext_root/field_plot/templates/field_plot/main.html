@@ -139,7 +139,20 @@
 					<div id="tab-frequency-coverage"></div>
 					<div id="tab-gained-sensitivity"></div>
 					<div id="tab-emission-lines"></div>
-					<div id="tab-observations"></div>
+					<div id="tab-observations">
+						<div class="info-wrapper">
+							<table id='obs_list' class='display compact' width='90%'>
+								<thead>
+									<tr>
+										<th>Project code</th>
+										<th>Source name</th>
+										<th>RA</th>
+										<th>Dec</th>
+									</tr>
+								</thead>
+							</table>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>	
@@ -149,6 +162,8 @@
 		<script src="https://d3js.org/d3.v5.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+		<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.css">
 		<script type="module" src="{% static 'field_plot/plot.js' %}"></script>
 		<script type="module" src="{% static 'field_plot/freq_histogram.js' %}"></script>
 		<script type="module" src="{% static 'field_plot/controller.js' %}"></script>

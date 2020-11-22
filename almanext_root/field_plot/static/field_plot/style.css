@@ -426,6 +426,25 @@ div#infotabs li a:hover
   background-color: lightgray;
 }
 
+/* Observation table header - I have to override the default DataTables style :D */
+table.dataTable th
+{
+  font-size: 12px;
+  font-weight: normal !important;
+  text-align: left;
+  border-top: 1px black;
+  border-bottom: 1px black;
+}
+
+table.dataTable tr
+{
+  font-size: 12px;
+  font-weight: normal !important;
+  text-align: left;
+  border-top: 1px black;
+  border-bottom: 1px black;
+}
+
 /* ============= PLOT ============= */
 
 #plot
