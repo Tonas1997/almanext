@@ -97,3 +97,8 @@ class Trace(models.Model):
 
     def __str__(self):
         return(str(self.ra) + ", " + str(self.dec) + ", " + str(self.fov) + " arcsec")
+
+class EmissionLine(models.Model):
+    em_id = models.CharField(max_length=25)
+    species = models.CharField(max_length=25)
+    frequency = models.FloatField()

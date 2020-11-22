@@ -26,6 +26,9 @@ var is_rendered_freq_histogram = false
 // ========================================================
 
 var parameters = {}
+/**
+ * Gets the bands that have been selected
+ */
 function getBands()
 {
     var band_list = []
@@ -39,6 +42,9 @@ function getBands()
     return band_list
 }
 
+/**
+ * Validates the plot parameters
+*/
 function checkParams()
 {
     var error = false
@@ -93,20 +99,31 @@ function checkParams()
         return parameters
 }
 
+/**
+ * Initializes the tab behaviour for the plot information area
+ */
 $(function() {
     $("#infotabs").tabs();
 });
 
-// placeholder until I figure out a better way to preset the parameters
+/**
+ * Sets the plot mode
+ */
 $("#plot-color-property").on('change', (function() {
     setRenderMode(this.value)
 }))
 
+/**
+ * Toggles the "highlight overlapping regions" option
+ */
 $('#highlightOverlap').on('change', (function() {
     setHighlightOverlap(this.checked)
 }))
 
 
+/**
+ * Defines the behaviour of the "render" submit button
+ */
 $("#form-plot").on('submit', function(event)
 {
     event.preventDefault()
@@ -136,6 +153,10 @@ $("#form-plot").on('submit', function(event)
 // ================= PLOT USER INTERFACE ==================
 // ========================================================
 
+/**
+ * Initializes a new plot view and its associated visualization tools
+ * @param {*} data The JSON data that has been obtained
+ */
 function initializePlotView(data)
 {
     //alert('success!')
@@ -193,6 +214,10 @@ function initializePlotView(data)
     }))
 }
 
+/**
+ * Creates or updates the plot information display
+ * @param {*} plot_properties The properties object
+ */
 function initializePlotInfo(plot_properties)
 {
     console.log(plot_properties)

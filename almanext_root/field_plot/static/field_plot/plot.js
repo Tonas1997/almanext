@@ -8,7 +8,7 @@ const container = d3.select('#plot');
 
 // color legend variables
 const scale_margin = {top: 0, right: 0, bottom: 0, left: 0};
-const scale_size = {height: 10, radius: 5};
+const scale_size = {width: '90%', height: 10, radius: 5};
 var scaleSvg;
 
 // data variables
@@ -25,7 +25,9 @@ export var canvas_chart
 var transform_store;
 var context;
 var color_scale = {scale: null, worst: 0, best: 0, ref: 0};
+var axis_label;
 
+// TODO
 var highlight_overlap = false
 var render_mode = "count_pointings"
 
@@ -130,6 +132,7 @@ export function updateCanvas(transform)
             color_scale.worst = plot_properties.min_count_pointings
             color_scale.best = plot_properties.max_count_pointings
             color_scale.ref = plot_properties.max_count_pointings
+            axis_label = ""
             inverse = false
             background = 0
             break
@@ -138,6 +141,7 @@ export function updateCanvas(transform)
             color_scale.worst = plot_properties.max_avg_res
             color_scale.best = plot_properties.min_avg_res
             color_scale.ref = plot_properties.max_avg_res
+            axis_label = "arcsec2"
             inverse = true
             background = 1
             break
@@ -146,6 +150,7 @@ export function updateCanvas(transform)
             color_scale.worst = plot_properties.max_avg_sens
             color_scale.best = plot_properties.min_avg_sens
             color_scale.ref = plot_properties.max_avg_sens
+            axis_label = "mJy/beam"
             inverse = true
             background = 1
             break
@@ -154,6 +159,7 @@ export function updateCanvas(transform)
             color_scale.worst = plot_properties.min_agv_int_time
             color_scale.best = plot_properties.max_avg_int_time
             color_scale.ref = plot_properties.max_avg_int_time
+            axis_label = "seconds"
             inverse = false
             background = 0
             break
@@ -162,6 +168,7 @@ export function updateCanvas(transform)
             color_scale.worst = plot_properties.min_snr
             color_scale.best = plot_properties.max_snr
             color_scale.ref = plot_properties.max_snr
+            axis_label = "factor"
             inverse = false
             background = 0
             break
@@ -212,8 +219,6 @@ function updateColorScale(inverse)
     scaleSvg = d3.select('#plot-color-scale')
         .attr('width', '100%')
         .attr('height', '100%')
-    //.append('g')
-      //  .attr('id', 'group')
     
     // defines the direction of the gradient
     var min, max
@@ -237,27 +242,41 @@ function updateColorScale(inverse)
             .attr('stop-opacity', 1);
     }
 
+    var left_margin = ($("#plot-color-scale")).width() * 0.1 / 2
+
     scaleSvg.append('rect')
-        .attr('x1', 0)
-        .attr('y1', 0)
-        .attr('width', '100%')
+        .attr('id', 'colorscale')
+        .attr('x', left_margin)
+        .attr('y', 0)
+        .attr('width', scale_size.width)
         .attr('height', scale_size.height)
         .attr('rx', scale_size.radius)
         .attr('ry', scale_size.radius)
+        .attr('left', '5%')
         .style('fill', 'url(#gradient)');
+
+    scaleSvg.append("text")             
+        .attr("transform", "translate(" +  ($("#plot-color-scale")).width()/2 + ", " + 40 +")")
+        .style("font-size", "11px")
+        .style("text-anchor", "middle")
+        .text(axis_label);
 
     var legendScale = d3.scaleLinear()
         .domain([color_scale.worst, color_scale.best])
-        .range([0, $("#plot-color-scale").width()]);
+        .range([0, $("#colorscale").width()]);
 
     var legendAxis = d3.axisBottom()
         .scale(legendScale)
 
     scaleSvg.append("g")
-        .attr("transform", "translate(0, " + scale_size.height + ")")
+        .attr("transform", "translate(" + left_margin + ", " + scale_size.height + ")")
         .call(legendAxis);
 }
 
+/**
+ * Public function to expose the "render data" routine
+ * @param {*} data The data that has been extracted from the JSON file
+ */
 export function renderData(data)
 {   
     return updateDataset(data)

@@ -15,6 +15,9 @@ ra_origin = 0
 dec_origin = 0
 curr_freq = 0
 
+# the reference synthesized beam
+ref_psf = 1.0
+
 properties_list = {
     "angular_size": 0,
     "resolution": 0,
@@ -205,7 +208,7 @@ def fill_pixels(obs_json, mean_freq, array, counter):
     sens = obs_json["line_sensitivity"]
     int_time = obs_json["integration_time"]
 
-    # iterate over the osbervation's traces
+    # iterate over the observation's traces
     for t in obs_json["traces"]:
         ra = t["ra"]
         dec = t["dec"]
@@ -256,6 +259,9 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                         snr = gaussian12m(distance_ratio*100, mean_freq)
                     else:
                         snr = gaussian7m(distance_ratio*100, mean_freq)
+                    # normalize sensitivity to the common synthesized beam
+                    #scaled_cont_sens = obs_json["continuum_sensitivity"] * (res/ref_psf)
+                    # TODO
                     pixel_array[y][x].add_snr(snr**2)
                     # add the observation to the pixel, if it's not already covered by this observation
                     if(not pixel_array[y][x].has_observation(counter)):
