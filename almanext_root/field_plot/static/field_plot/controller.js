@@ -5,7 +5,6 @@ import
     renderData, // initial render
     updateCanvas, // plot update
     getPixelInfo, // gets the selected pixel
-    setHighlightOverlap, // sets a given plot option
     canvas_chart, // canvas object
     setRenderMode
 } from "./plot.js"
@@ -13,14 +12,15 @@ import
 import
 {
     showFreqHistogram, // initial render
-    updateFreqHistogram,
-    updateFreqHistogramAxis // plot update
+    updateFreqHistogram, // plot update
+    updateFreqHistogramAxis // plot update - change axis
 } from "./freq_histogram.js"
 
 import
 {
     showObservationList, // initial render
-    updateObservationList // list update
+    updateObservationList, // list update
+    getObservationRowData // get row data
 } from "./obs_list.js"
 
 // ========================================================
@@ -125,13 +125,7 @@ $("#plot-color-property").on('change', (function() {
 /**
  * Toggles the "highlight overlapping regions" option
  */
-$('#highlightOverlap').on('change', (function() {
-    if(this.checked)
-        addFilter('highlightOverlap', null);
-    else
-        removeFilter('highlightOverlap', null)
-    //setHighlightOverlap(this.checked)
-}))
+
 
 
 /**
@@ -218,15 +212,29 @@ function initializePlotView(data)
     }))
     // defines the "highlight overlapping observations" behaviour
     $('#highlightOverlap').on('change', (function() {
-        setHighlightOverlap(this.checked)
-        updateCanvas()
+        if(this.checked)
+            addFilter('highlightOverlap', null);
+        else
+            removeFilter('highlightOverlap', null)
+        //setHighlightOverlap(this.checked)
     }))
 
     // LIST CONTROLS
     // highlights the panned-over observation
-    $('#obs_list tbody').on('mouseover', 'tr', function () 
+    $('#obs_list tbody').on('click', 'tr', function () 
     {
-        console.log(table.row(this).data() );
+        var row = getObservationRowData($(this))
+        // if it's selected, unselect
+        if ($(this).hasClass('selected'))
+        {
+            $(this).removeClass('selected');
+            removeFilter('highlightObservation', row.index)
+        }
+        else
+        {
+            $(this).addClass('selected');
+            addFilter('highlightObservation', row.index)
+        }
     } );
 }
 

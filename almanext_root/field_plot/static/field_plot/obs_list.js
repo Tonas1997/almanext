@@ -1,5 +1,4 @@
-// the table object
-export var obs_list
+var obs_table
 /**
  * Creates a HTML list containing the observations
  */
@@ -8,7 +7,7 @@ export function showObservationList(data)
     //var table_string = '<table id="obs_list" class="display" width="100%"></table>'
     //$('#tab-observations').html(table_string)
     console.log(data.observations)
-    obs_list = $('#obs_list').DataTable( 
+    obs_table = $('#obs_list').DataTable( 
     {
         data: data.observations,
         columns: [
@@ -25,9 +24,14 @@ export function showObservationList(data)
     ).columns.adjust().draw();
 }
 
+export function getObservationRowData(tr)
+{
+    return obs_table.row(tr).data()
+}
+
 export function updateObservationList(data)
 {
     console.log(data.observations)
-    obs_list.clear();
-    obs_list.rows.add(data.observations).draw()
+    obs_table.clear();
+    obs_table.rows.add(data.observations).draw()
 }

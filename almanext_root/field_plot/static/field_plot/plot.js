@@ -28,7 +28,6 @@ var axis_label;
 var filter_list = [];
 
 // TODO
-var highlight_overlap = false
 var render_mode = "count_pointings"
 
 // Filter class and its exports
@@ -37,15 +36,18 @@ class PlotFilter
     constructor(id, arg)
     {
         this.id = id;
+        this.arg = arg;
         switch(id)
         {
             case 'highlightOverlap':
-                this.filter_function = function(point) {
+                this.filter_function = function(point) 
+                {
                     return point.count_pointings > 1
                 }
                 break
             case 'highlightObservation':
-                this.filter_function = function(point) {
+                this.filter_function = function(point) 
+                {
                     return point.observations.includes(arg)
                 }
                 break
@@ -55,20 +57,27 @@ class PlotFilter
 
 export function addFilter(filter_id, argument)
 {   
+    console.log('========== ADD ==========')
+    console.log('filter_id: ' + filter_id + ' argument: ' + argument)
     var new_filter = new PlotFilter(filter_id, argument)
     filter_list.push(new_filter)
     updateFilters()
     updateCanvas()
+    console.log(filter_list)
 }
 
 export function removeFilter(filter_id, argument)
 {
+    console.log('========== REM ==========')
+    console.log('filter_id: ' + filter_id + ' argument: ' + argument)
+    // these filters have to be always destroyed
     filter_list = filter_list.filter(function(plot_filter) 
     {
-        return plot_filter.id != filter_id && plot_filter.arg != argument
-    })
+        return !(plot_filter.id == filter_id && plot_filter.arg == argument)
+    });
     updateFilters()
     updateCanvas()
+    console.log(filter_list)
 }
 
 export function setHighlightOverlap(bool)
@@ -97,7 +106,6 @@ function updateDataset(plot_json)
 
     pixel_array = createArray(pixel_len, pixel_len)
     observation_array = new Array(plot_json.observations.length)
-    //console.log(document.getElementById('plot').width);
 
     // Init Canvas
     canvas_chart = container.append('canvas').classed('canvas_chart', true)
@@ -269,7 +277,6 @@ function updateFilters()
                 })
                 point.highlight = highlight_px
             }
-            console.log(point)
         }
 }
 
@@ -372,7 +379,7 @@ export function getPixelInfo(mouse)
     if(pixel != 0)
     {
         var result
-        if(highlight_overlap && pixel.count_pointings == 1)
+        if(!pixel.highlight)
             result = null
         else
             var result = {
