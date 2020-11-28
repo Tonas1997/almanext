@@ -248,9 +248,11 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                     if(pixel is None):
                         new_pixel = Pixel(x, y, currCoord.ra.degree, currCoord.dec.degree)
                         pixel_array[y][x] = new_pixel
+                        # update plot area
+                        properties_list["total_area"] += properties_list["resolution"] ** 2
                     # else, increment the plot's overlapping area counter
-                    elif(len(pixel.observations) == 1):
-                        properties_list["overlap_area"] += properties_list["resolution"] ** 2
+                    elif(pixel.count_pointings == 1):
+                        properties_list["overlap_area"] += properties_list["resolution"] ** 2  
                     # change the average values
                     pixel_array[y][x].change_avgs(res, sens, int_time)
                     # add the signal-to-noise level
@@ -265,10 +267,8 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                     pixel_array[y][x].add_snr(snr**2)
                     # add the observation to the pixel, if it's not already covered by this observation
                     if(not pixel_array[y][x].has_observation(counter)):
-                        pixel_array[y][x].add_observation(counter)
+                        pixel_array[y][x].add_observation(counter)   
 
-                    # update plot area
-                    properties_list["total_area"] += properties_list["resolution"] ** 2
                     curr_px = pixel_array[y][x]
                     # update max/min values for each of the pixel's fields
                     if(curr_px.count_pointings < properties_list["min_count_pointings"]): properties_list["min_count_pointings"] = curr_px.count_pointings

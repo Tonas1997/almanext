@@ -102,7 +102,7 @@ export function updateFreqHistogram(observations)
     //console.log(observations)
     svg.selectAll('rect').remove()
 
-    if(observations != null)
+    if(observations != undefined)
     {
         svg.selectAll('rect')
         .data(observations)

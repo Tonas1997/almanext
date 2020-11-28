@@ -7,11 +7,10 @@ var height = outerHeight - plot_margin.top - plot_margin.bottom;
 const container = d3.select('#plot');
 
 // color legend variables
-const scale_margin = {top: 0, right: 0, bottom: 0, left: 0};
 const scale_size = {width: '90%', height: 10, radius: 5};
 var scaleSvg;
 
-// data variables
+// dataset variables
 var pixel_len;
 var overlap_area;
 var total_area;
@@ -26,10 +25,51 @@ var transform_store;
 var context;
 var color_scale = {scale: null, worst: 0, best: 0, ref: 0};
 var axis_label;
+var filter_list = [];
 
 // TODO
 var highlight_overlap = false
 var render_mode = "count_pointings"
+
+// Filter class and its exports
+class PlotFilter
+{
+    constructor(id, arg)
+    {
+        this.id = id;
+        switch(id)
+        {
+            case 'highlightOverlap':
+                this.filter_function = function(point) {
+                    return point.count_pointings > 1
+                }
+                break
+            case 'highlightObservation':
+                this.filter_function = function(point) {
+                    return point.observations.includes(arg)
+                }
+                break
+        }
+    }
+}
+
+export function addFilter(filter_id, argument)
+{   
+    var new_filter = new PlotFilter(filter_id, argument)
+    filter_list.push(new_filter)
+    updateFilters()
+    updateCanvas()
+}
+
+export function removeFilter(filter_id, argument)
+{
+    filter_list = filter_list.filter(function(plot_filter) 
+    {
+        return plot_filter.id != filter_id && plot_filter.arg != argument
+    })
+    updateFilters()
+    updateCanvas()
+}
 
 export function setHighlightOverlap(bool)
 {
@@ -94,8 +134,9 @@ function updateDataset(plot_json)
         // fill the pixel "cache" array with this pixel
         if(point.x < pixel_len)
         {
-            pixel_array[point.x][point.y] = point
+            pixel_array[point.x][point.y] = point    
         }
+        point.highlight = true
     }
 
     // initial render
@@ -112,7 +153,6 @@ function updateDataset(plot_json)
 }
 
 // Plot external API
-
 export function updateCanvas(transform)
 {
     // differentiates between zoom and plot colour update
@@ -196,16 +236,41 @@ export function updateCanvas(transform)
 
                 context.beginPath()
                 context.fillStyle = scale(point[render_mode]/ref);
-                if(point.count_pointings == 1 && highlight_overlap)
+                point.highlight ? context.globalAlpha = 1.0 : context.globalAlpha = 0.1 
+                
+                /**if(point.count_pointings == 1 && highlight_overlap)
                     context.globalAlpha = 0.1
                 else
-                    context.globalAlpha = 1.0
+                    context.globalAlpha = 1.0 **/
                 context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
             }
         }
     
     updateColorScale(inverse)
     context.restore();
+}
+
+function updateFilters()
+{
+    var highlight_px = true
+    for(var i = 0; i < pixel_array.length; i++)
+        for(var j = 0; j < pixel_array[i].length; j++)
+        {
+            var point = pixel_array[i][j]
+            if(point != 0)
+            {
+                highlight_px = filter_list.every(function(f) 
+                {
+                    if(!f.filter_function(point))
+                    {
+                        return false
+                    }
+                    return true
+                })
+                point.highlight = highlight_px
+            }
+            console.log(point)
+        }
 }
 
 function updateColorScale(inverse)

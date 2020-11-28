@@ -1,5 +1,7 @@
 import
 {
+    addFilter, // add a filter
+    removeFilter, // remove a filter
     renderData, // initial render
     updateCanvas, // plot update
     getPixelInfo, // gets the selected pixel
@@ -17,14 +19,16 @@ import
 
 import
 {
-    createObservationList
+    showObservationList, // initial render
+    updateObservationList // list update
 } from "./obs_list.js"
 
 // ========================================================
 // =================== STATE VARIABLES ====================
 // ========================================================
 
-var is_rendered_freq_histogram = false
+var first_render = true
+var table = null
 
 // ========================================================
 // ============== PLOT PARAMETERS MANAGEMENT ==============
@@ -122,7 +126,11 @@ $("#plot-color-property").on('change', (function() {
  * Toggles the "highlight overlapping regions" option
  */
 $('#highlightOverlap').on('change', (function() {
-    setHighlightOverlap(this.checked)
+    if(this.checked)
+        addFilter('highlightOverlap', null);
+    else
+        removeFilter('highlightOverlap', null)
+    //setHighlightOverlap(this.checked)
 }))
 
 
@@ -164,6 +172,9 @@ $("#form-plot").on('submit', function(event)
  */
 function initializePlotView(data)
 {
+    /**
+     * ================== INITIALIZATION ==================
+     */
     // defines some variables
     var plot_properties = renderData(data)
     var plot_cs = data.continuum_sensitivity        
@@ -171,60 +182,52 @@ function initializePlotView(data)
     // initializes the HTML handles for the plot properties
     initializePlotInfo(plot_properties)
     
-    // keeps duplicate plots from being rendered
+    // keeps duplicate plots from being rendered when the dataset is regenerated
     // TODO
-    if(!is_rendered_freq_histogram)
+    if(first_render)
     {
-        console.log(plot_properties)
         showFreqHistogram(plot_properties, plot_cs)
-        is_rendered_freq_histogram = true
+        showObservationList(data) // not sure I want to initialize the table before getting the data... TODO
+        first_render = false
     }
     else if(data.observations.length != 0)
     {
         updateFreqHistogramAxis(plot_properties, plot_cs)
+        updateObservationList(data)
     }
 
+    /**
+     * ================== BEHAVIOURS ==================
+     */
+    // PLOT CONTROLS
     // sets the behaviour for mouse panning on the plot
     canvas_chart.on("mousemove",function()
     {
         var info = getPixelInfo(d3.mouse(this));
         // update pixel info
+        updatePixelInfo(info)
         if(info != null)
-        {
-            document.getElementById('pixel-ra').innerHTML = info.ra
-            document.getElementById('pixel-dec').innerHTML = info.dec
-            document.getElementById('pixel-n-pointings').innerHTML = info.count_pointings
-            document.getElementById('pixel-avg-res').innerHTML = info.avg_res
-            document.getElementById('pixel-avg-sens').innerHTML = info.avg_sens
-            document.getElementById('pixel-avg-int-time').innerHTML = info.avg_int_time
             updateFreqHistogram(info.obs)
-        }
-        else
-        {
-            var nan = "--.--"
-            document.getElementById('pixel-ra').innerHTML = nan
-            document.getElementById('pixel-dec').innerHTML = nan
-            document.getElementById('pixel-n-pointings').innerHTML = nan
-            document.getElementById('pixel-avg-res').innerHTML = nan
-            document.getElementById('pixel-avg-sens').innerHTML = nan
-            document.getElementById('pixel-avg-int-time').innerHTML = nan
+        else // weird that I have to do this...
             updateFreqHistogram(null)
-        }
     });
-
     // defines the "change render mode" behaviour
     $("#plot-color-property").on('change', (function() {
         setRenderMode(this.value)
         updateCanvas()
     }))
-
     // defines the "highlight overlapping observations" behaviour
     $('#highlightOverlap').on('change', (function() {
         setHighlightOverlap(this.checked)
         updateCanvas()
     }))
 
-    createObservationList(data)
+    // LIST CONTROLS
+    // highlights the panned-over observation
+    $('#obs_list tbody').on('mouseover', 'tr', function () 
+    {
+        console.log(table.row(this).data() );
+    } );
 }
 
 /**
@@ -237,4 +240,30 @@ function initializePlotInfo(plot_properties)
     document.getElementById('plot-total-area').innerHTML = "~" + plot_properties.total_area
     document.getElementById('plot-overlap-area').innerHTML = "~" + plot_properties.overlap_area
     document.getElementById('plot-overlap-area-pct').innerHTML = "~" + (plot_properties.overlap_area/plot_properties.total_area*100).toFixed(2)
+}
+
+/**
+ * Updates the pixel information display
+ */
+function updatePixelInfo(info)
+{
+    if(info != null)
+    {
+        document.getElementById('pixel-ra').innerHTML = info.ra
+        document.getElementById('pixel-dec').innerHTML = info.dec
+        document.getElementById('pixel-n-pointings').innerHTML = info.count_pointings
+        document.getElementById('pixel-avg-res').innerHTML = info.avg_res
+        document.getElementById('pixel-avg-sens').innerHTML = info.avg_sens
+        document.getElementById('pixel-avg-int-time').innerHTML = info.avg_int_time
+    }
+    else
+    {
+        var nan = "--.--"
+        document.getElementById('pixel-ra').innerHTML = nan
+        document.getElementById('pixel-dec').innerHTML = nan
+        document.getElementById('pixel-n-pointings').innerHTML = nan
+        document.getElementById('pixel-avg-res').innerHTML = nan
+        document.getElementById('pixel-avg-sens').innerHTML = nan
+        document.getElementById('pixel-avg-int-time').innerHTML = nan
+    }
 }
