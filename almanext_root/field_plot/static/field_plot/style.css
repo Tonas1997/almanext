@@ -192,21 +192,21 @@ form
   margin: 10px 5px 5px 10px
 }
 
-#info-first-row
+#tab-information
 {
   display: flex;
   flex: 0 1 20vh;
   flex-direction: row;
 }
 
-#info-first-row-plot
+#tab-information-plot
 {
   display: flex;
   flex: 1 1 50%;
   flex-direction: column;
 }
 
-#info-first-row-plot-options
+#tab-information-plot-options
 {
   display: flex;
   flex: 1 1 50%;
@@ -214,17 +214,17 @@ form
   flex-direction: column;
 }
 
-#info-first-row-pixel
+#tab-information-pixel
 {
   display: flex;
   flex: 1 1 50%;
   flex-direction: column;
 }
 
-#info-second-row
+#info-first-row
 {
   display: flex;
-  flex: 1 1 30vh;
+  flex: 1 1 35vh;
   flex-direction: column;
 }
 

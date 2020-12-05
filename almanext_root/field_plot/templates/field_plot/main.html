@@ -83,76 +83,34 @@
 		<!-- ----------------------------------------------------------------- -->
 		<div class="separator big"></div>
 		
-		<div id="plot-information" class="pane-frame">
+		<div id="plot-information">
 			<div id="info-first-row">
-				<div id="info-first-row-plot">
-					Plot information
-					<div class="info-wrapper">	
-						<div id="info-first-row-plot-info">
-							<div id="infobox-plot-num">
-								<div class='value-box'><div class='value-box field label'>Total area</div>
-									<div class='field value'><div id="plot-total-area">--.--</div>&nbsp arcsec<sup>2</sup></div></div>
-								<div class='value-box'><div class='value-box field label'>Overlapping area</div>
-									<div class='field value'><div id="plot-overlap-area">--.--</div>&nbsp arcsec<sup>2</sup></div></div>
-								<div class='value-box'><div class='value-box field label'>Overlapping area (%)</div>
-									<div class='field value'><div id="plot-overlap-area-pct">--.--</div>&nbsp %</div></div>
-							</div>
-						</div>
-						
-						<div id="info-first-row-plot-options">
-							
-							<div class="options-wrapper">
-								<input type="checkbox" id="highlightOverlap">
-								<label for="checkbox" class="field label">Highlight overlapping regions</label>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="sep-vertical"></div>
-				<div id="info-first-row-pixel">
-					Pixel information
-					<div class="info-wrapper">
-						<div class='value-box'><div class='value-box field label'>RA</div>
-							<div class='field value'><div id='pixel-ra'> --.-- </div>&nbsp deg</div></div>
-						<div class='value-box'><div class='value-box field label'>Dec</div>
-							<div class='field value'><div id='pixel-dec'> --.-- </div>&nbsp deg</div></div>
-						<div class='value-box'><div class='value-box field label'>Number of pointings</div>
-							<div class='field value'><div id='pixel-n-pointings'> --.-- </div></div></div>
-						<div class='value-box'><div class='value-box field label'>Average resolution</div>
-							<div class='field value'><div id='pixel-avg-res'> --.-- </div>&nbsp arcsec<sup>2</sup></div></div>
-						<div class='value-box'><div class='value-box field label'>Average sensitivity</div>
-							<div class='field value'><div id='pixel-avg-sens'> --.-- </div>&nbsp mJy/beam</div></div>
-						<div class='value-box'><div class='value-box field label'>Average int. time</div>
-							<div class='field value'><div id='pixel-avg-int-time'> --.-- </div>&nbsp s</div></div>
-					</div>
+				<div id="infotabs">
+					<ul>
+						<li><a href="#tab-plot-information">Plot information</a></li>
+						<li><a href="#tab-frequency-coverage">Frequency support</a></li>
+						<li><a href="#tab-gained-sensitivity">Gained sensitivity</a></li>
+						<li><a href="#tab-emission-lines">Emission Lines</a></li>
+					</ul>	
+					<div id="tab-plot-information" class='pane-frame'></div>
+					<div id="tab-frequency-coverage" class='pane-frame'></div>
+					<div id="tab-gained-sensitivity" class='pane-frame'></div>
+					<div id="tab-emission-lines" class='pane-frame'></div>
 				</div>
 			</div>
 			<div class="sep-horizontal-small"></div>
-			<div id="info-second-row">
-				<div id="infotabs">
-					<ul>
-						<li><a href="#tab-frequency-coverage">Frequency coverage</a></li>
-						<li><a href="#tab-gained-sensitivity">Gained sensitivity</a></li>
-						<li><a href="#tab-emission-lines">Emission Lines</a></li>
-						<li><a href="#tab-observations">Observations</a></li>
-					</ul>	
-					<div id="tab-frequency-coverage"></div>
-					<div id="tab-gained-sensitivity"></div>
-					<div id="tab-emission-lines"></div>
-					<div id="tab-observations">
-						<div class="info-wrapper">
-							<table id='obs_list' class='display compact' width='90%'>
-								<thead>
-									<tr>
-										<th>Project code</th>
-										<th>Source name</th>
-										<th>RA</th>
-										<th>Dec</th>
-									</tr>
-								</thead>
-							</table>
-						</div>
-					</div>
+			<div id="observations-table">
+				<div class="info-wrapper">
+					<table id='obs_list' class='display compact' width='90%'>
+						<thead>
+							<tr>
+								<th>Project code</th>
+								<th>Source name</th>
+								<th>RA</th>
+								<th>Dec</th>
+							</tr>
+						</thead>
+					</table>
 				</div>
 			</div>
 		</div>	

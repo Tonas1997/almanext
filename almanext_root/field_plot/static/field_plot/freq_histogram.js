@@ -1,6 +1,6 @@
-var width = $('#info-second-row').width();
-var height = $('#info-second-row').height();
-var margin = {left: 50, right: 20, top: 20, bottom: 20, xlabel: 10, ylabel: 10};
+var width = $('#infotabs').width();
+var height = $('#infotabs').height();
+var margin = {left: 50, right: 20, top: 10, bottom: 20, xlabel: 10, ylabel: 10};
 
 var svg, xScale, yScale, xAxis, yAxis, g
 
@@ -22,8 +22,8 @@ export function showFreqHistogram(plot_properties, plot_cs)
     minS = plot_properties.min_avg_sens
     maxS = plot_properties.max_avg_sens
 
-    width = $('#info-second-row').width();
-    height = $('#info-second-row').height();
+    width = $('#infotabs').width() - 40;
+    height = $('#infotabs').height() - 40;
     //margin = 5;
     
     // X axis and scale (frequency)

@@ -123,12 +123,6 @@ $("#plot-color-property").on('change', (function() {
 }))
 
 /**
- * Toggles the "highlight overlapping regions" option
- */
-
-
-
-/**
  * Defines the behaviour of the "render" submit button
  */
 $("#form-plot").on('submit', function(event)
@@ -174,6 +168,7 @@ function initializePlotView(data)
     var plot_cs = data.continuum_sensitivity        
 
     // initializes the HTML handles for the plot properties
+    initializePlotInfoTab()
     initializePlotInfo(plot_properties)
     
     // keeps duplicate plots from being rendered when the dataset is regenerated
@@ -274,4 +269,48 @@ function updatePixelInfo(info)
         document.getElementById('pixel-avg-sens').innerHTML = nan
         document.getElementById('pixel-avg-int-time').innerHTML = nan
     }
+}
+
+function initializePlotInfoTab()
+{
+    document.getElementById("tab-plot-information").innerHTML = `
+    <div id="tab-information">
+        <div id="tab-information-plot">
+            <div class="info-wrapper">	
+                <div id="tab-information-plot-info">
+                    <div id="infobox-plot-num">
+                        <div class='value-box'><div class='value-box field label'>Total area</div>
+                            <div class='field value'><div id="plot-total-area">--.--</div>&nbsp arcsec<sup>2</sup></div></div>
+                        <div class='value-box'><div class='value-box field label'>Overlapping area</div>
+                            <div class='field value'><div id="plot-overlap-area">--.--</div>&nbsp arcsec<sup>2</sup></div></div>
+                        <div class='value-box'><div class='value-box field label'>Overlapping area (%)</div>
+                            <div class='field value'><div id="plot-overlap-area-pct">--.--</div>&nbsp %</div></div>
+                    </div>
+                </div>		
+                <div id="tab-information-plot-options">
+                    <div class="options-wrapper">
+                        <input type="checkbox" id="highlightOverlap">
+                        <label for="checkbox" class="field label">Highlight overlapping regions</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="sep-vertical"></div>
+        <div id="tab-information-pixel">
+            <div class="info-wrapper">
+                <div class='value-box'><div class='value-box field label'>RA</div>
+                    <div class='field value'><div id='pixel-ra'> --.-- </div>&nbsp deg</div></div>
+                <div class='value-box'><div class='value-box field label'>Dec</div>
+                    <div class='field value'><div id='pixel-dec'> --.-- </div>&nbsp deg</div></div>
+                <div class='value-box'><div class='value-box field label'>Number of pointings</div>
+                    <div class='field value'><div id='pixel-n-pointings'> --.-- </div></div></div>
+                <div class='value-box'><div class='value-box field label'>Average resolution</div>
+                    <div class='field value'><div id='pixel-avg-res'> --.-- </div>&nbsp arcsec<sup>2</sup></div></div>
+                <div class='value-box'><div class='value-box field label'>Average sensitivity</div>
+                    <div class='field value'><div id='pixel-avg-sens'> --.-- </div>&nbsp mJy/beam</div></div>
+                <div class='value-box'><div class='value-box field label'>Average int. time</div>
+                    <div class='field value'><div id='pixel-avg-int-time'> --.-- </div>&nbsp s</div></div>
+            </div>
+        </div>
+    </div>`
 }
