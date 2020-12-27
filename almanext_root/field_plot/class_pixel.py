@@ -39,5 +39,8 @@ class Pixel:
     def add_observation(self, obs_index):
         self.observations.append(obs_index)
 
+    def get_observations(self):
+        return self.observations
+
     def has_observation(self, obs_index):
         return(obs_index in self.observations)

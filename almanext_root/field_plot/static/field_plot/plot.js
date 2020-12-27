@@ -57,7 +57,7 @@ class PlotFilter
 
 export function addFilter(filter_id, argument)
 {   
-    console.log('========== ADD ==========')
+    //console.log('========== ADD ==========')
     console.log('filter_id: ' + filter_id + ' argument: ' + argument)
     var new_filter = new PlotFilter(filter_id, argument)
     filter_list.push(new_filter)
@@ -68,7 +68,7 @@ export function addFilter(filter_id, argument)
 
 export function removeFilter(filter_id, argument)
 {
-    console.log('========== REM ==========')
+    //console.log('========== REM ==========')
     console.log('filter_id: ' + filter_id + ' argument: ' + argument)
     // these filters have to be always destroyed
     filter_list = filter_list.filter(function(plot_filter) 
@@ -390,7 +390,7 @@ export function getPixelInfo(mouse)
                 "avg_sens": pixel.avg_sens.toFixed(2),
                 "avg_int_time": pixel.avg_int_time.toFixed(2),
                 "snr": pixel.snr,
-                "obs": getPixelObservation(pixel.observations)
+                "obs": getPixelObservations(pixel.observations)
             }
         return result
     }
@@ -409,21 +409,22 @@ function createArray(length)
     return arr;
 }
 
-function getPixelObservation(px_observations)
+function getPixelObservations(px_observations)
 {
-    var windows = []
+    var observations = []
 
     for(var i = 0; i < px_observations.length; i++)
     {
         var observation = observation_array[px_observations[i]]
-        var obs_code = observation.project_code
+        /*var obs_code = observation.project_code
         var obs_windows = observation.frequency
         windows.push(
         {
             "project_code": obs_code,
             "freq_windows": obs_windows
-        })
+        })*/
+        observations.push(observation)
     }
 
-    return windows
+    return observations
 }

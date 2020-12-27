@@ -20,7 +20,8 @@ import
 {
     showObservationList, // initial render
     updateObservationList, // list update
-    getObservationRowData // get row data
+    getObservationRowData, // get row data
+    highlightRows
 } from "./obs_list.js"
 
 // ========================================================
@@ -192,13 +193,21 @@ function initializePlotView(data)
     // sets the behaviour for mouse panning on the plot
     canvas_chart.on("mousemove",function()
     {
-        var info = getPixelInfo(d3.mouse(this));
+        var info = getPixelInfo(d3.mouse(this)); 
         // update pixel info
         updatePixelInfo(info)
         if(info != null)
+        {
+            //console.log(info)
             updateFreqHistogram(info.obs)
+            //highlightRows(info.obs)
+        }
         else // weird that I have to do this...
             updateFreqHistogram(null)
+        
+        // highlight the hovered observations on the table
+
+        
     });
     // defines the "change render mode" behaviour
     $("#plot-color-property").on('change', (function() {
@@ -209,24 +218,29 @@ function initializePlotView(data)
     $('#highlightOverlap').on('change', (function() {
         if(this.checked)
             addFilter('highlightOverlap', null);
-        else
+        else  
             removeFilter('highlightOverlap', null)
+            console.log("highlightOverlap!")
         //setHighlightOverlap(this.checked)
     }))
 
     // LIST CONTROLS
     // highlights the panned-over observation
-    $('#obs_list tbody').on('click', 'tr', function () 
+    $('#obs_list tbody').off().on('click', 'tr', function () 
     {
+        console.log("ENTRAR")
+        console.log("click!")
         var row = getObservationRowData($(this))
         // if it's selected, unselect
         if ($(this).hasClass('selected'))
         {
+            console.log("vou tirar filtros...")
             $(this).removeClass('selected');
-            removeFilter('highlightObservation', row.index)
+            removeFilter('highlightObservation', row.index) 
         }
         else
         {
+            console.log("vou adicionar filtros...")
             $(this).addClass('selected');
             addFilter('highlightObservation', row.index)
         }

@@ -2,7 +2,7 @@ var width = $('#infotabs').width();
 var height = $('#infotabs').height();
 var margin = {left: 50, right: 20, top: 10, bottom: 20, xlabel: 10, ylabel: 10};
 
-var svg, xScale, yScale, xAxis, yAxis, g
+var svg, xScale, yScale1, xAxis, yAxis, g
 
 var colorScale;
 
@@ -26,7 +26,8 @@ export function showFreqHistogram(plot_properties, plot_cs)
     height = $('#infotabs').height() - 40;
     //margin = 5;
     
-    // X axis and scale (frequency)
+    // =========== DEFINE AXIS ===========
+    // frequency buckets
     xScale = d3.scaleLinear()
         .domain([minF, maxF])
         .range([margin.left, width - margin.right]);
@@ -34,12 +35,20 @@ export function showFreqHistogram(plot_properties, plot_cs)
         .ticks(10)
         .scale(xScale)
 
-    yScale = d3.scaleLinear()
+    // line sensitivity TODO
+    yScale1 = d3.scaleLinear()
         .domain([maxC, minC])
         .range([height - margin.bottom, margin.top])
     yAxis = d3.axisLeft() 
-        .scale(yScale).ticks(10)
+        .scale(yScale1).ticks(10)
 
+    // observation count
+    /*yScale2 = d3.scaleLinear()
+        .domain([maxC, minC])
+        .range([height - margin.bottom, margin.top])
+    yAxis = d3.axisLeft() 
+        .scale(yScale1).ticks(10)
+    */
     colorScale = d3.scaleLinear()
         .domain([minS, maxS])
         .range([0, 1])
@@ -88,7 +97,7 @@ export function updateFreqHistogramAxis(plot_properties, plot_cs)
     maxS = plot_properties.max_avg_sens
     // update the axis (with animations!)
     xScale.domain([minF, maxF])
-    yScale.domain([maxC, minC])
+    yScale1.domain([maxC, minC])
     
     svg.select("#x-axis").transition().duration(2000).call(xAxis)
     svg.select("#y-axis").transition().duration(2000).call(yAxis)
@@ -110,7 +119,7 @@ export function updateFreqHistogram(observations)
         .each(function(o) {
 
             svg.selectAll('asd')
-            .data(o.freq_windows)
+            .data(o.frequency)
             .enter()
             .append('rect')
             .attr("x", function(w) { return xScale(w.start)})
@@ -126,13 +135,13 @@ export function updateFreqHistogram(observations)
 
 function drawCSPoints(plot_cs)
 {
-    console.log(yScale.domain())
+    console.log(yScale1.domain())
     svg.selectAll('path').remove()
 
     var cs_line = d3.line()
         .defined(function(d) { return d.cs != null })
         .x(function(d) { return xScale(d.freq)})
-        .y(function(d) { return yScale(d.cs)})
+        .y(function(d) { return yScale1(d.cs)})
 
     svg.append('path')
         //.data([plot_cs].filter(cs_line.defined()))

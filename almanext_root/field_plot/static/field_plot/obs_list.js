@@ -14,7 +14,9 @@ export function showObservationList(data)
             { "data": "project_code"},
             { "data": "source_name" },
             { "data": "ra" },
-            { "data": "dec" }
+            { "data": "dec" },
+            { "data": "total_area" },
+            { "data": "overlap_area" }
         ],
         "scrollY": "200px",
         "paging": false,
@@ -31,7 +33,13 @@ export function getObservationRowData(tr)
 
 export function updateObservationList(data)
 {
-    console.log(data.observations)
     obs_table.clear();
     obs_table.rows.add(data.observations).draw()
+}
+
+export function highlightRows(obs_list)
+{
+
+    $(obs_table.cells().nodes()).removeClass('highlight');
+    obs_table.rows(obs_list).nodes().to$().addClass('highlight'); 
 }
