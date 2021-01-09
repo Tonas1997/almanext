@@ -100,9 +100,9 @@ def get_frequency_from_obs(obs, index):
             if((curr_freq >= min_freq) and (curr_freq <= max_freq)):
                 pos = int((curr_freq - min_freq)*100)
                 curr = freq_list[pos]
+                freq_list[pos]["observations"].append(index)
                 if(curr["cs"] == None or cs > curr["cs"]):
-                    freq_list[pos]["cs"] = cs
-                    freq_list[pos]["observations"].append(index)
+                    freq_list[pos]["cs"] = cs   
                     update_min_max("freq_obs_count", len(freq_list[pos]["observations"]))
                     if(cs > max_cs): properties_list["max_cs"] = cs
                     if(cs < min_cs): properties_list["min_cs"] = cs 
@@ -342,8 +342,10 @@ def reset_properties_list(plot_size, plot_res, min_f, max_f):
     properties_list["max_avg_sens"] = -9999
     properties_list["min_avg_int_time"] = 9999
     properties_list["max_avg_int_time"] = -9999
-    properties_list["min_snr"] : 9999
-    properties_list["max_snr"] : -9999
+    properties_list["min_snr"] = 9999
+    properties_list["max_snr"] = -9999
+    properties_list["min_freq_obs_count"] = 0
+    properties_list["max_freq_obs_count"] = -9999
 
 # -----------------------------------------------------------------------------------------
 # populates the continuum sensitivity list
