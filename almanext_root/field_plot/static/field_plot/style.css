@@ -286,6 +286,39 @@ form
   flex: 1 0 calc(50% - 20px);
 }
 
+/* Frequency coverage */
+.center
+{
+  text-align: center;
+}
+/* Frequency Coverage - line sensitivity line */
+.line 
+{
+  fill: none;
+  stroke: rgb(55, 55, 85);
+  stroke-width: 1px;
+}
+
+/* Frequency Coverage - observation count bar */
+.freq-histogram-obs-bar
+{
+  stroke-width: 0;
+  fill: rgb(85, 55, 85);
+  stroke: rgb(85, 55, 85);
+  opacity: 0.1;
+}
+
+.highlight
+{
+  opacity: 1.0
+}
+
+#histogram-controls 
+{
+  margin-top: center;
+  vertical-align: center;
+}
+
 /* Non-specific, auxiliary styles (including value box) */
 .axis-label 
 {
@@ -306,32 +339,6 @@ form
 .field.value
 {
   color: black;
-}
-
-.center
-{
-  text-align: center;
-}
-/* Frequency Coverage - line sensitivity line */
-.line 
-{
-  fill: none;
-  stroke: rgb(55, 55, 85);
-  stroke-width: 1px;
-}
-
-/* Frequency Coverage - observation count bar */
-.freq-coverage-obs-bar
-{
-  stroke-width: 0;
-  fill: rgb(85, 55, 85);
-  stroke: rgb(85, 55, 85);
-  opacity: 0.1;
-}
-
-.highlight
-{
-  opacity: 1.0
 }
 
 .options-wrapper
@@ -414,6 +421,7 @@ form
 /* Used for the "pixel info" tab menu */
 .ui-widget * { outline: none; }
 
+/*
 div#infotabs ul
 {
   list-style-type: none;
@@ -422,6 +430,7 @@ div#infotabs ul
   overflow: hidden;
   background-color: white;
 }
+
 
 div#infotabs li
 {
@@ -432,7 +441,7 @@ div#infotabs li
 div#infotabs li a
 {
   display: block;
-  color: black;
+  color: white;
   text-align: center;
   font-size: 14px;
   align-items: center;
@@ -444,7 +453,11 @@ div#infotabs li a:hover
 {
   background-color: lightgray;
 }
-
+*/
+.test
+{
+  font-size: smaller !important;
+}
 /* Observation table header - I have to override the default DataTables style :D */
 table.dataTable th
 {

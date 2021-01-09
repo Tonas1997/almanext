@@ -116,6 +116,10 @@ $(function() {
     $("#infotabs").tabs();
 });
 
+$(function() {
+    $("#freq-histogram-yaxis2").selectmenu();
+});
+
 /**
  * Sets the plot mode
  */

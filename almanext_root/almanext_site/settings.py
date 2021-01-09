@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from django.conf import settings
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -72,12 +73,14 @@ TEMPLATES = [
 ]
 
 STATICFILES_DIRS = [
-        os.path.join(BASE_DIR, 'static'),
+        os.path.join(BASE_DIR, 'almanext_site\\static'),
 ]
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "almanext_root/almanext_site/static")
+STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "almanext_root\\almanext_site")
+
+dir(settings)
 
 WSGI_APPLICATION = 'almanext_site.wsgi.application'
 

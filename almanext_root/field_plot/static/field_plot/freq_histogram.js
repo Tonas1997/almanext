@@ -27,7 +27,9 @@ export function showFreqHistogram(plot_properties, plot_freqs)
     maxFO = plot_properties.max_freq_obs_count // see above
 
     width = $('#infotabs').width() - 20;
-    height = $('#infotabs').height() - 70;
+    height = $('#infotabs').height() - 50;
+
+    document.getElementById("tab-frequency-coverage").innerHTML = "<div id='histogram'></div><div id=histogram-controls></div>"
     //margin = 5;
     
     // =========== DEFINE AXIS ===========
@@ -54,7 +56,7 @@ export function showFreqHistogram(plot_properties, plot_freqs)
         .scale(yScale2)
 
     // Create an SVG object
-    svg = d3.select("#tab-frequency-coverage")
+    svg = d3.select("#histogram")
         .append("svg")
         .attr("width", width)
         .attr("height", height + margin.bottom)
@@ -129,7 +131,7 @@ export function updateFreqHistogramAxis(plot_properties, plot_freqs)
 
 export function updateFreqHistogram(pixel_obs)
 {
-    svg.selectAll('rect').attr("class", "freq-coverage-obs-bar")
+    svg.selectAll('rect').attr("class", "freq-histogram-obs-bar")
     if(pixel_obs != null)
     {
         svg.selectAll('rect').each(function() {
@@ -141,11 +143,11 @@ export function updateFreqHistogram(pixel_obs)
                 var index = obs.index
                 if(bar_obs.includes(index))
                 {
-                    rect.attr("class", "freq-coverage-obs-bar highlight")
+                    rect.attr("class", "freq-histogram-obs-bar highlight")
                     return true
                 }
                 else
-                   rect.attr("class", "freq-coverage-obs-bar")
+                    rect.attr("class", "freq-histogram-obs-bar")
             })
         })
     }
@@ -181,18 +183,21 @@ function drawFreqObsBars(plot_freqs)
         .attr("y", function(f) { return yScale2(f.observations.length) + margin.top})
         .attr("width", function() { return getWidth(bucket_size)})
         .attr("height", function(f) { return height - margin.top - margin.bottom - yScale2(f.observations.length)})
-        .attr("class", "freq-coverage-obs-bar")
+        .attr("class", "freq-histogram-obs-bar")
 }
 
 function drawControls()
 {
-    document.getElementById("tab-frequency-coverage").innerHTML += `
-        <br><span class='text-label'>asd</span> 
-        <select id='freq-histogram-yaxis2'>
-            <option value='obs_count'>Number of observations</option>
-            <option value='total_area'>Total area</option>
-            <option value='overlap_area'>Total overlap area</option>
-        </select>`
+    document.getElementById("histogram-controls").innerHTML = `
+            <span class='text-label'>Vertical axis</span> 
+            <select id='freq-histogram-yaxis2'>
+                <option value='obs_count'>Number of observations</option>
+                <option value='total_area'>Total area</option>
+                <option value='overlap_area'>Total overlap area</option>
+            </select>`
+
+    // convert the above element to a JQuery UI one
+    $("#freq-histogram-yaxis2").selectmenu();
 }
 
 // returns the width of a given element given its start and end values
