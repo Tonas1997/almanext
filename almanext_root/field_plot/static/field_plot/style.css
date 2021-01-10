@@ -313,10 +313,42 @@ form
   opacity: 1.0
 }
 
-#histogram-controls 
+#histogram-controls-wrapper 
 {
-  margin-top: center;
-  vertical-align: center;
+  display: flex;
+  flex-direction: row;
+  padding-top: 4px;
+  border-top: 1px solid grey;
+}
+
+.histogram-control
+{
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.checkbox-clean
+{
+  padding: 0% !important;
+  background-color: transparent !important;
+  border: none !important;
+  height:16px !important;
+  margin-top: 0px !important;
+}
+
+.checkbox-clean:focus
+{
+  outline: 0 !important;
+}
+
+.freq-histogram-slider-range
+{
+  background-color: #d3d3d3 !important;
+  vertical-align: middle;
+  margin-left: 10px;
+  height: 7px;
+  border-radius: 5px;
+  width: 250px;
 }
 
 /* Non-specific, auxiliary styles (including value box) */
@@ -378,6 +410,16 @@ form
   border-radius: 1px;
   background-color: grey;
 }
+.sep-vertical-small {
+  content: '';
+  display: block;
+  width: 1px;
+  margin: 2px;
+  margin-left: 5px;
+  margin-right: 5px;
+  border-radius: 1px;
+  background-color: grey;
+}
 
 .sep-vertical-plot {
   content: '';
@@ -421,39 +463,6 @@ form
 /* Used for the "pixel info" tab menu */
 .ui-widget * { outline: none; }
 
-/*
-div#infotabs ul
-{
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background-color: white;
-}
-
-
-div#infotabs li
-{
-  float: left;
-  cursor: pointer;
-}
-
-div#infotabs li a
-{
-  display: block;
-  color: white;
-  text-align: center;
-  font-size: 14px;
-  align-items: center;
-  padding: 10px 14px;
-  text-decoration: none;
-}
-
-div#infotabs li a:hover
-{
-  background-color: lightgray;
-}
-*/
 .test
 {
   font-size: smaller !important;

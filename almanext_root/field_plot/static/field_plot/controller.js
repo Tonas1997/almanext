@@ -118,6 +118,11 @@ $(function() {
 
 $(function() {
     $("#freq-histogram-yaxis2").selectmenu();
+    $("#freq-histogram-redshift").slider({min: 0, max: 100, value:50, values:[10,90],slide: function(event, ui) {
+        console.log(ui.value)
+    }
+});
+
 });
 
 /**

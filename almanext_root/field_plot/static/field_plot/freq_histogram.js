@@ -29,7 +29,7 @@ export function showFreqHistogram(plot_properties, plot_freqs)
     width = $('#infotabs').width() - 20;
     height = $('#infotabs').height() - 50;
 
-    document.getElementById("tab-frequency-coverage").innerHTML = "<div id='histogram'></div><div id=histogram-controls></div>"
+    document.getElementById("tab-frequency-coverage").innerHTML = "<div id='histogram'></div><div id=histogram-controls-wrapper></div>"
     //margin = 5;
     
     // =========== DEFINE AXIS ===========
@@ -188,16 +188,43 @@ function drawFreqObsBars(plot_freqs)
 
 function drawControls()
 {
-    document.getElementById("histogram-controls").innerHTML = `
-            <span class='text-label'>Vertical axis</span> 
-            <select id='freq-histogram-yaxis2'>
-                <option value='obs_count'>Number of observations</option>
-                <option value='total_area'>Total area</option>
-                <option value='overlap_area'>Total overlap area</option>
-            </select>`
+    document.getElementById("histogram-controls-wrapper").innerHTML = `
+            <div class='histogram-control'>
+                <span class='text-label'>Vertical axis</span> 
+                <select id='freq-histogram-yaxis2'>
+                    <option value='obs_count'>Number of observations</option>
+                    <option value='total_area'>Total area</option>
+                    <option value='overlap_area'>Total overlap area</option>
+                </select>
+            </div>
+            <div class="sep-vertical-small"></div>
+            <div class='histogram-control'>
+                <span class='text-label'>Show emission lines</span>
+                <input type="checkbox" name="checkbox-1" id="freq-histogram-emissionlines">
+                <label for="freq-histogram-emissionlines" class="checkbox-clean"></label>
+            </div>
+            <div class="histogram-control">
+                <span class='text-label'>Redshift</span>
+                <div id="freq-histogram-redshift" class="freq-histogram-slider-range"></div>
+            </div>
+            `
 
-    // convert the above element to a JQuery UI one
+    // convert the above elements to JQueryUI instances
     $("#freq-histogram-yaxis2").selectmenu();
+    $("#freq-histogram-emissionlines").checkboxradio();
+    $("#freq-histogram-redshift").slider(
+    {
+        min: 0, 
+        max: 12,  
+        values:[0,12],
+        step: 0.01,
+        disabled: true, 
+        range: true, 
+        slide: function(event, ui) 
+        {
+            console.log(ui.value)
+        }
+    })
 }
 
 // returns the width of a given element given its start and end values

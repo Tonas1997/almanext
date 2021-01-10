@@ -71,7 +71,7 @@
 }
 .ui-state-active,.ui-widget-content .ui-state-active,.ui-widget-header .ui-state-active,a.ui-button:active,.ui-button:active,.ui-button.ui-state-active:hover
 {
-	border:1px solid #fff;
+	/*border:1px solid #fff;*/
 	background:#828295;
 	font-weight:normal;
 	color:#fff
