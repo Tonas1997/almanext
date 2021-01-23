@@ -25,11 +25,40 @@ import
 } from "./obs_list.js"
 
 // ========================================================
+// ================= PAGE INITIALIZATION ==================
+// ========================================================
+
+// loads the emission lines into the form's selectmenu on startup
+function fillLinesMenu(linesJSON)
+{
+    var len = linesJSON.lines.length
+    for(var i = 0; i < len; i++) 
+    {
+        var curr_line = linesJSON.lines[i];
+        var line_str = curr_line.species + " (" + curr_line.line + ")"
+        console.log(line_str)
+        emission_lines.push(
+        {
+            "line_id": curr_line.line_id, 
+            "species": curr_line.species, 
+            "line": curr_line.line, 
+            "frequency": curr_line.frequency
+        })
+    }
+
+    $.each(emission_lines, function (i, line) {
+        $('#form-lines').append($('<option>', { 
+            value: line.line_id,
+            text : line.species + " (" + line.line + ")" 
+        }));
+    });
+}
+// ========================================================
 // =================== STATE VARIABLES ====================
 // ========================================================
 
 var first_render = true
-var table = null
+var emission_lines = []
 
 // ========================================================
 // ============== PLOT PARAMETERS MANAGEMENT ==============
@@ -52,19 +81,55 @@ function getBands()
     return band_list
 }
 
+function getFreq(option)
+{
+    var minF, maxF
+    switch(option)
+    {
+        case "freq-bands":
+        {
+            return getBands()
+        }
+        
+        case "freq-range":
+        {
+            var minF = parseFloat($("#formfield_freq_min").val());
+            var maxF = parseFloat($("#formfield_freq_max").val());
+            return [minF, maxF]
+        }
+
+        case "freq-lines":
+        {
+            console.log(emission_lines)
+            console.log($("#form-lines").val())
+            // this needss to put this in an array to keep the request field coherent
+            return [emission_lines.find(({line_id}) => line_id == $("#form-lines").val()).frequency]
+        }
+    }
+}
+
+function getRedshift()
+{
+    var values = $('#formfield-redshift').slider("option", "values");
+    return values
+}
+
 /**
  * Validates the plot parameters
 */
 function checkParams()
 {
     var error = false
+    console.log(getFreq())
+    var freq_option = $("input[name='freq_option']:checked").val()
 
     parameters = {
         ra: parseFloat($("#formfield_ra").val()),
         dec: parseFloat($("#formfield_dec").val()),
         size: parseFloat($("#formfield_size").val()),
-        bands: getBands(),
-        redshift: parseFloat($("#formfield_redshift").val()),
+        frequency_option: freq_option,
+        frequency: getFreq(freq_option),
+        redshift: getRedshift(),
         res: parseFloat($("#formfield_res").val())
     }
     // check for the RA value
@@ -88,13 +153,7 @@ function checkParams()
         console.log("Size!")
         error = true
     }
-    // check if the user selected at least one band
-    if(parameters.bands.length == 0)
-    {
-        // handle error
-        console.log("Bands!")
-        error = true
-    }
+
     // check for the resolution value
     if(isNaN(parameters.res))
     {
@@ -110,19 +169,41 @@ function checkParams()
 }
 
 /**
- * Initializes the tab behaviour for the plot information area
+ * Initializes the plot parameter controls
  */
-$(function() {
+$(function() 
+{
+    $("input[type='radio']").checkboxradio();
+    $("#formfield-redshift").slider(
+        {
+            min: 0, 
+            max: 12,  
+            values:[0,0],
+            step: 0.01,
+            disabled: false,
+            range: true
+        })
+    $("#form-lines").selectmenu({
+        maxHeight: '500px'})
     $("#infotabs").tabs();
-});
-
-$(function() {
     $("#freq-histogram-yaxis2").selectmenu();
     $("#freq-histogram-redshift").slider({min: 0, max: 100, value:50, values:[10,90],slide: function(event, ui) {
         console.log(ui.value)
     }
-});
+    });
 
+    $.ajax(    
+        {
+            url: '/get_lines/',
+            data_type: 'json',
+            success: function(data) {
+                console.log(data)
+                fillLinesMenu(JSON.parse(data))
+                $("#form-lines option:eq(1)").attr("selected","selected");
+                $("#form-lines").selectmenu("refresh")
+            }
+        }
+    )
 });
 
 /**

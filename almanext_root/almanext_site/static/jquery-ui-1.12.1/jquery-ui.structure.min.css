@@ -765,7 +765,9 @@ z-index:9999
 }
 .ui-selectmenu-open
 {
-	display:block
+	display: block;
+	max-height: 350px;
+    overflow-y: scroll;
 }
 .ui-selectmenu-text
 {
@@ -782,7 +784,7 @@ z-index:9999
 	border-width: 1px;
 	text-align:left;
 	white-space:nowrap;
-	width:12em;
+	width:100%;
 	padding: 2px;
 }
 .ui-selectmenu-icon.ui-icon

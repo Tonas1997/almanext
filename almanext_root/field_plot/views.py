@@ -4,7 +4,8 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from django.shortcuts import render
 from django.http import JsonResponse
-from common.models import Observation, SpectralWindow, Trace, Band
+from common.models import Observation, SpectralWindow, Trace, Band, EmissionLine
+from django.core.serializers.json import DjangoJSONEncoder
 
 ra_origin = 0
 dec_origin = 0
@@ -27,17 +28,35 @@ def index(request):
     #return HttpResponse("<h1>Hello world</h1>")
     return render(request, 'field_plot/main.html')
 
+def get_lines(request):
+
+    lines_list = []
+    lines_result = EmissionLine.objects.all()
+    for l in lines_result:
+        lines_list.append({
+            "line_id": l.line_id,
+            "species": l.species,
+            "line": l.line,
+            "frequency": l.frequency
+        })
+    
+    lines_json = json.dumps({"lines": lines_list}, cls=DjangoJSONEncoder)
+
+    return JsonResponse(lines_json, safe=False)
+
 # returns the json file generated with the given request
 def get_plot(request):
 
     ra = float(request.GET.get('ra', None))
     dec = float(request.GET.get('dec', None))
     size = float(request.GET.get('size', None))
-    bands = request.GET.getlist('bands[]', None)
-    z = float(request.GET.get('redshift', None))
+    frequency_options = request.GET.get('frequency_option', None)
+    frequency = request.GET.getlist('frequency[]', None)
+    z = request.GET.getlist('redshift[]', None)
     res = float(request.GET.get('res', None))
 
-    print("bands:" + str(bands))
+    z_min = z[0]
+    z_max = z[1]
 
     # defines the center of the observation in the form of a SkyCoord object
     center = SkyCoord(ra, dec, unit=(u.deg, u.deg))
@@ -51,32 +70,33 @@ def get_plot(request):
     print(str(min_ra) + " , " + str(max_ra) + " , " + str(min_dec) + " , " + str(max_dec))
     
     obs_result = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec, field_of_view__lte = 300).prefetch_related('spec_windows').prefetch_related('traces')
-    # if the redshift is zero, no need to look into frequency support
+    # if the redshift is zero AND we are looking into bands, no need to look into frequency support
     print("size 1:" + str(obs_result.count()))
-    if(z == 0):
-        obs_result = obs_result.filter(bands__designation__in = bands)
-        bands_qs = Band.objects.filter(designation__in = bands)
+    if(z == 0 and frequency_options == 'freq-bands'):
+        obs_result = obs_result.filter(bands__designation__in = frequency)
+        bands_qs = Band.objects.filter(designation__in = frequency)
         min_freq = bands_qs.first().start
         max_freq = bands_qs.last().end
-    # otherwise, apply the given redshift to the selected bands
+    # otherwise, run through the remaining use cases
     else:
-        z_bands = []
-        min_freq = 9999
-        max_freq = -9999 
-        for b in Band.objects.filter(designation__in = bands):
-            new_z_band = {
-                "start": b.start / (1+z), # cosmological redshift
-                "end": b.end / (1+z)
-            }
-            print(new_z_band)
-            if(new_z_band["start"] < min_freq): min_freq = new_z_band["start"]
-            if(new_z_band["end"] > max_freq): max_freq = new_z_band["end"]
-            z_bands.append(new_z_band)
-            
-        for o in obs_result:
-            covers = coversBands(z_bands, o)
-            if(not covers):
-                obs_result = obs_result.exclude(id=o.id)
+        if(frequency_options == 'freq-bands' and z_max != 0.0):
+            z_bands = []
+            min_freq = 9999
+            max_freq = -9999 
+            for b in Band.objects.filter(designation__in = bands):
+                new_z_band = {
+                    "start": b.start / (1+z), # cosmological redshift
+                    "end": b.end / (1+z)
+                }
+                print(new_z_band)
+                if(new_z_band["start"] < min_freq): min_freq = new_z_band["start"]
+                if(new_z_band["end"] > max_freq): max_freq = new_z_band["end"]
+                z_bands.append(new_z_band)
+                
+            for o in obs_result:
+                covers = coversBands(z_bands, o)
+                if(not covers):
+                    obs_result = obs_result.exclude(id=o.id)
 
     print(obs_result.query)
 

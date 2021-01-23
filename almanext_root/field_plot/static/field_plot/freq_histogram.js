@@ -216,9 +216,9 @@ function drawControls()
     {
         min: 0, 
         max: 12,  
-        values:[0,12],
+        values:[0],
         step: 0.01,
-        disabled: true, 
+        disabled: true,
         range: true, 
         slide: function(event, ui) 
         {

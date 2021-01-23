@@ -40,6 +40,7 @@ class Command(BaseCommand):
                 freq = row["Freq"]
                 # build the DB object
                 new_em = EmissionLine (
+                    line_id = row["#Lines"],
                     species = str_species,
                     line = str_line,
                     frequency = freq

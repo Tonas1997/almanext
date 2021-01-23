@@ -31,7 +31,19 @@
   margin-left: 5px;
 }
 
+.form-controls-area-inner
+{
+  display: flex;
+  flex: 1 0 100%;
+  flex-direction: column;
+}
+
 /* -------------------- */
+
+.plot-parameters-align
+{
+  align-items: center;
+}
 
 .plot-parameters-form-region
 {
@@ -54,19 +66,81 @@
 {
   display: flex;
   flex-direction: column;
-  flex: 2 1 50%;
+  flex: 1 1 75%;
 }
 
-.plot-parameters-form-frequency-bands
+.plot-parameters-form-frequency-options
+{
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  margin-bottom: 5px;
+}
+
+.radio-custom
+{
+  width: 90%;
+  padding-left: 0%;
+  padding-right: 0%;
+}
+
+.plot-parameters-form-frequency-bands-wrapper
 {
   display: flex;
   flex-direction: column;
+  flex: 0 0 35%;
+}
+
+.row-block
+{
+  margin: auto;
 }
 
 .plot-parameters-form-frequency-bands-row
 {
   display: flex;
   flex-direction: row;
+  vertical-align: center;
+}
+
+.plot-parameters-form-frequency-values-wrapper
+{
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 35%;
+}
+
+.freq-range-center
+{
+  display: flex;
+  align-items: center;
+}
+
+.plot-parameters-form-frequency-values
+{
+  display: flex;
+  flex-direction: row;
+  flex: 1
+}
+
+.plot-parameters-form-frequency-lines-wrapper
+{
+  display: flex;
+  flex: 0 0 30%;
+  flex-direction: column;
+}
+
+.plot-parameters-form-frequency-lines
+{
+  margin-top: 2px;
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+.selectmenu-lines
+{
+  width: 100% !important;
 }
 
 /* -------------------- */
@@ -89,6 +163,7 @@ form
   color: rgb(100, 100, 100)
 }
 
+
 .plot-parameters-textbox-large input
 {
   height: 30px;
@@ -101,10 +176,23 @@ form
   border-radius: 3px;
 }
 
+.plot-parameters-textbox-small input
+{
+  height: 15px;
+  width: 40px;
+  margin-top: 5px;
+  margin-right: 5px;
+  border-style: solid;
+  border-color: rgb(128, 128, 128);
+  border-width: 1px;
+  border-radius: 3px;
+}
+
 .plot-parameters-checkbutton
 {
   margin-right: 15px;
-  margin-top: 5px;
+  margin-top: 2px;
+  margin-bottom: 2px;
   font-size: 12px;
 }
 
@@ -116,44 +204,39 @@ form
   vertical-align: middle;
 }
 
-.plot-parameters-form-frequency-redshift
+.plot-parameters-form-frequency-controls
 {
-  display: flex;
-  flex-direction: column;
-  margin-top: 5px;
-  width: 100%;
-}
-
-.plot-parameters-form-frequency-redshift-slider
-{
+  margin-right: 10px;
   display: flex;
   flex-direction: row;
-  margin-top: 5px;
+  flex: 1 30%;
   align-items: center;
 }
 
-.plot-parameters-form-frequency-redshift-slider .zvalue
+.plot-parameters-form-frequency-controls-redshift-wrapper
 {
-  -webkit-appearance: none;
-  width: 70%;
-  height: 7px;
-  border-radius: 5px;  
-  background: #d3d3d3;
-  outline: none;
-  opacity: 0.7;
-  -webkit-transition: .2s;
-  transition: opacity .2s;
-  margin-right: 10px;
+  display: flex;
+  flex: 0 0 60%;
+  flex-direction: column;
+  margin-top: 5px;
 }
 
-.zvalue::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%; 
-  background: rgb(55, 55, 85);
-  cursor: pointer;
+.plot-parameters-slider-range
+{
+  background-color: #d3d3d3 !important;
+  vertical-align: middle;
+  margin-left: 10px;
+  margin-right: 10px;
+  height: 7px;
+  border-radius: 5px;
+  width: 250px;
+}
+
+.slider-row-label
+{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .redshift-sym
@@ -165,8 +248,8 @@ form
 
 .submit-button
 {
-  width: 80px;
-  height: 30px;
+  width: 100%;
+  height: 50%;
 }
 
 
@@ -400,7 +483,8 @@ form
   background-color: grey;
 }
 
-.sep-vertical {
+.sep-vertical 
+{
   content: '';
   display: block;
   width: 1px;
@@ -410,11 +494,11 @@ form
   border-radius: 1px;
   background-color: grey;
 }
+
 .sep-vertical-small {
   content: '';
   display: block;
   width: 1px;
-  margin: 2px;
   margin-left: 5px;
   margin-right: 5px;
   border-radius: 1px;
