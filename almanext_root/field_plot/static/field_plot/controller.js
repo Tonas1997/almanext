@@ -173,7 +173,26 @@ function checkParams()
  */
 $(function() 
 {
-    $("input[type='radio']").checkboxradio();
+    // Frequency options
+    $("input[type='radio']").checkboxradio({icon: false});
+    // Enable and disable control groups according to the selected option
+    $("#radio-1").on('click', (function() {
+        $('input[name=band_box]').removeAttr('disabled');
+        $('input[name=formfield_freq]').attr('disabled','true');
+        $("#form-lines").selectmenu("disable");
+    }))
+    $("#radio-2").on('click', (function() {
+        $('input[name=band_box]').attr('disabled','true');
+        $('input[name=formfield_freq]').removeAttr('disabled');
+        $("#form-lines").selectmenu("disable");
+    }))
+    $("#radio-3").on('click', (function() {
+        $('input[name=band_box]').attr('disabled','true');
+        $('input[name=formfield_freq]').attr('disabled','true');
+        $("#form-lines").selectmenu("enable");
+    }))
+
+    // Redshift slider
     $("#formfield-redshift").slider(
         {
             min: 0, 
@@ -183,6 +202,12 @@ $(function()
             disabled: false,
             range: true
         })
+    // Change the z display
+    $("#formfield-redshift").on('slide', (function(event, ui) {
+       $("#redshift-val-min").html(ui.values[0])
+       $("#redshift-val-max").html(ui.values[1])
+    }))
+    // Line selection menu
     $("#form-lines").selectmenu({
         maxHeight: '500px'})
     $("#infotabs").tabs();
@@ -205,6 +230,10 @@ $(function()
         }
     )
 });
+
+/**
+ * Enable and disable frequency controls according to the selected option
+ */
 
 /**
  * Sets the plot mode

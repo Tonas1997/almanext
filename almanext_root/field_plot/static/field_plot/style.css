@@ -82,6 +82,7 @@
   width: 90%;
   padding-left: 0%;
   padding-right: 0%;
+  font-size: 12px;
 }
 
 .plot-parameters-form-frequency-bands-wrapper
@@ -163,7 +164,6 @@ form
   color: rgb(100, 100, 100)
 }
 
-
 .plot-parameters-textbox-large input
 {
   height: 30px;
@@ -216,7 +216,7 @@ form
 .plot-parameters-form-frequency-controls-redshift-wrapper
 {
   display: flex;
-  flex: 0 0 60%;
+  flex: 1 1 60%;
   flex-direction: column;
   margin-top: 5px;
 }
@@ -243,12 +243,12 @@ form
 {
   display: flex;
   flex-direction: row;
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .submit-button
 {
-  width: 100%;
+  width: 30%;
   height: 50%;
 }
 

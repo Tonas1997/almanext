@@ -35,51 +35,55 @@
 						<div class="form-controls-area-inner">
 							<div class="plot-parameters-form-frequency-options">
 								<div class="plot-parameters-form-frequency-bands-wrapper plot-parameters-align">
-									<label for="radio-1" class="text-label radio-custom">Bands</label>
+									<label for="radio-1" class="radio-custom">Bands</label>
 									<input type="radio" name="freq_option" id="radio-1" value="freq-bands">
 									<div class="row-block">
 										<div class="plot-parameters-form-frequency-bands-row">
 											<div class="plot-parameters-checkbutton">
-												<input type="checkbox" id="formfield_band3" name="formfield_band3" value="Band 3">
+												<input type="checkbox" id="formfield_band3" name="band_box" value="Band 3">
 												<label for="formfield_band3" class="text-label">3</label><br></div>
 											<div class="plot-parameters-checkbutton">
-												<input type="checkbox" id="formfield_band4" name="formfield_band4" value="Band 4">
+												<input type="checkbox" id="formfield_band4" name="band_box" value="Band 4">
 												<label for="formfield_band4" class="text-label">4</label><br></div>
 											<div class="plot-parameters-checkbutton">
-												<input type="checkbox" id="formfield_band5" name="formfield_band5" value="Band 5">
+												<input type="checkbox" id="formfield_band5" name="band_box" value="Band 5">
 												<label for="formfield_band5" class="text-label">5</label><br></div>
 											<div class="plot-parameters-checkbutton">
-												<input type="checkbox" id="formfield_band6" name="formfield_band6" value="Band 6">
+												<input type="checkbox" id="formfield_band6" name="band_box" value="Band 6">
 												<label for="formfield_band6" class="text-label">6</label><br></div>
 										</div>
 										<div class="plot-parameters-form-frequency-bands-row">
 											<div class="plot-parameters-checkbutton">
-												<input type="checkbox" id="formfield_band7" name="formfield_band7" value="Band 7">
+												<input type="checkbox" id="formfield_band7" name="band_box" value="Band 7">
 												<label for="formfield_band7" class="text-label">7</label><br></div>
 											<div class="plot-parameters-checkbutton">
-												<input type="checkbox" id="formfield_band8" name="formfield_band8" value="Band 8">
+												<input type="checkbox" id="formfield_band8" name="band_box" value="Band 8">
 												<label for="formfield_band8" class="text-label">8</label><br></div>
 											<div class="plot-parameters-checkbutton">
-												<input type="checkbox" id="formfield_band9" name="formfield_band9" value="Band 9">
+												<input type="checkbox" id="formfield_band9" name="band_box" value="Band 9">
 												<label for="formfield_band9" class="text-label">9</label><br></div>
 											<div class="plot-parameters-checkbutton">
-												<input type="checkbox" id="formfield_band10" name="formfield_band10" value="Band 10">
+												<input type="checkbox" id="formfield_band10" name="band_box" value="Band 10">
 												<label for="formfield_band10" class="text-label">10</label><br></div>
 										</div>
 									</div>
 								</div>
 								<div class="plot-parameters-form-frequency-values-wrapper plot-parameters-align">
-									<label for="radio-2" class="text-label radio-custom">Frequency Range</label>
+									<label for="radio-2" class="radio-custom">Frequency Range</label>
 									<input type="radio" name="freq_option" id="radio-2" value="freq-range">
 									<div class="plot-parameters-form-frequency-values freq-range-center">
-										<div class="plot-parameters-textbox-small"><label for="formfield_freq_min" class="text-label">Start:</label>
-											<input type="text" id="formfield_freq_min" name="formfield_freq"></div>
-										<div class="plot-parameters-textbox-small"><label for="formfield_freq_max" class="text-label">End:</label>
-											<input type="text" id="formfield_freq_max" name="formfield_freq"></div>
+										<div class="plot-parameters-textbox-small">
+											<label for="formfield_freq_min" class="text-label">Start:</label>
+											<input type="text" id="formfield_freq_min" name="formfield_freq">
+										</div>
+										<div class="plot-parameters-textbox-small">
+											<label for="formfield_freq_max" class="text-label">End:</label>
+											<input type="text" id="formfield_freq_max" name="formfield_freq">
+										</div>
 									</div>
 								</div>
 								<div class="plot-parameters-form-frequency-lines-wrapper plot-parameters-align">
-									<label for="radio-3" class="text-label radio-custom">Emissions Lines</label>
+									<label for="radio-3" class="radio-custom">Emissions Lines</label>
 									<input type="radio" name="freq_option" id="radio-3" value="freq-lines">
 									<div class="plot-parameters-form-frequency-lines">
 										<select name="emission_lines" id="form-lines" class="selectmenu-lines"></select>
@@ -92,7 +96,7 @@
 									<span class="text-label">Redshift</span>
 									<div class="slider-row-label">
 										<div id="formfield-redshift" class="plot-parameters-slider-range"></div>
-										<div class="redshift-sym text-label">&zscr; =&nbsp;<div id="redshift-val">0.0</div></div>
+										<div class="redshift-sym text-label">&zscr; =&nbsp;<div id="redshift-val-min">0.0</div>~<div id="redshift-val-max">0.0</div></div>
 									</div>
 								</div>
 								<input class="ui-button ui-widget ui-corner-all submit-button" type="submit" value="Submit">
