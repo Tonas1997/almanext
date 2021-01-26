@@ -13,9 +13,9 @@ inc = 0
 minF = 0
 maxF = 0
 
-# determines if an observation has coverage on the listed (and redshifted) bands
-def coversBands(z_bands, o):
-    for b in z_bands:
+# determines if an observation has coverage on the listed (and possibly redshifted) ranges
+def covers_ranges(z_ranges, o):
+    for b in z_ranges:
         for w in o.spec_windows.iterator():
             if((w.start < b['start'] and w.end > b['start']) or
                 (w.start < b['end'] and w.end > b['end']) or
@@ -23,6 +23,16 @@ def coversBands(z_bands, o):
                 (w.start > b['start'] and w.end < b['end'])):
                 return True
     return False
+
+def get_min_max_f(o):
+    min_f = 9999
+    max_f = -9999
+    for w in o.spec_windows.iterator():
+        min_f = min(min_f, w.start, w.end)
+        max_f = max(max_f, w.start, w.end)
+    return([min_f, max_f])
+        
+
 
 def index(request):
     #return HttpResponse("<h1>Hello world</h1>")
@@ -55,8 +65,8 @@ def get_plot(request):
     z = request.GET.getlist('redshift[]', None)
     res = float(request.GET.get('res', None))
 
-    z_min = z[0]
-    z_max = z[1]
+    z_min = float(z[0])
+    z_max = float(z[1])
 
     # defines the center of the observation in the form of a SkyCoord object
     center = SkyCoord(ra, dec, unit=(u.deg, u.deg))
@@ -72,31 +82,53 @@ def get_plot(request):
     obs_result = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec, field_of_view__lte = 300).prefetch_related('spec_windows').prefetch_related('traces')
     # if the redshift is zero AND we are looking into bands, no need to look into frequency support
     print("size 1:" + str(obs_result.count()))
-    if(z == 0 and frequency_options == 'freq-bands'):
+    # temporary default
+    min_freq = 9999
+    max_freq = -9999 
+    if(z_max == 0 and frequency_options == 'freq-bands'):
         obs_result = obs_result.filter(bands__designation__in = frequency)
         bands_qs = Band.objects.filter(designation__in = frequency)
         min_freq = bands_qs.first().start
         max_freq = bands_qs.last().end
     # otherwise, run through the remaining use cases
     else:
-        if(frequency_options == 'freq-bands' and z_max != 0.0):
-            z_bands = []
-            min_freq = 9999
-            max_freq = -9999 
-            for b in Band.objects.filter(designation__in = bands):
+        # the only common object across the use cases
+        z_bands = []
+        if(frequency_options == 'freq-bands'):        
+            
+            for b in Band.objects.filter(designation__in = frequency):
+                print(b.start)
+                print(z_min)
                 new_z_band = {
-                    "start": b.start / (1+z), # cosmological redshift
-                    "end": b.end / (1+z)
+                    "start": b.start / (1+z_min), # cosmological redshift
+                    "end": b.end / (1+z_max)
                 }
                 print(new_z_band)
-                if(new_z_band["start"] < min_freq): min_freq = new_z_band["start"]
-                if(new_z_band["end"] > max_freq): max_freq = new_z_band["end"]
+                #if(new_z_band["start"] < min_freq): min_freq = new_z_band["start"]
+                #if(new_z_band["end"] > max_freq): max_freq = new_z_band["end"]
                 z_bands.append(new_z_band)
-                
-            for o in obs_result:
-                covers = coversBands(z_bands, o)
+        # frequency range
+        elif(frequency_options == 'freq-range'):
+            min_f = float(frequency[0]) / (1+z_min)
+            max_f = float(frequency[1]) / (1+z_max)
+            z_bands.append({"start": min_f, "end": max_f})
+        # emission line
+        else:
+            em_freq = float(frequency[0])
+            min_f = em_freq / (1+z_min)
+            max_f = em_freq / (1+z_max)
+            z_bands.append({"start": min_f, "end": max_f})
+
+        # filter out the observations that fall outside the defined frequency range(s)
+        for o in obs_result:
+                covers = covers_ranges(z_bands, o)
                 if(not covers):
                     obs_result = obs_result.exclude(id=o.id)
+                # update the min and max frequency values across the obs set
+                else:
+                    min_max = get_min_max_f(o)
+                    min_freq = min(min_freq, min_max[0])
+                    max_freq = max(max_freq, min_max[1])
 
     print(obs_result.query)
 

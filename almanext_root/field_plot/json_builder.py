@@ -43,6 +43,8 @@ properties_list = {
     "max_snr": 0,
     "min_freq_obs_count": 0,
     "max_freq_obs_count": 0,
+    "min_freq_obs_t_area": 0,
+    "max_freq_obs_t_area": 0,
 }
 pixel_area = 0
 pixel_list = []
@@ -53,6 +55,8 @@ min_freq = 9999
 max_freq = -9999
 min_freq_obs_count = 0
 max_freq_obs_count = -9999
+min_freq_obs_t_area = 0
+max_freq_obs_t_area = -9999
 
 freq_list = []
 freq_list_size = 0
@@ -102,7 +106,7 @@ def get_frequency_from_obs(obs, index):
                 curr = freq_list[pos]
                 freq_list[pos]["observations"].append(index)
                 if(curr["cs"] == None or cs > curr["cs"]):
-                    freq_list[pos]["cs"] = cs   
+                    freq_list[pos]["cs"] = cs
                     update_min_max("freq_obs_count", len(freq_list[pos]["observations"]))
                     if(cs > max_cs): properties_list["max_cs"] = cs
                     if(cs < min_cs): properties_list["min_cs"] = cs 
@@ -236,6 +240,24 @@ def update_obs_overlapping_areas(y, x, counter):
             observations_list[o]["overlap_area"] += pixel_area
 
 # -----------------------------------------------------------------------------------------
+# updates the total area for all frequency buckets covered by a given observation
+def increase_freq_bucket_total_area(obs_json):
+    global max_freq_obs_t_area
+    obs_windows = obs_json["frequency"]
+    obs_area = obs_json["total_area"]
+    for o in obs_windows:
+        start = o["start"]
+        curr_freq = start
+        end = o["end"]
+        # run through the spectral window in 10MHz increments
+        while(curr_freq <= end):
+            if((curr_freq >= min_freq) and (curr_freq <= max_freq)):
+                pos = int((curr_freq - min_freq)*100)
+                freq_list[pos]["total_area"] += obs_area
+                max_freq_obs_t_area = max(max_freq_obs_t_area, obs_area)
+            curr_freq += 0.01
+
+# -----------------------------------------------------------------------------------------
 # fills the pixels around given ra/dec coordinates and a fov measured in arcsecs
 # ARGS: the json representation of the observation, the mean frequency, the antenna array and the observation counter
 def fill_pixels(obs_json, mean_freq, array, counter):
@@ -317,6 +339,8 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                     update_min_max("avg_res", curr_px.avg_res)
                     update_min_max("avg_sens", curr_px.avg_sens)
                     update_min_max("avg_int_time", curr_px.avg_int_time)
+                    # update the total area for all frequency buckets covered by this observation
+    increase_freq_bucket_total_area(obs_json)
     return obs_json
 
 # -----------------------------------------------------------------------------------------
@@ -346,9 +370,11 @@ def reset_properties_list(plot_size, plot_res, min_f, max_f):
     properties_list["max_snr"] = -9999
     properties_list["min_freq_obs_count"] = 0
     properties_list["max_freq_obs_count"] = -9999
+    properties_list["min_freq_obs_t_area"] = 0
+    properties_list["max_freq_obs_t_area"] = -9999
 
 # -----------------------------------------------------------------------------------------
-# populates the continuum sensitivity list
+# populates the continuum sensitivity list with default values which will be replaced later on
 def fill_frequency_list(min_freq, max_freq):
     global freq_list, freq_list_size
 
@@ -360,7 +386,9 @@ def fill_frequency_list(min_freq, max_freq):
         ls.append({
             "freq": curr_freq,
             "cs": None,
-            "observations": []
+            "observations": [],
+            "total_area": 0
+
         })
         curr_freq += 0.01
     freq_list = ls

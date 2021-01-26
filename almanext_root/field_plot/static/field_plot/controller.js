@@ -102,7 +102,7 @@ function getFreq(option)
         {
             console.log(emission_lines)
             console.log($("#form-lines").val())
-            // this needss to put this in an array to keep the request field coherent
+            // this needs to put this in an array to keep the request field coherent with those of other options
             return [emission_lines.find(({line_id}) => line_id == $("#form-lines").val()).frequency]
         }
     }
