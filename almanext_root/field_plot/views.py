@@ -99,9 +99,11 @@ def get_plot(request):
             for b in Band.objects.filter(designation__in = frequency):
                 print(b.start)
                 print(z_min)
+                f1 = b.start / (1+z_min) # cosmological redshift
+                f2 = b.end / (1+z_max)
                 new_z_band = {
-                    "start": b.start / (1+z_min), # cosmological redshift
-                    "end": b.end / (1+z_max)
+                    "start": min(f1, f2), 
+                    "end": max(f1, f2)
                 }
                 print(new_z_band)
                 #if(new_z_band["start"] < min_freq): min_freq = new_z_band["start"]

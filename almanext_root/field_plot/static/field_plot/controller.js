@@ -6,7 +6,8 @@ import
     updateCanvas, // plot update
     getPixelInfo, // gets the selected pixel
     canvas_chart, // canvas object
-    setRenderMode
+    setRenderMode,
+    showPlotControls
 } from "./plot.js"
 
 import
@@ -229,6 +230,7 @@ $(function()
             }
         }
     )
+    
 });
 
 /**
@@ -284,6 +286,7 @@ function initializePlotView(data)
      * ================== INITIALIZATION ==================
      */
     // defines some variables
+    if(first_render) showPlotControls()
     var plot_properties = renderData(data)
     var plot_cs = data.continuum_sensitivity        
 
@@ -328,11 +331,6 @@ function initializePlotView(data)
 
         
     });
-    // defines the "change render mode" behaviour
-    $("#plot-color-property").on('change', (function() {
-        setRenderMode(this.value)
-        updateCanvas()
-    }))
     // defines the "highlight overlapping observations" behaviour
     $('#highlightOverlap').on('change', (function() {
         if(this.checked)

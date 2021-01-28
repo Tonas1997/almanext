@@ -254,7 +254,7 @@ def increase_freq_bucket_total_area(obs_json):
             if((curr_freq >= min_freq) and (curr_freq <= max_freq)):
                 pos = int((curr_freq - min_freq)*100)
                 freq_list[pos]["total_area"] += obs_area
-                max_freq_obs_t_area = max(max_freq_obs_t_area, obs_area)
+                update_min_max("freq_obs_t_area", freq_list[pos]["total_area"])
             curr_freq += 0.01
 
 # -----------------------------------------------------------------------------------------

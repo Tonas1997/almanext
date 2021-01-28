@@ -14,6 +14,8 @@ var minS;
 var maxS;
 var minFO;
 var maxFO;
+var minFA;
+var maxFA;
 
 export function showFreqHistogram(plot_properties, plot_freqs)
 {
@@ -25,6 +27,8 @@ export function showFreqHistogram(plot_properties, plot_freqs)
     maxS = plot_properties.max_avg_sens
     minFO = plot_properties.min_freq_obs_count // highest number of observations covering any bucket
     maxFO = plot_properties.max_freq_obs_count // see above
+    minFA = plot_properties.min_freq_obs_t_area
+    maxFA = plot_properties.max_freq_obs_t_area
 
     width = $('#infotabs').width() - 20;
     height = $('#infotabs').height() - 50;
@@ -41,12 +45,13 @@ export function showFreqHistogram(plot_properties, plot_freqs)
         .ticks(10)
         .scale(xScale)
 
-    // line sensitivity TODO
+    // left scale - default: number of observations per frequency
     yScale1 = d3.scaleLinear()
         .domain([minFO, maxFO])
         .range([height - margin.bottom - margin.top, 0])
     yAxis1 = d3.axisLeft() 
         .scale(yScale1)
+        
 
     // line sensitivity
     yScale2 = d3.scaleLinear()
@@ -79,8 +84,10 @@ export function showFreqHistogram(plot_properties, plot_freqs)
     g = svg.append("g")
         .attr('id', 'y-axis1')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-        .call(yAxis1)
-    g = svg.append("text")             
+        .call(yAxis1
+            .tickFormat(d3.format(".0s")))
+    g = svg.append("text")
+        .attr("id", "y-axis1-label")             
         .attr("transform", "translate(" + margin.ylabelLeft + "," + (height/2) + ")rotate(-90)")
         .attr("class", "axis-label")
         .style("text-anchor", "middle")
@@ -116,6 +123,8 @@ export function updateFreqHistogramAxis(plot_properties, plot_freqs)
     maxS = plot_properties.max_avg_sens
     minFO = plot_properties.min_freq_obs_count 
     maxFO = plot_properties.max_freq_obs_count
+    minFA = plot_properties.min_freq_obs_t_area
+    maxFA = plot_properties.max_freq_obs_t_area
     // update the axis (with animations!)
     xScale.domain([minF, maxF])
     yScale1.domain([minFO, maxFO])
@@ -187,19 +196,37 @@ function drawFreqObsBars(plot_freqs)
         .attr("class", "freq-histogram-obs-bar")
 }
 
-function changeAxisData(data_id)
+export function changeAxisData(data_id)
 {
+    console.log(data_id)
     switch(data_id)
     {
-        case "n_observations":
+        case "obs_count":
         {
             yScale1.domain([minFO, maxFO])
+            svg.select("#y-axis1").transition().duration(1000).call(yAxis1)
+            $('y-axis1-label').html("Observation count")
+            svg.selectAll('rect')
+                .transition()
+                .duration(500)
+                .attr("y", function(f) { return yScale1(f.observations.length) + margin.top})
+                .attr("height", function(f) { return height - margin.top - margin.bottom - yScale1(f.observations.length)})
+            break
         }
         case "total_area":
         {
             yScale1.domain([minFA, maxFA])
+            svg.select("#y-axis1").transition().duration(1000).call(yAxis1)
+            $('#y-axis1-label').html("Area (arcsec&#178;)")
+            svg.selectAll('rect')
+                .transition()
+                .duration(500)
+                .attr("y", function(f) { return yScale1(f.total_area) + margin.top})
+                .attr("height", function(f) { return height - margin.top - margin.bottom - yScale1(f.total_area)})
+            break
         }
-    svg.selectAll('rect')
+    }
+    
 
 }
 
@@ -208,10 +235,9 @@ function drawControls()
     document.getElementById("histogram-controls-wrapper").innerHTML = `
             <div class='histogram-control'>
                 <span class='text-label'>Vertical axis</span> 
-                <select id='freq-histogram-yaxis2'>
+                <select id='freq-histogram-yaxis1'>
                     <option value='obs_count'>Number of observations</option>
                     <option value='total_area'>Total area</option>
-                    <option value='overlap_area'>Total overlap area</option>
                 </select>
             </div>
             <div class="sep-vertical-small"></div>
@@ -227,7 +253,13 @@ function drawControls()
             `
 
     // convert the above elements to JQueryUI instances
-    $("#freq-histogram-yaxis2").selectmenu();
+    $("#freq-histogram-yaxis1").selectmenu(
+    {
+        change: function(event, ui)
+        {
+            changeAxisData(ui.item.value)
+        }
+    })
     $("#freq-histogram-emissionlines").checkboxradio();
     $("#freq-histogram-redshift").slider(
     {
@@ -242,6 +274,7 @@ function drawControls()
             console.log(ui.value)
         }
     })
+
 }
 
 // returns the width of a given element given its start and end values

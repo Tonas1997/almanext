@@ -398,7 +398,35 @@ export function getPixelInfo(mouse)
     {
         return null
     }
-}    
+}
+
+export function showPlotControls()
+{
+    $("#plot").append(`<div id="plot-controls">
+                        <select id="plot-color-property">
+                            <option value="count_pointings">Pointings count</option>
+                            <option value="avg_res">Average resolution</option>
+                            <option value="avg_sens">Average sensitivity (10km/s)</option>
+                            <option value="avg_int_time">Average integration time</option>
+                            <option value="snr">SNR improvement factor</option>
+                        </select>
+                        <div id="plot-axis">
+                            <svg id="plot-color-scale"></svg>
+                        </div>
+                    </div>`)
+    $("#plot-color-property").selectmenu(
+    {
+        change: function(event, ui)
+        {
+            setRenderMode(ui.item.value)
+            updateCanvas()
+        },
+        position:
+        {
+            collision: "flip"
+        }
+    })
+}
 
 // ------------------- AUXILIARY FUNCTIONS -------------------
 
