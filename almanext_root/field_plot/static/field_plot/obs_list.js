@@ -21,7 +21,8 @@ export function showObservationList(data)
         "scrollY": "200px",
         "paging": false,
         "searching": false,
-        "info": false
+        "info": false,
+        "orderClasses": false
     } 
     ).columns.adjust().draw();
 }
@@ -39,7 +40,22 @@ export function updateObservationList(data)
 
 export function highlightRows(obs_list)
 {
-
-    $(obs_table.cells().nodes()).removeClass('highlight');
-    obs_table.rows(obs_list).nodes().to$().addClass('highlight'); 
+    obs_table.rows().every(function() 
+    {
+        this.nodes().to$().removeClass('highlighted-row')
+    })
+    if(obs_list != null)
+    {
+        var id_list = []
+        for (var i = 0; i < obs_list.length; i++)
+        {
+            id_list.push(obs_list[i]["index"])
+        }
+        obs_table.rows().every(function() 
+        {
+            var rowData = this.data();
+            if(id_list.includes(rowData.index))
+                $(this.node()).addClass('highlighted-row');
+        })
+    } 
 }

@@ -2,7 +2,7 @@ var width //= $('#infotabs').width() - 50;
 var height //= $('#infotabs').height() - 40;
 var margin = {left: 50, right: 40, top: 10, bottom: 15, xlabel: 25, ylabelLeft: 10, ylabelRight: 10};
 
-var svg, xScale, yScale1, yScale2, xAxis, yAxis1, yAxis2, g
+var svg, xScale, yScale1, yScale2, xAxis, yAxis1, yAxis2, g, drawArea
 
 var bucket_size = 0.01 // in GHz
 
@@ -42,7 +42,6 @@ export function showFreqHistogram(plot_properties, plot_freqs)
         .domain([minF, maxF])
         .range([margin.left, width - margin.right]);
     xAxis = d3.axisBottom()
-        .ticks(10)
         .scale(xScale)
 
     // left scale - default: number of observations per frequency
@@ -51,7 +50,6 @@ export function showFreqHistogram(plot_properties, plot_freqs)
         .range([height - margin.bottom - margin.top, 0])
     yAxis1 = d3.axisLeft() 
         .scale(yScale1)
-        
 
     // line sensitivity
     yScale2 = d3.scaleLinear()
@@ -70,6 +68,13 @@ export function showFreqHistogram(plot_properties, plot_freqs)
         .style("margin-top", margin.top)
 
     // X axis
+    /*var clipX = svg.append("clipPath")
+        .attr('id', 'clip-x-axis')
+        .append('rect')
+        .attr('x', margin.left)
+        .attr('y', height - margin.bottom)
+        .attr('width', width - margin.left - margin.right)
+        .attr('height', margin.bottom);*/
     g = svg.append("g")
         .attr('id', 'x-axis')
         .attr('transform', 'translate(0,' + (height-margin.bottom) + ')')
@@ -104,11 +109,45 @@ export function showFreqHistogram(plot_properties, plot_freqs)
         .style("text-anchor", "middle")
         .text("Line sensitivity (mJy/beam)");
 
+    var clip = svg.append("defs").append("svg:clipPath")
+        .attr("id", "clip")
+        .append("svg:rect")
+        .attr("width", width - margin.left - margin.right)
+        .attr("height", height - margin.top - margin.bottom)
+        .attr("x", margin.left)
+        .attr("y", margin.top);
+    
+    drawArea = svg.append("g")
+        .attr("clip-path", "url(#clip)")
+
     // draw the CS graph
-    drawCSPoints(plot_freqs)
+    drawCSPoints(plot_freqs) //I have to fix the scaling issues
     drawFreqObsBars(plot_freqs)
     drawControls()
+    
+    const extent = [[margin.left, margin.top], [width - margin.right - margin.left, height - margin.top - margin.bottom]];
+
+    svg.call(d3.zoom()
+      .scaleExtent([1, 20])
+      .translateExtent(extent)
+      .extent(extent)
+      .on("zoom", zoomed));
 }
+
+function zoomed() 
+{
+    //xScale = d3.event.transform.rescaleX(xScale)
+    //xScale.range([margin.left, width - margin.right].map(d => d3.event.transform.applyX(d)));
+    drawArea.selectAll("rect")
+        .attr("transform", "translate(" + d3.event.transform.x+",0)scale(" + d3.event.transform.k + ",1)")
+        //.attr("x", function(f) { return xScale(f.freq)})
+        //.attr("width", function() { return getWidth(bucket_size)});
+    drawArea.selectAll("path")
+        .attr("transform", "translate(" + d3.event.transform.x+",0)scale(" + d3.event.transform.k + ",1)")
+        //.attr("x", (function(d) { return xScale(d.freq)}))
+    svg.selectAll("#x-axis").call(xAxis.scale(d3.event.transform.rescaleX(xScale)));
+}
+
 
 export function updateFreqHistogramAxis(plot_properties, plot_freqs)
 {
@@ -135,16 +174,16 @@ export function updateFreqHistogramAxis(plot_properties, plot_freqs)
     svg.select("#y-axis2").transition().duration(2000).call(yAxis2)
     
     // redraw the CS graph
-    drawCSPoints(plot_freqs)
+    //drawCSPoints(plot_freqs)
     drawFreqObsBars(plot_freqs)
 }
 
 export function updateFreqHistogram(pixel_obs)
 {
-    svg.selectAll('rect').attr("class", "freq-histogram-obs-bar")
+    drawArea.selectAll('rect').attr("class", "freq-histogram-obs-bar")
     if(pixel_obs != null)
     {
-        svg.selectAll('rect').each(function() {
+        drawArea.selectAll('rect').each(function() {
             var rect = d3.select(this)
             var rect_obs = rect.attr("observations")
             var bar_obs = rect_obs.split(",").map(Number)
@@ -166,14 +205,14 @@ export function updateFreqHistogram(pixel_obs)
 function drawCSPoints(plot_freqs)
 {
     console.log(yScale1.domain())
-    svg.selectAll('path').remove()
+    drawArea.selectAll('path').remove()
 
     var cs_line = d3.line()
         .defined(function(d) { return d.cs != null })
         .x(function(d) { return xScale(d.freq)})
         .y(function(d) { return yScale2(d.cs)})
 
-    svg.append('path')
+    drawArea.append('path')
         //.data([plot_freqs].filter(cs_line.defined()))
         .attr('class', 'line')
         .attr('d', cs_line(plot_freqs))
@@ -181,9 +220,9 @@ function drawCSPoints(plot_freqs)
 
 function drawFreqObsBars(plot_freqs)
 {
-    svg.selectAll('rect').remove()
+    drawArea.selectAll('rect').remove()
     
-    svg.selectAll('rect')
+    drawArea.selectAll('rect')
         .data(removeEmpty(plot_freqs))
         .enter()
         .append('rect')
@@ -205,8 +244,8 @@ export function changeAxisData(data_id)
         {
             yScale1.domain([minFO, maxFO])
             svg.select("#y-axis1").transition().duration(1000).call(yAxis1)
-            $('y-axis1-label').html("Observation count")
-            svg.selectAll('rect')
+            $('#y-axis1-label').html("Observation count")
+            drawArea.selectAll('rect')
                 .transition()
                 .duration(500)
                 .attr("y", function(f) { return yScale1(f.observations.length) + margin.top})
@@ -218,7 +257,7 @@ export function changeAxisData(data_id)
             yScale1.domain([minFA, maxFA])
             svg.select("#y-axis1").transition().duration(1000).call(yAxis1)
             $('#y-axis1-label').html("Area (arcsec&#178;)")
-            svg.selectAll('rect')
+            drawArea.selectAll('rect')
                 .transition()
                 .duration(500)
                 .attr("y", function(f) { return yScale1(f.total_area) + margin.top})

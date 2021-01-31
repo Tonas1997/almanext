@@ -322,11 +322,13 @@ function initializePlotView(data)
         {
             //console.log(info)
             updateFreqHistogram(info.obs)
-            //highlightRows(info.obs)
+            highlightRows(info.obs)
         }
-        else // weird that I have to do this...
+        else 
+        {// weird that I have to do this...
             updateFreqHistogram(null)
-        
+            highlightRows(null)
+        }
         // highlight the hovered observations on the table
 
         

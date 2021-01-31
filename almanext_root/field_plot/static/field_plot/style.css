@@ -396,6 +396,12 @@ form
   opacity: 1.0
 }
 
+.brush
+{
+  background-color: grey;
+  opacity: 0.3;
+}
+
 #histogram-controls-wrapper 
 {
   display: flex;
@@ -432,6 +438,12 @@ form
   height: 7px;
   border-radius: 5px;
   width: 250px;
+}
+
+/* Observation table classes */
+.highlighted-row
+{
+  background-color: #a2aec7 !important;
 }
 
 /* Non-specific, auxiliary styles (including value box) */
@@ -580,28 +592,30 @@ table.dataTable tr
   padding: 0px;
 }
 
-#plot-controls
+#plot-control-axis
 {
   display: block;
   position: absolute;
   text-align: center;
-  height: 15%;
+  height: 12%;
   width: 100%;
-  top: 85%;
+  top: 88%;
   z-index: 100;
   transition: 0.3s ease-out;
+  opacity: 0.3;
 }
 
-#plot-controls:hover
+#plot-control-axis:hover
 {
   background-color: rgba(70, 70, 70, 0.5);
+  opacity: 1;
   color: #FFFFFF;
   transition: 0.3s ease-out;
 }
 
 #plot-axis
 {  
-  margin-top: 10px;
+  margin-top: 5px;
   position: relative;
 }
 
@@ -611,6 +625,46 @@ table.dataTable tr
   width: 90%;
   height: 45px;
   text-align: center;
+}
+
+#plot-control-buttons
+{
+  display: block;
+  position: absolute;
+  text-align: center;
+  height: auto;
+  width: 10%;
+  top: 5%;
+  left: 90%;
+  z-index: 100;
+  transition: 0.3s ease-out;
+}
+
+.plot-button
+{
+  background-color: rgba(70, 70, 70, 0.3); /* Blue background */
+  border: none; /* Remove borders */
+  color: white; /* White text */
+  margin: 10%;
+  width: 50px;
+  height: 50px;
+  border-radius: 2px;
+  padding: 16px 16px; /* Some padding */
+  font-size: 16px; /* Set a font size */
+  cursor: pointer; /* Mouse pointer on hover */
+}
+
+.plot-button:hover
+{
+  background-color: rgba(70, 70, 70, 0.5); /* Blue background */
+}
+
+.plot-button-tooltip
+{
+  font-size: small;
+  background-color: rgba(40, 40, 40, 0.5);
+  color: white;
+  border-radius: 2px;
 }
 
 .svg-plot, .canvas-plot {

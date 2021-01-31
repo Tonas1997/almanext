@@ -402,7 +402,8 @@ export function getPixelInfo(mouse)
 
 export function showPlotControls()
 {
-    $("#plot").append(`<div id="plot-controls">
+    // Axis and color scale options
+    $("#plot").append(`<div id="plot-control-axis" class="plot-control-hidden">
                         <select id="plot-color-property">
                             <option value="count_pointings">Pointings count</option>
                             <option value="avg_res">Average resolution</option>
@@ -426,6 +427,29 @@ export function showPlotControls()
             collision: "flip"
         }
     })
+
+    $("#plot").append(`<div id="plot-control-buttons">
+                        <button id="btn-tooltip" class="plot-button" title="">X</button>
+                        <button id="btn-overlap" class="plot-button" title="">X</button>
+                    </div>`)
+
+    $("#btn-tooltip").tooltip({
+        content: "Toggle pixel tooltips",
+        position: { my: "left-10 center", at: "right center" },
+        classes: 
+        {
+            "ui-tooltip": "plot-button-tooltip"
+        }
+    });
+
+    $("#btn-overlap").tooltip({
+        content: "Toggle overlap highlight",
+        position: { my: "left-10 center", at: "right center" },
+        classes: 
+        {
+            "ui-tooltip": "plot-button-tooltip"
+        }
+    });
 }
 
 // ------------------- AUXILIARY FUNCTIONS -------------------
