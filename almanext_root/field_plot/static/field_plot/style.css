@@ -437,8 +437,15 @@ form
   margin-left: 10px;
   height: 7px;
   border-radius: 5px;
-  width: 250px;
+  width: 200px;
 }
+
+.z-tiny-labels
+{
+  font-size: xx-small;
+  text-align: left;
+}
+
 
 /* Observation table classes */
 .highlighted-row

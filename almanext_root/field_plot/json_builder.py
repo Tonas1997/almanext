@@ -103,7 +103,7 @@ def get_frequency_from_obs(obs, index):
         while(curr_freq <= end):
             if((curr_freq >= min_freq) and (curr_freq <= max_freq)):
                 pos = int((curr_freq - min_freq)*100)
-                curr = freq_list[pos]
+                curr = freq_list[pos-1]
                 freq_list[pos]["observations"].append(index)
                 if(curr["cs"] == None or cs > curr["cs"]):
                     freq_list[pos]["cs"] = cs

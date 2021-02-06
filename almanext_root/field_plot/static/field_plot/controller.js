@@ -13,8 +13,8 @@ import
 import
 {
     showFreqHistogram, // initial render
-    updateFreqHistogram, // plot update
-    updateFreqHistogramAxis // plot update - change axis
+    highlightFreqHistogram, // plot update
+    updateFreqHistogram // plot update - change axis
 } from "./freq_histogram.js"
 
 import
@@ -60,6 +60,8 @@ function fillLinesMenu(linesJSON)
 
 var first_render = true
 var emission_lines = []
+var observations = []
+var options = {highlight_overlap: false}
 
 // ========================================================
 // ============== PLOT PARAMETERS MANAGEMENT ==============
@@ -298,13 +300,13 @@ function initializePlotView(data)
     // TODO
     if(first_render)
     {
-        showFreqHistogram(plot_properties, plot_cs)
+        showFreqHistogram(plot_properties, plot_cs, emission_lines)
         showObservationList(data) // not sure I want to initialize the table before getting the data... TODO
         first_render = false
     }
     else if(data.observations.length != 0)
     {
-        updateFreqHistogramAxis(plot_properties, plot_cs)
+        updateFreqHistogram(plot_properties, plot_cs, emission_lines)
         updateObservationList(data)
     }
 
@@ -321,12 +323,12 @@ function initializePlotView(data)
         if(info != null)
         {
             //console.log(info)
-            updateFreqHistogram(info.obs)
+            highlightFreqHistogram(info.obs)
             highlightRows(info.obs)
         }
         else 
         {// weird that I have to do this...
-            updateFreqHistogram(null)
+            highlightFreqHistogram(null)
             highlightRows(null)
         }
         // highlight the hovered observations on the table
@@ -334,14 +336,23 @@ function initializePlotView(data)
         
     });
     // defines the "highlight overlapping observations" behaviour
-    $('#highlightOverlap').on('change', (function() {
-        if(this.checked)
+    $('#btn-overlap').on('click', (function() {
+        if(!options.highlight_overlap)
+        {
             addFilter('highlightOverlap', null);
-        else  
+            options.highlight_overlap = true
+        }
+        else
+        {  
             removeFilter('highlightOverlap', null)
+            options.highlight_overlap = false
             console.log("highlightOverlap!")
+        }
         //setHighlightOverlap(this.checked)
     }))
+
+    // FREQUENCY HISTOGRAM CONTROLS
+
 
     // LIST CONTROLS
     // highlights the panned-over observation

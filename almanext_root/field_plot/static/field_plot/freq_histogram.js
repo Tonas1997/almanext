@@ -2,9 +2,11 @@ var width //= $('#infotabs').width() - 50;
 var height //= $('#infotabs').height() - 40;
 var margin = {left: 50, right: 40, top: 10, bottom: 15, xlabel: 25, ylabelLeft: 10, ylabelRight: 10};
 
-var svg, xScale, yScale1, yScale2, xAxis, yAxis1, yAxis2, g, drawArea
+var svg, xScale, yScale1, yScale2, xAxis, yAxis1, yAxis2, g, drawArea, linesArea, transform_store
 
 var bucket_size = 0.01 // in GHz
+var z = 0 // selected redshift
+const c = 299792458 // speed of light
 
 var minF;
 var maxF;
@@ -17,7 +19,7 @@ var maxFO;
 var minFA;
 var maxFA;
 
-export function showFreqHistogram(plot_properties, plot_freqs)
+export function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
 {
     minF = plot_properties.min_frequency // lowest frequency bucket
     maxF = plot_properties.max_frequency // highest frequency bucket
@@ -109,8 +111,16 @@ export function showFreqHistogram(plot_properties, plot_freqs)
         .style("text-anchor", "middle")
         .text("Line sensitivity (mJy/beam)");
 
-    var clip = svg.append("defs").append("svg:clipPath")
-        .attr("id", "clip")
+    var clip1 = svg.append("defs").append("svg:clipPath")
+        .attr("id", "clip1")
+        .append("svg:rect")
+        .attr("width", width - margin.left - margin.right)
+        .attr("height", height - margin.top - margin.bottom)
+        .attr("x", margin.left)
+        .attr("y", margin.top);
+    
+    var clip2 = svg.append("defs").append("svg:clipPath")
+        .attr("id", "clip2")
         .append("svg:rect")
         .attr("width", width - margin.left - margin.right)
         .attr("height", height - margin.top - margin.bottom)
@@ -118,38 +128,58 @@ export function showFreqHistogram(plot_properties, plot_freqs)
         .attr("y", margin.top);
     
     drawArea = svg.append("g")
-        .attr("clip-path", "url(#clip)")
+        .attr("clip-path", "url(#clip1)")
+
+    linesArea = svg.append("g")
+        .attr("clip-path", "url(#clip2)")
 
     // draw the CS graph
     drawCSPoints(plot_freqs) //I have to fix the scaling issues
     drawFreqObsBars(plot_freqs)
+    drawEmissionLines(emission_lines)
     drawControls()
     
     const extent = [[margin.left, margin.top], [width - margin.right - margin.left, height - margin.top - margin.bottom]];
 
+    transform_store = d3.zoomIdentity
     svg.call(d3.zoom()
-      .scaleExtent([1, 20])
+      .scaleExtent([1, 10000])
       .translateExtent(extent)
       .extent(extent)
-      .on("zoom", zoomed));
+      .on("zoom", () => zoomed(d3.event.transform)));
 }
 
-function zoomed() 
+function zoomed(transform)
 {
-    //xScale = d3.event.transform.rescaleX(xScale)
+    if(transform != undefined)
+    {
+        transform_store = transform
+    }
+    var new_xScale = transform_store.rescaleX(xScale)
     //xScale.range([margin.left, width - margin.right].map(d => d3.event.transform.applyX(d)));
     drawArea.selectAll("rect")
-        .attr("transform", "translate(" + d3.event.transform.x+",0)scale(" + d3.event.transform.k + ",1)")
+        .attr("transform", "translate(" + transform_store.x+",0)scale(" + transform_store.k + ",1)")
         //.attr("x", function(f) { return xScale(f.freq)})
         //.attr("width", function() { return getWidth(bucket_size)});
     drawArea.selectAll("path")
-        .attr("transform", "translate(" + d3.event.transform.x+",0)scale(" + d3.event.transform.k + ",1)")
+        .attr("transform", "translate(" + transform_store.x+",0)scale(" + transform_store.k + ",1)")
         //.attr("x", (function(d) { return xScale(d.freq)}))
-    svg.selectAll("#x-axis").call(xAxis.scale(d3.event.transform.rescaleX(xScale)));
+    svg.selectAll("#x-axis").call(xAxis.scale(transform_store.rescaleX(xScale)));
+    linesArea.selectAll("svg")
+        .attr("x", function(l) {return(new_xScale(l.frequency/(1+z)))})
+        //.attr("transform", "translate(" + d3.event.transform.x+",0) scale(" + d3.event.transform.k + ",1)")
+}
+
+function transform(t)
+{
+    return function(d)
+    {
+        return "translate(" + t.apply(d) + ")"
+    }
 }
 
 
-export function updateFreqHistogramAxis(plot_properties, plot_freqs)
+export function updateFreqHistogram(plot_properties, plot_freqs, emission_lines)
 {
     // get the new plot's properties
     minF = plot_properties.min_frequency
@@ -176,9 +206,10 @@ export function updateFreqHistogramAxis(plot_properties, plot_freqs)
     // redraw the CS graph
     //drawCSPoints(plot_freqs)
     drawFreqObsBars(plot_freqs)
+    drawEmissionLines(emission_lines)
 }
 
-export function updateFreqHistogram(pixel_obs)
+export function highlightFreqHistogram(pixel_obs)
 {
     drawArea.selectAll('rect').attr("class", "freq-histogram-obs-bar")
     if(pixel_obs != null)
@@ -235,6 +266,17 @@ function drawFreqObsBars(plot_freqs)
         .attr("class", "freq-histogram-obs-bar")
 }
 
+export function drawEmissionLines(emission_lines)
+{
+    linesArea.selectAll("svg").remove()
+    // only render those lines that fall inside the frequency interval
+    var visible_lines = emission_lines.filter((em) => {return(em.frequency/(1+z) > minF && em.frequency/(1+z) < maxF)})
+    // create a group to place the emission lines
+    var em_lines_g = linesArea.selectAll("svg")
+        .data(visible_lines)
+    createLinesSVG(em_lines_g)
+}
+
 export function changeAxisData(data_id)
 {
     console.log(data_id)
@@ -265,8 +307,6 @@ export function changeAxisData(data_id)
             break
         }
     }
-    
-
 }
 
 function drawControls()
@@ -289,6 +329,12 @@ function drawControls()
                 <span class='text-label'>Redshift</span>
                 <div id="freq-histogram-redshift" class="freq-histogram-slider-range"></div>
             </div>
+            <div class="histogram-control">
+                <div class='z-tiny-labels'>
+                    z= <span id='z-factor'></span><br>
+                    v= <span id='z-speed'></span> km/s
+                </div>
+            </div>
             `
 
     // convert the above elements to JQueryUI instances
@@ -300,20 +346,88 @@ function drawControls()
         }
     })
     $("#freq-histogram-emissionlines").checkboxradio();
+    $("#freq-histogram-emissionlines").click(function() {
+        if($(this).is(":checked"))
+        {
+            $("#freq-histogram-redshift").slider("enable")
+        }
+        else
+        {
+            $("#freq-histogram-redshift").slider("disable")
+        }
+    })
     $("#freq-histogram-redshift").slider(
     {
-        min: 0, 
-        max: 12,  
+        // this redshift is expressed in km/s
+        min: -0.004, 
+        max: 0.004,  
         values:[0],
-        step: 0.01,
+        step: 0.0001,
         disabled: true,
-        range: true, 
         slide: function(event, ui) 
         {
-            console.log(ui.value)
+            $("#z-factor").text(ui.value.toFixed(5))
+            $("#z-speed").text((ui.value/1000*c).toFixed(2))
+            z = ui.value
+            console.log(z/1000*c + " km/s")
+            console.log(z)
+            zoomed()
         }
     })
 
+}
+
+function createLinesSVG(em_lines_g)
+{
+    var line = em_lines_g
+        .enter()
+        .append("svg")
+        .attr("x", function(e) {return xScale(e.frequency/(1+z))-5})
+        .attr("y", margin.top)
+        .attr("width", 50)
+        .attr("height", 200)
+    line.append("rect")
+        .attr("x", 0)
+        .attr("y", 85)
+        .attr("width", 10)
+        .attr("height", 30)
+        .attr("stroke", "#b4b40f")
+        .attr("stroke-width", 4)
+        .attr("fill", "#b4b40f")
+    line.append("text")
+        .attr("dominant-baseline", "middle")
+        .attr("font-family", "verdana")
+        .attr("font-size", "10px")
+        .attr("fill", "white")
+        .attr("text-anchor", "middle")
+        .attr("transform", "translate(6,100) rotate(270)")
+        .text(function(e) {return e.species})
+    line.append("line")
+        .attr("stroke", "#b4b40f")
+        .attr("stroke-linecap", "null")
+        .attr("stroke-linejoin", "null")
+        .attr("y2", "85")
+        .attr("x2", "5")
+        .attr("y1", "0")
+        .attr("x1", "5")
+        .attr("stroke-width", "2")
+        .attr("fill", "none")
+    line.append("line")
+        .attr("stroke", "#b4b40f")
+        .attr("stroke-linecap", "null")
+        .attr("stroke-linejoin", "null")
+        .attr("y2", "200")
+        .attr("x2", "5")
+        .attr("y1", "115")
+        .attr("x1", "5")
+        .attr("stroke-width", "2")
+        .attr("fill", "none")
+
+    
+        /*<rect x="10" y="90" width="30" height="20" stroke="#b4b40f" stroke-width="4" fill="#b4b40f"/>
+        <text x="50%" y="50%" dominant-baseline="middle" font-family="verdana" font-size="10px" fill="white" text-anchor="middle">HCN</text>
+        <line stroke="#b4b40f" stroke-linecap="null" stroke-linejoin="null" id="svg_4" y2="90" x2="25" y1="0" x1="25" stroke-width="2" fill="none"/>
+        <line stroke="#b4b40f" stroke-linecap="null" stroke-linejoin="nul*/
 }
 
 // returns the width of a given element given its start and end values

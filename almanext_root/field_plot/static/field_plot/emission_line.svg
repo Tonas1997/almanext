@@ -6,9 +6,9 @@
  </g> -->
  <g>
   <title>Layer 1</title>
-  <rect x="10" y="90" width="30" height="20" stroke="#b4b40f" stroke-width="4" fill="#b4b40f"/>
-  <text x="50%" y="50%" dominant-baseline="middle" font-family="verdana" font-size="10px" fill="white" text-anchor="middle">HCN</text>
-  <line stroke="#b4b40f" stroke-linecap="null" stroke-linejoin="null" id="svg_4" y2="90" x2="25" y1="0" x1="25" stroke-width="2" fill="none"/>
-  <line stroke="#b4b40f" stroke-linecap="null" stroke-linejoin="null" id="svg_5" y2="200" x2="25" y1="110" x1="25" stroke-width="2" fill="none"/>
+  <rect x="0" y="85" width="10" height="30" stroke="#b4b40f" stroke-width="4" fill="#b4b40f"/>
+  <text dominant-baseline="middle" font-family="verdana" font-size="9px" fill="white" text-anchor="middle" transform="translate(6,100) rotate(270)">HCN</text>
+  <line stroke="#b4b40f" stroke-linecap="null" stroke-linejoin="null" y2="85" x2="5" y1="0" x1="5" stroke-width="2" fill="none"/>
+  <line stroke="#b4b40f" stroke-linecap="null" stroke-linejoin="null" id="svg_5" y2="200" x2="5" y1="115" x1="5" stroke-width="2" fill="none"/>
  </g>
 </svg>
