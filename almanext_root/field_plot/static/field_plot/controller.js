@@ -232,7 +232,6 @@ $(function()
             }
         }
     )
-    
 });
 
 /**
@@ -429,12 +428,6 @@ function initializePlotInfoTab()
                             <div class='field value'><div id="plot-overlap-area">--.--</div>&nbsp arcsec<sup>2</sup></div></div>
                         <div class='value-box'><div class='value-box field label'>Overlapping area (%)</div>
                             <div class='field value'><div id="plot-overlap-area-pct">--.--</div>&nbsp %</div></div>
-                    </div>
-                </div>		
-                <div id="tab-information-plot-options">
-                    <div class="options-wrapper">
-                        <input type="checkbox" id="highlightOverlap">
-                        <label for="checkbox" class="field label">Highlight overlapping regions</label>
                     </div>
                 </div>
             </div>

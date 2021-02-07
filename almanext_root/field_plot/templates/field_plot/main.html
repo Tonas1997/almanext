@@ -5,6 +5,9 @@
 {% block content %}
 
 <link href="{% static 'field_plot/style.css' %}" rel="stylesheet" type="text/css" />
+<script>
+	const IMAGE_DIR = "{% static 'field_plot/images/' %}"
+</script>
 <div id="container">
 	<div id="plot-controller">
 		<div id="plot-parameters" class="pane-frame">
@@ -115,7 +118,6 @@
 						<li><a href="#tab-plot-information">Plot information</a></li>
 						<li><a href="#tab-frequency-coverage">Frequency support</a></li>
 						<li><a href="#tab-gained-sensitivity">Gained sensitivity</a></li>
-						<li><a href="#tab-emission-lines">Emission Lines</a></li>
 					</ul>	
 					<div id="tab-plot-information" class='pane-frame'></div>
 					<div id="tab-frequency-coverage" class='pane-frame center'><div id="test"></div></div>

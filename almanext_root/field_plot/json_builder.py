@@ -102,9 +102,11 @@ def get_frequency_from_obs(obs, index):
         # run through the spectral window in 10MHz increments
         while(curr_freq <= end):
             if((curr_freq >= min_freq) and (curr_freq <= max_freq)):
-                pos = int((curr_freq - min_freq)*100)
-                curr = freq_list[pos-1]
-                freq_list[pos]["observations"].append(index)
+                pos = int((curr_freq - min_freq)*100)-1
+                curr = freq_list[pos]
+                # only add this observation to the list if it's not there yet
+                if(index not in freq_list[pos]["observations"]):
+                    freq_list[pos]["observations"].append(index)
                 if(curr["cs"] == None or cs > curr["cs"]):
                     freq_list[pos]["cs"] = cs
                     update_min_max("freq_obs_count", len(freq_list[pos]["observations"]))
@@ -252,7 +254,7 @@ def increase_freq_bucket_total_area(obs_json):
         # run through the spectral window in 10MHz increments
         while(curr_freq <= end):
             if((curr_freq >= min_freq) and (curr_freq <= max_freq)):
-                pos = int((curr_freq - min_freq)*100)
+                pos = int((curr_freq - min_freq)*100)-1
                 freq_list[pos]["total_area"] += obs_area
                 update_min_max("freq_obs_t_area", freq_list[pos]["total_area"])
             curr_freq += 0.01

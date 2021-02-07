@@ -139,14 +139,14 @@ export function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
     drawEmissionLines(emission_lines)
     drawControls()
     
-    const extent = [[margin.left, margin.top], [width - margin.right - margin.left, height - margin.top - margin.bottom]];
+    const extent = [[margin.left, 0], [width - margin.right, 0]];
 
     transform_store = d3.zoomIdentity
     svg.call(d3.zoom()
-      .scaleExtent([1, 10000])
-      .translateExtent(extent)
-      .extent(extent)
-      .on("zoom", () => zoomed(d3.event.transform)));
+        .scaleExtent([1, 1000])
+        .translateExtent(extent)
+        .extent(extent)
+        .on("zoom", () => zoomed(d3.event.transform)));
 }
 
 function zoomed(transform)
@@ -169,15 +169,6 @@ function zoomed(transform)
         .attr("x", function(l) {return(new_xScale(l.frequency/(1+z)))})
         //.attr("transform", "translate(" + d3.event.transform.x+",0) scale(" + d3.event.transform.k + ",1)")
 }
-
-function transform(t)
-{
-    return function(d)
-    {
-        return "translate(" + t.apply(d) + ")"
-    }
-}
-
 
 export function updateFreqHistogram(plot_properties, plot_freqs, emission_lines)
 {
@@ -336,6 +327,7 @@ function drawControls()
                 </div>
             </div>
             `
+    updateSliderLabels(0)
 
     // convert the above elements to JQueryUI instances
     $("#freq-histogram-yaxis1").selectmenu(
@@ -350,10 +342,12 @@ function drawControls()
         if($(this).is(":checked"))
         {
             $("#freq-histogram-redshift").slider("enable")
+            linesArea.selectAll("svg").transition().duration(500).style("opacity", 1.0)
         }
         else
         {
             $("#freq-histogram-redshift").slider("disable")
+            linesArea.selectAll("svg").transition().duration(500).style("opacity", 0.0)
         }
     })
     $("#freq-histogram-redshift").slider(
@@ -361,20 +355,28 @@ function drawControls()
         // this redshift is expressed in km/s
         min: -0.004, 
         max: 0.004,  
-        values:[0],
+        value:[0],
         step: 0.0001,
         disabled: true,
         slide: function(event, ui) 
-        {
-            $("#z-factor").text(ui.value.toFixed(5))
-            $("#z-speed").text((ui.value/1000*c).toFixed(2))
-            z = ui.value
-            console.log(z/1000*c + " km/s")
-            console.log(z)
+        {   
+            z = ui.value      
+            updateSliderLabels(z)
             zoomed()
         }
     })
+    $("#freq-histogram-redshift").dblclick(function() {
+        z = 0
+        $(this).slider("value", 0)
+        updateSliderLabels(0)
+        zoomed()
+    })
 
+    function updateSliderLabels(z)
+    {
+        $("#z-factor").text(z.toFixed(5))
+        $("#z-speed").text((z/1000*c).toFixed(2))
+    }
 }
 
 function createLinesSVG(em_lines_g)
@@ -386,6 +388,7 @@ function createLinesSVG(em_lines_g)
         .attr("y", margin.top)
         .attr("width", 50)
         .attr("height", 200)
+        .style("opacity", 0.0)
     line.append("rect")
         .attr("x", 0)
         .attr("y", 85)
@@ -422,12 +425,6 @@ function createLinesSVG(em_lines_g)
         .attr("x1", "5")
         .attr("stroke-width", "2")
         .attr("fill", "none")
-
-    
-        /*<rect x="10" y="90" width="30" height="20" stroke="#b4b40f" stroke-width="4" fill="#b4b40f"/>
-        <text x="50%" y="50%" dominant-baseline="middle" font-family="verdana" font-size="10px" fill="white" text-anchor="middle">HCN</text>
-        <line stroke="#b4b40f" stroke-linecap="null" stroke-linejoin="null" id="svg_4" y2="90" x2="25" y1="0" x1="25" stroke-width="2" fill="none"/>
-        <line stroke="#b4b40f" stroke-linecap="null" stroke-linejoin="nul*/
 }
 
 // returns the width of a given element given its start and end values

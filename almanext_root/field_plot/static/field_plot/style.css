@@ -674,6 +674,13 @@ table.dataTable tr
   border-radius: 2px;
 }
 
+.ui-icon-custom 
+{ 
+  background-image: url(field_plot/images/coiso.png);
+  width: 50px;
+  height: 50px; 
+}
+
 .svg-plot, .canvas-plot {
   position: absolute;
 }

@@ -433,6 +433,8 @@ export function showPlotControls()
                         <button id="btn-overlap" class="plot-button" title="">X</button>
                     </div>`)
 
+    
+
     $("#btn-tooltip").tooltip({
         content: "Toggle pixel tooltips",
         position: { my: "left-10 center", at: "right center" },
@@ -450,6 +452,11 @@ export function showPlotControls()
             "ui-tooltip": "plot-button-tooltip"
         }
     });
+    /*
+    $("#btn-overlap").button({
+        icons: {primary: 'ui-icon-custom', secondary: null}
+    });
+    document.getElementById("btn-overlap").innerHTML = '<img src="' + IMAGE_DIR + 'coiso.png"/>'*/
 }
 
 // ------------------- AUXILIARY FUNCTIONS -------------------

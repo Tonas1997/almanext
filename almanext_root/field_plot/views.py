@@ -79,7 +79,7 @@ def get_plot(request):
     # =============================================================================
     print(str(min_ra) + " , " + str(max_ra) + " , " + str(min_dec) + " , " + str(max_dec))
     
-    obs_result = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec, field_of_view__lte = 300).prefetch_related('spec_windows').prefetch_related('traces')
+    obs_result = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec, field_of_view__lte = 300)#.prefetch_related('spec_windows').prefetch_related('traces')
     # if the redshift is zero AND we are looking into bands, no need to look into frequency support
     print("size 1:" + str(obs_result.count()))
     # temporary default
