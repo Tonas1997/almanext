@@ -39,8 +39,8 @@ properties_list = {
     "max_avg_sens": 0,
     "min_avg_int_time": 0,
     "max_avg_int_time": 0,
-    "min_snr": 0,
-    "max_snr": 0,
+    "min_combined_cs": 0,
+    "max_combined_cs": 0,
     "min_freq_obs_count": 0,
     "max_freq_obs_count": 0,
     "min_freq_obs_t_area": 0,
@@ -168,10 +168,8 @@ def get_mean_freq(freq_list):
 def append_pixel(x, y, px):
     global pixel_list, properties_list
     # we have to set min and max values for the snr here
-    snr_total = math.sqrt(px.snr)
-    #if(snr_total > properties_list["max_snr"]): properties_list["max_snr"] = snr_total
-    #if(snr_total < properties_list["min_snr"]): properties_list["min_snr"] = snr_total
-    update_min_max("snr", snr_total)
+    combined_cs = 1/math.sqrt(px.cs_sum)
+    update_min_max("combined_cs", 1/(combined_cs/px.cs_best))
 
     # append the pixel to the pixel list
     pixel_list.append({"x" : x,
@@ -182,7 +180,8 @@ def append_pixel(x, y, px):
                     "avg_res" : px.avg_res,
                     "avg_sens" : px.avg_sens,
                     "avg_int_time" : px.avg_int_time,
-                    "snr" : math.sqrt(px.snr),
+                    "cs_comb" : combined_cs,
+                    "cs_best": px.cs_best,
                     "observations" : px.observations})
 
 # -----------------------------------------------------------------------------------------
@@ -269,6 +268,9 @@ def fill_pixels(obs_json, mean_freq, array, counter):
     sens = obs_json["line_sensitivity"]
     int_time = obs_json["integration_time"]
 
+    # normalize sensitivity to the common synthesized beam
+    scaled_cont_sens = obs_json["continuum_sensitivity"] * (res/ref_psf)
+
     # iterate over the observation's traces
     for t in obs_json["traces"]:
         ra = t["ra"]
@@ -322,15 +324,15 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                     # change the average values
                     pixel_array[y][x].change_avgs(res, sens, int_time)
                     # add the signal-to-noise level
-                    distance_ratio = sep/fov_degree
                     if(array == "12"):
-                        snr = gaussian12m(distance_ratio*100, mean_freq)
+                        fraction_pb = gaussian12m(sep.arcsec, mean_freq)
                     else:
-                        snr = gaussian7m(distance_ratio*100, mean_freq)
-                    # normalize sensitivity to the common synthesized beam
-                    #scaled_cont_sens = obs_json["continuum_sensitivity"] * (res/ref_psf)
+                        fraction_pb = gaussian7m(sep.arcsec, mean_freq)
+
+                    pixel_array[y][x].add_cs((1.0/(scaled_cont_sens/fraction_pb))**2)
+                    pixel_array[y][x].update_best_cs(scaled_cont_sens/fraction_pb)
                     # TODO
-                    pixel_array[y][x].add_snr(snr**2)
+                    # pixel_array[y][x].add_snr(snr**2)
                     # add the observation to the pixel, if it's not already covered by this observation
                     if(not pixel_array[y][x].has_observation(counter)):
                         pixel_array[y][x].add_observation(counter)
@@ -368,8 +370,8 @@ def reset_properties_list(plot_size, plot_res, min_f, max_f):
     properties_list["max_avg_sens"] = -9999
     properties_list["min_avg_int_time"] = 9999
     properties_list["max_avg_int_time"] = -9999
-    properties_list["min_snr"] = 9999
-    properties_list["max_snr"] = -9999
+    properties_list["min_combined_cs"] = 9999
+    properties_list["max_combined_cs"] = -9999
     properties_list["min_freq_obs_count"] = 0
     properties_list["max_freq_obs_count"] = -9999
     properties_list["min_freq_obs_t_area"] = 0

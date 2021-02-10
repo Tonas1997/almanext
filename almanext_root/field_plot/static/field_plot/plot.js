@@ -172,51 +172,62 @@ export function updateCanvas(transform)
 
     var background
     var inverse // this will later help us define the direction of the scale's gradient
+    var pixel_value // allows us to define more complex calculations vs. just reading a field
 
     switch(render_mode)
     {
         case "count_pointings":
-            color_scale.scale = function(value) {return d3.interpolateViridis(value)};
+            //color_scale.scale = function(value) {return d3.interpolateViridis(value)};
             color_scale.worst = plot_properties.min_count_pointings
             color_scale.best = plot_properties.max_count_pointings
-            color_scale.ref = plot_properties.max_count_pointings
+            color_scale.scale = d3.scaleSequential()
+                .interpolator(d3.interpolateViridis)
+                .domain([color_scale.worst,color_scale.best]);
             axis_label = ""
             inverse = false
             background = 0
             break
         case "avg_res":
-            color_scale.scale = function(value) {return d3.interpolateInferno(Math.abs(1-value))};
+            //color_scale.scale = function(value) {return d3.interpolateInferno(Math.abs(1-value))};
             color_scale.worst = plot_properties.max_avg_res
             color_scale.best = plot_properties.min_avg_res
-            color_scale.ref = plot_properties.max_avg_res
+            color_scale.scale = d3.scaleSequential()
+                .interpolator(d3.interpolateInferno)
+                .domain([color_scale.best,color_scale.worst]);
             axis_label = "arcsec2"
             inverse = true
             background = 1
             break
         case "avg_sens":
-            color_scale.scale = function(value) {return d3.interpolateYlGnBu(value)};
+            //color_scale.scale = function(value) {return d3.interpolateYlGnBu(value)};
             color_scale.worst = plot_properties.max_avg_sens
             color_scale.best = plot_properties.min_avg_sens
-            color_scale.ref = plot_properties.max_avg_sens
+            color_scale.scale = d3.scaleSequential()
+                .interpolator(d3.interpolateYlGnBu)
+                .domain([color_scale.worst,color_scale.best]);
             axis_label = "mJy/beam"
             inverse = true
             background = 1
             break
         case "avg_int_time":
-            color_scale.scale = function(value) {return d3.interpolateCividis(value)};
-            color_scale.worst = plot_properties.min_agv_int_time
+            //color_scale.scale = function(value) {return d3.interpolateCividis(value)};
+            color_scale.worst = plot_properties.min_avg_int_time
             color_scale.best = plot_properties.max_avg_int_time
-            color_scale.ref = plot_properties.max_avg_int_time
+            color_scale.scale = d3.scaleSequential()
+                .interpolator(d3.interpolateCividis)
+                .domain([color_scale.worst,color_scale.best]);
             axis_label = "seconds"
             inverse = false
             background = 0
             break
-        case "snr":
-            color_scale.scale = function(value) {return d3.interpolateGreys(Math.abs(1-value))};
-            color_scale.worst = plot_properties.min_snr
-            color_scale.best = plot_properties.max_snr
-            color_scale.ref = plot_properties.max_snr
-            axis_label = "factor"
+        case "cs_comb":
+            color_scale.worst = 1//plot_properties.min_combined_cs
+            color_scale.best = plot_properties.max_combined_cs
+            color_scale.ref = plot_properties.max_combined_cs
+            color_scale.scale = d3.scaleSequential()
+                .interpolator(d3.interpolateGreys)
+                .domain([color_scale.best,color_scale.worst]);//function(value) {return d3.interpolateGreys(color_scale.worst,color_scale.best)(Math.abs(1-value))};
+            axis_label = "factor (combined sensitivity)"
             inverse = false
             background = 0
             break
@@ -243,13 +254,13 @@ export function updateCanvas(transform)
                 const py = point.y
 
                 context.beginPath()
-                context.fillStyle = scale(point[render_mode]/ref);
+                if(render_mode == "cs_comb")
+                {
+                    pixel_value = (point["cs_best"]/point["cs_comb"])
+                }
+                context.fillStyle = (pixel_value == null? scale(point[render_mode]): scale(pixel_value));
                 point.highlight ? context.globalAlpha = 1.0 : context.globalAlpha = 0.1 
                 
-                /**if(point.count_pointings == 1 && highlight_overlap)
-                    context.globalAlpha = 0.1
-                else
-                    context.globalAlpha = 1.0 **/
                 context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
             }
         }
@@ -306,8 +317,15 @@ function updateColorScale(inverse)
         .attr('y2', '0%')
         .attr('spreadMethod', 'pad');
 
-    for(var i = 0; i <= 1; i += 0.1)
+    var min_val = color_scale.scale.domain()[0]
+    var max_val = color_scale.scale.domain()[1]
+    var step = (max_val - min_val)/10
+
+    for(var i = min_val; i <= max_val; i += step)
     {
+        console.log("##########################")
+        console.log(i)
+        console.log(color_scale.scale(i))
         gradient.append('stop')
             .attr('offset', Math.round(i * 100) + "%")
             .attr('stop-color', color_scale.scale(i))
@@ -382,6 +400,7 @@ export function getPixelInfo(mouse)
         if(!pixel.highlight)
             result = null
         else
+        {
             var result = {
                 "ra": pixel.ra.toFixed(2),
                 "dec": pixel.dec.toFixed(2),
@@ -389,9 +408,10 @@ export function getPixelInfo(mouse)
                 "avg_res": pixel.avg_res.toFixed(2),
                 "avg_sens": pixel.avg_sens.toFixed(2),
                 "avg_int_time": pixel.avg_int_time.toFixed(2),
-                "snr": pixel.snr,
+                "cs_comb": pixel.cs_comb,
                 "obs": getPixelObservations(pixel.observations)
             }
+        }
         return result
     }
     else
@@ -409,7 +429,7 @@ export function showPlotControls()
                             <option value="avg_res">Average resolution</option>
                             <option value="avg_sens">Average sensitivity (10km/s)</option>
                             <option value="avg_int_time">Average integration time</option>
-                            <option value="snr">SNR improvement factor</option>
+                            <option value="cs_comb">CS improvement factor</option>
                         </select>
                         <div id="plot-axis">
                             <svg id="plot-color-scale"></svg>

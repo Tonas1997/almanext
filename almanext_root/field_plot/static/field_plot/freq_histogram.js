@@ -1,6 +1,6 @@
 var width //= $('#infotabs').width() - 50;
 var height //= $('#infotabs').height() - 40;
-var margin = {left: 50, right: 40, top: 10, bottom: 15, xlabel: 25, ylabelLeft: 10, ylabelRight: 10};
+var margin = {left: 50, right: 40, top: 10, bottom: 15, xlabel: 25, ylabelLeft: 15, ylabelRight: 10};
 
 var svg, xScale, yScale1, yScale2, xAxis, yAxis1, yAxis2, g, drawArea, linesArea, transform_store
 
