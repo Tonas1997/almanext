@@ -7,7 +7,7 @@
 #plot-controller
 {
   display: flex;
-  flex: 1 1 100px;
+  flex: 1 1 100vh;
   flex-direction: column;
 }
 
@@ -254,17 +254,14 @@ form
 
 
 /* ============= INFO ============= */
-
 .pane-frame
 {
   margin: 10px 0px 0px 10px;
 }
 
-#plot-information
+#infotabs .ui-tabs-panel 
 {
-  display: flex;
-  flex: 0 1;
-  flex-direction: column;
+  height: 190px;
 }
 
 .info-wrapper
@@ -275,7 +272,7 @@ form
   margin: 10px 5px 5px 10px
 }
 
-#tab-information
+.tab-information
 {
   display: flex;
   flex: 0 1 20vh;
@@ -307,7 +304,7 @@ form
 #info-row
 {
   display: flex;
-  flex: 1 1 35vh;
+  flex: 1 1 30vh;
   flex-direction: column;
 }
 

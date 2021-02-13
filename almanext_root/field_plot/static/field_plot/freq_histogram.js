@@ -32,10 +32,16 @@ export function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
     minFA = plot_properties.min_freq_obs_t_area
     maxFA = plot_properties.max_freq_obs_t_area
 
-    width = $('#infotabs').width() - 20;
-    height = $('#infotabs').height() - 50;
+    width = $('#info-row').width() - 20;
+    height = $('#info-row').height() - 95;
 
-    document.getElementById("tab-frequency-coverage").innerHTML = "<div id='histogram'></div><div id=histogram-controls-wrapper></div>"
+    document.getElementById("tab-frequency-coverage").innerHTML = `
+    <div class="tab-histogram">
+        <div id='histogram'>
+        </div>
+        <div id=histogram-controls-wrapper>
+        </div>
+    </div>`
     //margin = 5;
     
     // =========== DEFINE AXIS ===========

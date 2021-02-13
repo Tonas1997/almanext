@@ -193,7 +193,7 @@ export function updateCanvas(transform)
             color_scale.best = plot_properties.min_avg_res
             color_scale.scale = d3.scaleSequential()
                 .interpolator(d3.interpolateInferno)
-                .domain([color_scale.best,color_scale.worst]);
+                .domain([color_scale.worst,color_scale.best]);
             axis_label = "arcsec2"
             inverse = true
             background = 1
@@ -204,7 +204,7 @@ export function updateCanvas(transform)
             color_scale.best = plot_properties.min_avg_sens
             color_scale.scale = d3.scaleSequential()
                 .interpolator(d3.interpolateYlGnBu)
-                .domain([color_scale.worst,color_scale.best]);
+                .domain([color_scale.best,color_scale.worst]);
             axis_label = "mJy/beam"
             inverse = true
             background = 1
@@ -225,8 +225,8 @@ export function updateCanvas(transform)
             color_scale.best = plot_properties.max_combined_cs
             color_scale.ref = plot_properties.max_combined_cs
             color_scale.scale = d3.scaleSequential()
-                .interpolator(d3.interpolateGreys)
-                .domain([color_scale.best,color_scale.worst]);//function(value) {return d3.interpolateGreys(color_scale.worst,color_scale.best)(Math.abs(1-value))};
+                .interpolator(d3.interpolateCool)
+                .domain([color_scale.worst,color_scale.best]);
             axis_label = "factor (combined sensitivity)"
             inverse = false
             background = 0
@@ -317,17 +317,19 @@ function updateColorScale(inverse)
         .attr('y2', '0%')
         .attr('spreadMethod', 'pad');
 
-    var min_val = color_scale.scale.domain()[0]
-    var max_val = color_scale.scale.domain()[1]
-    var step = (max_val - min_val)/10
-
-    for(var i = min_val; i <= max_val; i += step)
+    var start = inverse? color_scale.best : color_scale.worst
+    var end = inverse? color_scale.worst : color_scale.best
+    var step = (end-start)/10
+    console.log("###########################")
+    console.log(start)
+    console.log(end)
+    console.log(step)
+    for(var i = start; i <= end; i += step)
     {
-        console.log("##########################")
-        console.log(i)
-        console.log(color_scale.scale(i))
+        
+        console.log(Math.round(i/end * 100) + "%")
         gradient.append('stop')
-            .attr('offset', Math.round(i * 100) + "%")
+            .attr('offset', Math.round(i/end * 100) + "%")
             .attr('stop-color', color_scale.scale(i))
             .attr('stop-opacity', 1);
     }
@@ -408,6 +410,7 @@ export function getPixelInfo(mouse)
                 "avg_res": pixel.avg_res.toFixed(2),
                 "avg_sens": pixel.avg_sens.toFixed(2),
                 "avg_int_time": pixel.avg_int_time.toFixed(2),
+                "cs_best" : pixel.cs_best,
                 "cs_comb": pixel.cs_comb,
                 "obs": getPixelObservations(pixel.observations)
             }

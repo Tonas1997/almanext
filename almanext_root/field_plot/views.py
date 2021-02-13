@@ -79,7 +79,7 @@ def get_plot(request):
     # =============================================================================
     print(str(min_ra) + " , " + str(max_ra) + " , " + str(min_dec) + " , " + str(max_dec))
     
-    obs_result = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec, field_of_view__lte = 300)#.prefetch_related('spec_windows').prefetch_related('traces')
+    obs_result = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec, field_of_view__lte = 300)#.prefetch_related('traces')#.prefetch_related('spec_windows')#
     # if the redshift is zero AND we are looking into bands, no need to look into frequency support
     print("size 1:" + str(obs_result.count()))
     # temporary default
@@ -132,9 +132,6 @@ def get_plot(request):
                     min_freq = min(min_freq, min_max[0])
                     max_freq = max(max_freq, min_max[1])
 
-    print(obs_result.query)
-
-    print("size 2:" + str(obs_result.count()))
 # =============================================================================
 
     JSONplot = get_json_plot(center, size, res, obs_result, min_freq, max_freq)

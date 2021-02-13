@@ -401,6 +401,7 @@ function updatePixelInfo(info)
         document.getElementById('pixel-avg-res').innerHTML = info.avg_res
         document.getElementById('pixel-avg-sens').innerHTML = info.avg_sens
         document.getElementById('pixel-avg-int-time').innerHTML = info.avg_int_time
+        document.getElementById('pixel-cs-improvement').innerHTML = (info.cs_best/info.cs_comb).toFixed(2)
     }
     else
     {
@@ -411,13 +412,14 @@ function updatePixelInfo(info)
         document.getElementById('pixel-avg-res').innerHTML = nan
         document.getElementById('pixel-avg-sens').innerHTML = nan
         document.getElementById('pixel-avg-int-time').innerHTML = nan
+        document.getElementById('pixel-cs-improvement').innerHTML = nan
     }
 }
 
 function initializePlotInfoTab()
 {
     document.getElementById("tab-plot-information").innerHTML = `
-    <div id="tab-information">
+    <div class="tab-information">
         <div id="tab-information-plot">
             <div class="info-wrapper">	
                 <div id="tab-information-plot-info">
@@ -447,6 +449,8 @@ function initializePlotInfoTab()
                     <div class='field value'><div id='pixel-avg-sens'> --.-- </div>&nbsp mJy/beam</div></div>
                 <div class='value-box'><div class='value-box field label'>Average int. time</div>
                     <div class='field value'><div id='pixel-avg-int-time'> --.-- </div>&nbsp s</div></div>
+                <div class='value-box'><div class='value-box field label'>CS improvement</div>
+                    <div class='field value'><div id='pixel-cs-improvement'> --.-- </div></div></div>
             </div>
         </div>
     </div>`
