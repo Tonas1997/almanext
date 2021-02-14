@@ -37,9 +37,9 @@ export function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
 
     document.getElementById("tab-frequency-coverage").innerHTML = `
     <div class="tab-histogram">
-        <div id='histogram'>
+        <div id='freq-histogram'>
         </div>
-        <div id=histogram-controls-wrapper>
+        <div id="freq-histogram-controls" class='histogram-controls-wrapper'>
         </div>
     </div>`
     //margin = 5;
@@ -68,7 +68,7 @@ export function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
 
 
     // Create an SVG object
-    svg = d3.select("#histogram")
+    svg = d3.select("#freq-histogram")
         .append("svg")
         .attr("width", width)
         .attr("height", height + margin.bottom)
@@ -254,13 +254,13 @@ function drawFreqObsBars(plot_freqs)
         .data(removeEmpty(plot_freqs))
         .enter()
         .append('rect')
-        .attr("type", "static")
-        .attr("observations", function(f) { return f.observations})
-        .attr("x", function(f) { return xScale(f.freq)})
-        .attr("y", function(f) { return yScale1(f.observations.length) + margin.top})
-        .attr("width", function() { return getWidth(bucket_size)})
-        .attr("height", function(f) { return height - margin.top - margin.bottom - yScale1(f.observations.length)})
-        .attr("class", "freq-histogram-obs-bar")
+            .attr("type", "static")
+            .attr("observations", function(f) { return f.observations})
+            .attr("x", function(f) { return xScale(f.freq)})
+            .attr("y", function(f) { return yScale1(f.observations.length) + margin.top})
+            .attr("width", function() { return getWidth(bucket_size)})
+            .attr("height", function(f) { return height - margin.top - margin.bottom - yScale1(f.observations.length)})
+            .attr("class", "freq-histogram-obs-bar")
 }
 
 export function drawEmissionLines(emission_lines)
@@ -308,7 +308,7 @@ export function changeAxisData(data_id)
 
 function drawControls()
 {
-    document.getElementById("histogram-controls-wrapper").innerHTML = `
+    document.getElementById("freq-histogram-controls").innerHTML = `
             <div class='histogram-control'>
                 <span class='text-label'>Vertical axis</span> 
                 <select id='freq-histogram-yaxis1'>

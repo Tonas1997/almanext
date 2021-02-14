@@ -399,7 +399,7 @@ form
   opacity: 0.3;
 }
 
-#histogram-controls-wrapper 
+.histogram-controls-wrapper 
 {
   display: flex;
   flex-direction: row;
@@ -443,6 +443,43 @@ form
   text-align: left;
 }
 
+#tab-gained-sensitivity-wrapper
+{
+  display: flex;
+  flex-direction: row;
+}
+
+#cs-plot-left
+{
+  display: flex;
+  flex: 1 1 100px;
+  flex-direction: column;
+}
+
+#cs-plot-right
+{
+  display: flex;
+  width: 70%;
+  flex-direction: column;
+}
+
+#cs-plot-histogram
+{
+  display: flex;
+  flex: 1 0 30vh;
+}
+
+.bar-cont-best
+{
+  fill: rgb(100, 100, 100);
+  opacity: 0.3;
+}
+
+.bar-cont-comb
+{
+  fill: rgb(55, 55, 85);
+  opacity: 0.7;
+}
 
 /* Observation table classes */
 .highlighted-row

@@ -19,6 +19,11 @@ import
 
 import
 {
+    showSensitivityPlot
+} from "./sensitivity_imp.js"
+
+import
+{
     showObservationList, // initial render
     updateObservationList, // list update
     getObservationRowData, // get row data
@@ -289,17 +294,19 @@ function initializePlotView(data)
     // defines some variables
     if(first_render) showPlotControls()
     var plot_properties = renderData(data)
-    var plot_cs = data.continuum_sensitivity        
+    var plot_cs = data.continuum_sensitivity
+    var plot_pixels = data.pixels        
 
     // initializes the HTML handles for the plot properties
-    initializePlotInfoTab()
-    initializePlotInfo(plot_properties)
+    showPlotInfoTab()
+    showPlotInfo(plot_properties)
     
     // keeps duplicate plots from being rendered when the dataset is regenerated
     // TODO
     if(first_render)
     {
         showFreqHistogram(plot_properties, plot_cs, emission_lines)
+        showSensitivityPlot(plot_properties, plot_pixels)
         showObservationList(data) // not sure I want to initialize the table before getting the data... TODO
         first_render = false
     }
@@ -380,7 +387,7 @@ function initializePlotView(data)
  * Creates or updates the plot information display
  * @param {*} plot_properties The properties object
  */
-function initializePlotInfo(plot_properties)
+function showPlotInfo(plot_properties)
 {
     console.log(plot_properties)
     document.getElementById('plot-total-area').innerHTML = "~" + plot_properties.total_area
@@ -416,7 +423,7 @@ function updatePixelInfo(info)
     }
 }
 
-function initializePlotInfoTab()
+function showPlotInfoTab()
 {
     document.getElementById("tab-plot-information").innerHTML = `
     <div class="tab-information">
