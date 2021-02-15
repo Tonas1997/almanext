@@ -19,7 +19,8 @@ import
 
 import
 {
-    showSensitivityPlot
+    showSensitivityPlot,
+    updateSensitivityPlot
 } from "./sensitivity_imp.js"
 
 import
@@ -313,6 +314,7 @@ function initializePlotView(data)
     else if(data.observations.length != 0)
     {
         updateFreqHistogram(plot_properties, plot_cs, emission_lines)
+        updateSensitivityPlot(plot_pixels)
         updateObservationList(data)
     }
 

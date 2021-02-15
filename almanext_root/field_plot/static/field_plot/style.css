@@ -303,9 +303,7 @@ form
 
 #info-row
 {
-  display: flex;
-  flex: 1 1 30vh;
-  flex-direction: column;
+  height: 240px;
 }
 
 #infobox-plot-num
@@ -404,6 +402,7 @@ form
   display: flex;
   flex-direction: row;
   padding-top: 4px;
+  padding-bottom: 4px;
   border-top: 1px solid grey;
 }
 
@@ -478,7 +477,7 @@ form
 .bar-cont-comb
 {
   fill: rgb(55, 55, 85);
-  opacity: 0.7;
+  opacity: 0.3;
 }
 
 /* Observation table classes */

@@ -22,7 +22,8 @@ export function showObservationList(data)
         "paging": false,
         "searching": false,
         "info": false,
-        "orderClasses": false
+        "orderClasses": false,
+        "asStripeClasses": [""]
     } 
     ).columns.adjust().draw();
 }
