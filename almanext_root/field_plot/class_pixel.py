@@ -10,7 +10,9 @@ class Pixel:
     avg_res = 0
     avg_sens = 0
     avg_int_time = 0
-    cs_sum = 0
+    cs_sum_12m = 0
+    cs_sum_7m = 0
+    cs_sum_tp = 0
     cs_best = 1e9
     
     observations = []
@@ -34,8 +36,14 @@ class Pixel:
 
         self.count_pointings = self.count_pointings + 1
 
-    def add_cs(self, cs):
-        self.cs_sum += cs
+    def add_cs_12m(self, cs):
+        self.cs_sum_12m += cs
+
+    def add_cs_7m(self, cs):
+        self.cs_sum_7m += cs
+
+    def add_cs_tp(self, cs):
+        self.cs_sum_tp += cs
 
     def update_best_cs(self, cs):
         self.cs_best = min(cs, self.cs_best)

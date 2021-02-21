@@ -39,8 +39,12 @@ properties_list = {
     "max_avg_sens": 0,
     "min_avg_int_time": 0,
     "max_avg_int_time": 0,
-    "min_combined_cs": 0,
-    "max_combined_cs": 0,
+    "min_combined_cs_12m": 0,
+    "max_combined_cs_12m": 0,
+    "min_combined_cs_7m": 0,
+    "max_combined_cs_7m": 0,
+    "min_combined_cs_tp": 0,
+    "max_combined_cs_tp": 0,
     "min_freq_obs_count": 0,
     "max_freq_obs_count": 0,
     "min_freq_obs_t_area": 0,
@@ -168,8 +172,19 @@ def get_mean_freq(freq_list):
 def append_pixel(x, y, px):
     global pixel_list, properties_list
     # we have to set min and max values for the snr here
-    combined_cs = 1/math.sqrt(px.cs_sum)
-    update_min_max("combined_cs", 1/(combined_cs/px.cs_best))
+    combined_cs_12m = None 
+    combined_cs_7m = None
+    combined_cs_tp = None
+
+    if(px.cs_sum_12m != 0):
+        combined_cs_12m = 1/math.sqrt(px.cs_sum_12m)
+        update_min_max("combined_cs_12m", 1/(combined_cs_12m/px.cs_best))
+    if(px.cs_sum_7m != 0):
+        combined_cs_7m = 1/math.sqrt(px.cs_sum_7m)
+        update_min_max("combined_cs_7m", 1/(combined_cs_7m/px.cs_best))
+    if(px.cs_sum_tp != 0):
+        combined_cs_tp = 1/math.sqrt(px.cs_sum_tp)
+        update_min_max("combined_cs_tp", 1/(combined_cs_tp/px.cs_best))
 
     # append the pixel to the pixel list
     pixel_list.append({"x" : x,
@@ -180,7 +195,9 @@ def append_pixel(x, y, px):
                     "avg_res" : px.avg_res,
                     "avg_sens" : px.avg_sens,
                     "avg_int_time" : px.avg_int_time,
-                    "cs_comb" : combined_cs,
+                    "cs_comb_12m" : combined_cs_12m,
+                    "cs_comb_7m" : combined_cs_7m,
+                    "cs_comb_tp" : combined_cs_tp,
                     "cs_best": px.cs_best,
                     "observations" : px.observations})
 
@@ -326,10 +343,14 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                     # add the signal-to-noise level
                     if(array == "12"):
                         fraction_pb = gaussian12m(sep.arcsec, mean_freq)
-                    else:
+                        pixel_array[y][x].add_cs_12m((1.0/(scaled_cont_sens/fraction_pb))**2)
+                    elif(array == "7"):
                         fraction_pb = gaussian7m(sep.arcsec, mean_freq)
+                        pixel_array[y][x].add_cs_7m((1.0/(scaled_cont_sens/fraction_pb))**2)
+                    else: # TODO, total power gaussian? let's assume 7m for a worst-case scenario
+                        fraction_pb = gaussian7m(sep.arcsec, mean_freq)
+                        pixel_array[y][x].add_cs_tp((1.0/(scaled_cont_sens/fraction_pb))**2)
 
-                    pixel_array[y][x].add_cs((1.0/(scaled_cont_sens/fraction_pb))**2)
                     pixel_array[y][x].update_best_cs(scaled_cont_sens/fraction_pb)
                     # TODO
                     # pixel_array[y][x].add_snr(snr**2)
@@ -370,8 +391,12 @@ def reset_properties_list(plot_size, plot_res, min_f, max_f):
     properties_list["max_avg_sens"] = -9999
     properties_list["min_avg_int_time"] = 9999
     properties_list["max_avg_int_time"] = -9999
-    properties_list["min_combined_cs"] = 9999
-    properties_list["max_combined_cs"] = -9999
+    properties_list["min_combined_cs_12m"] = 9999
+    properties_list["max_combined_cs_12m"] = -9999
+    properties_list["min_combined_cs_7m"] = 9999
+    properties_list["max_combined_cs_7m"] = -9999
+    properties_list["min_combined_cs_tp"] = 9999
+    properties_list["max_combined_cs_tp"] = -9999
     properties_list["min_freq_obs_count"] = 0
     properties_list["max_freq_obs_count"] = -9999
     properties_list["min_freq_obs_t_area"] = 0

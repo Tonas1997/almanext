@@ -47,7 +47,7 @@ export function showSensitivityPlot(plot_properties, plot_pixels)
         .attr("transform", "translate(" + (width/2) + " ," + (height - margin.bottom + margin.xLabel) + ")")
         .attr("class", "axis-label")
         .style("text-anchor", "middle")
-        .text("Sensitivity");
+        .text("log(Sensitivity) [mJy/1 arcsec beam]");
 
     // left Y axis
     g = svg.append("g")
@@ -108,23 +108,31 @@ export function showSensitivityPlot(plot_properties, plot_pixels)
 
 export function updateSensitivityPlot(plot_pixels)
 {
-    var h1 = d3.histogram().value(d => d.cs_best).domain(xScale.domain()).thresholds(N_BUCKETS)
-    var h2 = d3.histogram().value(d => d.cs_comb).domain(xScale.domain()).thresholds(N_BUCKETS)
-
-    bins_best = h1(plot_pixels).filter(p => p.length > 0)
-    bins_comb = h2(plot_pixels).filter(p => p.length > 0)
-    console.log(bins_best)
-    console.log(bins_comb)
-
-    var maxYBest = d3.max(bins_best, function(d) { return d.length; })
-    var maxYComb = d3.max(bins_comb, function(d) { return d.length; })
-    
     xScale.domain(
             [
-                d3.min(plot_pixels.map(function(d) { return Math.min(d.cs_comb, d.cs_best)})), 
-                d3.max(plot_pixels.map(function(d) { return Math.max(d.cs_comb, d.cs_best)}))
+                d3.min(plot_pixels.map(function(d) { return Math.log(Math.min(d.cs_comb_12m, d.cs_comb_7m, d.cs_comb_tp, d.cs_best))})), 
+                d3.max(plot_pixels.map(function(d) { return Math.log(Math.max(d.cs_comb_12m, d.cs_comb_7m, d.cs_comb_tp, d.cs_best))}))
             ])
-    yScale.domain([1, Math.max(maxYBest, maxYComb)])
+    
+    // generate histogram functions for all combined sensitivities
+    var h_best      = d3.histogram().value(d => Math.log(d.cs_best)).domain(xScale.domain()).thresholds(N_BUCKETS)
+    var h_comb_12m  = d3.histogram().value(d => Math.log(d.cs_comb_12m)).domain(xScale.domain()).thresholds(N_BUCKETS)
+    var h_comb_7m   = d3.histogram().value(d => Math.log(d.cs_comb_7m)).domain(xScale.domain()).thresholds(N_BUCKETS)
+    var h_comb_tp   = d3.histogram().value(d => Math.log(d.cs_comb_tp)).domain(xScale.domain()).thresholds(N_BUCKETS)
+
+    // filter empty bins
+    var bins_best       = h_best(plot_pixels).filter(p => p.length > 0)
+    var bins_comb_12m   = h_comb_12m(plot_pixels).filter(p => p.length > 0)
+    var bins_comb_7m    = h_comb_7m(plot_pixels).filter(p => p.length > 0)
+    var bins_comb_tp    = h_comb_tp(plot_pixels).filter(p => p.length > 0)
+
+    // obtain the highest column among all bins
+    var maxYBest    = d3.max(bins_best, function(d) { return d.length; })
+    var maxYComb12  = d3.max(bins_comb_12m, function(d) { return d.length; }) 
+    var maxYComb7   = d3.max(bins_comb_7m, function(d) { return d.length; }) 
+    var maxYCombTP  = d3.max(bins_comb_tp, function(d) { return d.length; }) 
+    
+    yScale.domain([1, Math.max(maxYBest, maxYComb12, maxYComb7, maxYCombTP)])
     xAxis.scale(xScale)
     yAxis.scale(yScale).ticks(3, "~s");
     
@@ -137,6 +145,11 @@ export function updateSensitivityPlot(plot_pixels)
 
     console.log(xScale.domain())
 
+    appendBins(0, bins_best, "bar-cont-best")
+    appendBins(1, bins_comb_12m, "bar-cont-comb")
+    //appendBins(2, bins_comb_7m, "bar-cont-comb")
+    //appendBins(3, bins_comb_tp, "bar-cont-comb")
+    /*
     drawArea.selectAll("rect").remove()
     drawArea.selectAll("rect")
         .data(bins_best)
@@ -157,6 +170,21 @@ export function updateSensitivityPlot(plot_pixels)
             .attr("width", function(d) { return xScale(d.x1) - xScale(d.x0); })
             .attr("height", function(d) { return height - margin.top - margin.bottom - yScale(d.length); })
             .attr("class", "bar-cont-comb")
+            */
+}
+
+function appendBins(id, bin_set, css_class)
+{
+    var selectTarget = "rect" + id
+    drawArea.selectAll(selectTarget)
+        .data(bin_set)
+        .enter()
+        .append("rect")
+            .attr("x", function(d) { return xScale(d.x0)})
+            .attr("y", function(d) { return yScale(d.length) + margin.top})
+            .attr("width", function(d) { return xScale(d.x1) - xScale(d.x0); })
+            .attr("height", function(d) { return height - margin.top - margin.bottom - yScale(d.length); })
+            .attr("class", css_class)
 }
 
 function zoomed(transform)

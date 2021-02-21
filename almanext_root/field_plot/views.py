@@ -54,6 +54,12 @@ def get_lines(request):
 
     return JsonResponse(lines_json, safe=False)
 
+# ==========================
+# ======= FILTERS ==========
+# ==========================
+def filter_obs_by_bands(obs, freq_list):
+    return(obs.bands.designation in freq_list)
+    
 # returns the json file generated with the given request
 def get_plot(request):
 
@@ -81,8 +87,8 @@ def get_plot(request):
     
     obs_result = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec, field_of_view__lte = 300)#.prefetch_related('traces')#.prefetch_related('spec_windows')#
     # if the redshift is zero AND we are looking into bands, no need to look into frequency support
-    print("size 1:" + str(obs_result.count()))
     # temporary default
+    print(obs_result.query)
     min_freq = 9999
     max_freq = -9999 
     if(z_max == 0 and frequency_options == 'freq-bands'):
@@ -122,15 +128,19 @@ def get_plot(request):
             z_bands.append({"start": min_f, "end": max_f})
 
         # filter out the observations that fall outside the defined frequency range(s)
+        exclude_ids = []
         for o in obs_result:
                 covers = covers_ranges(z_bands, o)
                 if(not covers):
-                    obs_result = obs_result.exclude(id=o.id)
+                    exclude_ids.append(o.id)
                 # update the min and max frequency values across the obs set
                 else:
                     min_max = get_min_max_f(o)
                     min_freq = min(min_freq, min_max[0])
                     max_freq = max(max_freq, min_max[1])
+
+        obs_result = obs_result.exclude(id__in = exclude_ids)
+        print(obs_result.query)
 
 # =============================================================================
 
