@@ -5,7 +5,11 @@ var bins_best, bins_comb
 var transform_store
 
 var resolution
-const N_BUCKETS = 100
+const N_BUCKETS = 200
+
+var SHOW_COMB = true
+var SHOW_BEST = true
+var ARRAY_CONFIG = "12m" // default
 
 export function showSensitivityPlot(plot_properties, plot_pixels)
 {
@@ -26,7 +30,7 @@ export function showSensitivityPlot(plot_properties, plot_pixels)
     xAxis = d3.axisBottom()
         .scale(xScale)
 
-    yScale = d3.scaleLog()
+    yScale = d3.scaleLinear()
         .domain([1, 10])
         .range([height - margin.bottom - margin.top, 0])
     yAxis = d3.axisLeft() 
@@ -82,36 +86,48 @@ export function showSensitivityPlot(plot_properties, plot_pixels)
     
     $("#cs-histogram-best").checkboxradio().prop('checked',true).checkboxradio('refresh');
     $("#cs-histogram-best").click(function() {
-        if($(this).is(":checked"))
-        {
-            svg.selectAll(".bar-cont-best").transition().duration(500).style("opacity", 0.5)
-        }
-        else
-        {
-            svg.selectAll(".bar-cont-best").transition().duration(500).style("opacity", 0.0)
-        }
+        SHOW_BEST = $(this).is(":checked")
+        console.log(SHOW_BEST)
+        changeVisibleBars()
     })
 
     $("#cs-histogram-comb").checkboxradio().prop('checked',true).checkboxradio('refresh');
     $("#cs-histogram-comb").click(function() {
-        if($(this).is(":checked"))
+        SHOW_COMB = $(this).is(":checked")
+        changeVisibleBars()
+        /*
         {
+            SHOW_COMB = true
             svg.selectAll(".bar-cont-comb").transition().duration(500).style("opacity", 0.5)
         }
         else
         {
+            SHOW_COMB = false
             svg.selectAll(".bar-cont-comb").transition().duration(500).style("opacity", 0.0)
-        }
+        }*/
     })
+    $("#cs-histogram-array").selectmenu()
+    // behavior is defined on controller.js as it affects other page displays
+
     updateSensitivityPlot(plot_pixels)
 }
 
 export function updateSensitivityPlot(plot_pixels)
 {
+    // handle null values for any sensitivity field
+    // this is the only way I can think of to sanitize this :/
     xScale.domain(
             [
-                d3.min(plot_pixels.map(function(d) { return Math.log(Math.min(d.cs_comb_12m, d.cs_comb_7m, d.cs_comb_tp, d.cs_best))})), 
-                d3.max(plot_pixels.map(function(d) { return Math.log(Math.max(d.cs_comb_12m, d.cs_comb_7m, d.cs_comb_tp, d.cs_best))}))
+                d3.min(plot_pixels.map(function(d) 
+                {
+                    var minXArray = [d.cs_comb_12m, d.cs_comb_7m, d.cs_comb_tp, d.cs_best].filter(e => e != null)
+                    return Math.log(Math.min(...minXArray))
+                })), 
+                d3.max(plot_pixels.map(function(d) 
+                { 
+                    var maxXArray = [d.cs_comb_12m, d.cs_comb_7m, d.cs_comb_tp, d.cs_best].filter(e => e != null)
+                    return Math.log(Math.max(...maxXArray))
+                }))
             ])
     
     // generate histogram functions for all combined sensitivities
@@ -120,19 +136,42 @@ export function updateSensitivityPlot(plot_pixels)
     var h_comb_7m   = d3.histogram().value(d => Math.log(d.cs_comb_7m)).domain(xScale.domain()).thresholds(N_BUCKETS)
     var h_comb_tp   = d3.histogram().value(d => Math.log(d.cs_comb_tp)).domain(xScale.domain()).thresholds(N_BUCKETS)
 
-    // filter empty bins
-    var bins_best       = h_best(plot_pixels).filter(p => p.length > 0)
-    var bins_comb_12m   = h_comb_12m(plot_pixels).filter(p => p.length > 0)
-    var bins_comb_7m    = h_comb_7m(plot_pixels).filter(p => p.length > 0)
-    var bins_comb_tp    = h_comb_tp(plot_pixels).filter(p => p.length > 0)
+    /* filter empty bins - we also need to remove pixels which don't have a computed
+    sensitivity for a given array configuration beforehand */
+    var bins_best       = h_best(plot_pixels
+        .filter(d => d.cs_best != null))
+        .filter(b => b.length > 0)
+    
+    console.log(plot_pixels.filter(d => d.cs_comb_7m != null))
+    var bins_comb_12m   = h_comb_12m(plot_pixels
+        .filter(d => d.cs_comb_12m != null))
+        .filter(b => b.length > 0)
+    console.log("############ BEFORE ############")
+    console.log(plot_pixels)
+    var bins_comb_7m    = h_comb_7m(plot_pixels
+        .filter(d => d.cs_comb_7m != null))
+        .filter(b => b.length > 0)
+    console.log("############ AFTER ############")
+    console.log(plot_pixels.filter(d => d.cs_comb_7m != null))
+    var bins_comb_tp    = h_comb_tp(plot_pixels
+        .filter(d => d.cs_comb_tp != null))
+        .filter(b => b.length > 0)
+    console.log(bins_best)
 
     // obtain the highest column among all bins
     var maxYBest    = d3.max(bins_best, function(d) { return d.length; })
     var maxYComb12  = d3.max(bins_comb_12m, function(d) { return d.length; }) 
     var maxYComb7   = d3.max(bins_comb_7m, function(d) { return d.length; }) 
-    var maxYCombTP  = d3.max(bins_comb_tp, function(d) { return d.length; }) 
+    var maxYCombTP  = d3.max(bins_comb_tp, function(d) { return d.length; })
+
+    var maxYArray = [maxYBest, maxYComb12, maxYComb7, maxYCombTP].filter(e => typeof e !== "undefined")
+
+    console.log(maxYBest)
+    console.log(maxYComb12)
+    console.log(maxYComb7)
+    console.log(maxYCombTP)
     
-    yScale.domain([1, Math.max(maxYBest, maxYComb12, maxYComb7, maxYCombTP)])
+    yScale.domain([0, Math.max(...maxYArray)])
     xAxis.scale(xScale)
     yAxis.scale(yScale).ticks(3, "~s");
     
@@ -145,41 +184,22 @@ export function updateSensitivityPlot(plot_pixels)
 
     console.log(xScale.domain())
 
-    appendBins(0, bins_best, "bar-cont-best")
-    appendBins(1, bins_comb_12m, "bar-cont-comb")
-    //appendBins(2, bins_comb_7m, "bar-cont-comb")
-    //appendBins(3, bins_comb_tp, "bar-cont-comb")
-    /*
-    drawArea.selectAll("rect").remove()
-    drawArea.selectAll("rect")
-        .data(bins_best)
-        .enter()
-        .append("rect")
-            .attr("x", function(d) { return xScale(d.x0)})
-            .attr("y", function(d) { return yScale(d.length) + margin.top})
-            .attr("width", function(d) { return xScale(d.x1) - xScale(d.x0); })
-            .attr("height", function(d) { return height - margin.top - margin.bottom - yScale(d.length); })
-            .attr("class", "bar-cont-best")
-
-    drawArea.selectAll("rect2")
-        .data(bins_comb)
-        .enter()
-        .append("rect")
-            .attr("x", function(d) { return xScale(d.x0)})
-            .attr("y", function(d) { return yScale(d.length) + margin.top})
-            .attr("width", function(d) { return xScale(d.x1) - xScale(d.x0); })
-            .attr("height", function(d) { return height - margin.top - margin.bottom - yScale(d.length); })
-            .attr("class", "bar-cont-comb")
-            */
+    appendBins(0, bins_best, "best", "bar-cont-best")
+    appendBins(1, bins_comb_12m, "12m", "bar-cont-comb")
+    appendBins(2, bins_comb_7m, "7m", "bar-cont-comb")
+    appendBins(3, bins_comb_tp, "tp", "bar-cont-comb")
+    
+    changeVisibleBars()
 }
 
-function appendBins(id, bin_set, css_class)
+function appendBins(id, bin_set, array, css_class)
 {
     var selectTarget = "rect" + id
     drawArea.selectAll(selectTarget)
         .data(bin_set)
         .enter()
         .append("rect")
+            .attr("array", array)
             .attr("x", function(d) { return xScale(d.x0)})
             .attr("y", function(d) { return yScale(d.length) + margin.top})
             .attr("width", function(d) { return xScale(d.x1) - xScale(d.x0); })
@@ -199,9 +219,42 @@ function zoomed(transform)
     svg.selectAll("#x-axis1").call(xAxis.scale(transform_store.rescaleX(xScale)));
 }
 
-function getBinArea(length)
+export function changeVisibleBars(array_id)
 {
-    return length*(resolution**2/1.296e7)
+    if(array_id != undefined) 
+        ARRAY_CONFIG = array_id
+    if(SHOW_COMB)
+    {
+        drawArea.selectAll(".bar-cont-comb")
+            .filter(function() {
+                var array = d3.select(this).attr("array")
+                return (array != ARRAY_CONFIG)
+            })
+            .transition().duration(200).style("opacity", 0.0)
+        drawArea.selectAll(".bar-cont-comb")
+            .filter(function() {
+                var array = d3.select(this).attr("array")
+                return (array == ARRAY_CONFIG)
+            })
+            .transition().duration(200).style("opacity", 0.5)
+    }
+    else
+    {
+        drawArea.selectAll(".bar-cont-comb").transition().duration(200).style("opacity", 0.0)
+    }
+    if(SHOW_BEST)
+    {
+        drawArea.selectAll(".bar-cont-best")
+            .filter(function() {
+                var array = d3.select(this).attr("array")
+                return (array == "best")
+            })
+            .transition().duration(200).style("opacity", 0.5)
+    }
+    else
+    {
+        drawArea.selectAll(".bar-cont-best").transition().duration(200).style("opacity", 0.0)
+    }
 }
 
 function getPaneHTML()
@@ -218,16 +271,23 @@ function getPaneHTML()
             </div>
             <div class='histogram-controls-wrapper'>
                 <div class='histogram-control'>
-                    <span class='text-label'>Show best sensitivity</span>
+                    <span class='text-label'>Best sensitivity</span>
                     <input type="checkbox" name="checkbox-1" id="cs-histogram-best">
                     <label for="cs-histogram-best" class="checkbox-clean"></label>
                 </div>
                 <div class='histogram-control'>
-                    <span class='text-label'>Show combined sensitivity</span>
+                    <span class='text-label'>Combined sensitivity</span>
                     <input type="checkbox" name="checkbox-1" id="cs-histogram-comb">
                     <label for="cs-histogram-comb" class="checkbox-clean"></label>
                 </div>
-                
+                <div class='histogram-control'>
+                    <span class='text-label'>Array</span> 
+                    <select id='cs-histogram-array'>
+                        <option value='12m'>12m (long baselines)</option>
+                        <option value='7m'>7m (compact array)</option>
+                        <option value='tp'>Total power (LB + ACA)</option>
+                    </select>
+                </div>
             </div>
         </div>
     </div>`

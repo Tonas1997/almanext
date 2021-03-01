@@ -20,7 +20,8 @@ import
 import
 {
     showSensitivityPlot,
-    updateSensitivityPlot
+    updateSensitivityPlot,
+    changeVisibleBars
 } from "./sensitivity_imp.js"
 
 import
@@ -360,7 +361,13 @@ function initializePlotView(data)
     }))
 
     // FREQUENCY HISTOGRAM CONTROLS
-
+    $("#cs-histogram-array").selectmenu(
+    {
+            change: function(event, ui)
+            {
+                changeVisibleBars(ui.item.value)
+            }
+    })
 
     // LIST CONTROLS
     // highlights the panned-over observation

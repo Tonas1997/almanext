@@ -177,12 +177,15 @@ def append_pixel(x, y, px):
     combined_cs_tp = None
 
     if(px.cs_sum_12m != 0):
+        #print("12m")
         combined_cs_12m = 1/math.sqrt(px.cs_sum_12m)
         update_min_max("combined_cs_12m", 1/(combined_cs_12m/px.cs_best))
     if(px.cs_sum_7m != 0):
+        #print("7m")
         combined_cs_7m = 1/math.sqrt(px.cs_sum_7m)
         update_min_max("combined_cs_7m", 1/(combined_cs_7m/px.cs_best))
     if(px.cs_sum_tp != 0):
+        #print("TP")
         combined_cs_tp = 1/math.sqrt(px.cs_sum_tp)
         update_min_max("combined_cs_tp", 1/(combined_cs_tp/px.cs_best))
 
@@ -341,13 +344,14 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                     # change the average values
                     pixel_array[y][x].change_avgs(res, sens, int_time)
                     # add the signal-to-noise level
+                    print(array)
                     if(array == "12"):
                         fraction_pb = gaussian12m(sep.arcsec, mean_freq)
                         pixel_array[y][x].add_cs_12m((1.0/(scaled_cont_sens/fraction_pb))**2)
                     elif(array == "7"):
                         fraction_pb = gaussian7m(sep.arcsec, mean_freq)
                         pixel_array[y][x].add_cs_7m((1.0/(scaled_cont_sens/fraction_pb))**2)
-                    else: # TODO, total power gaussian? let's assume 7m for a worst-case scenario
+                    else: # TODO, total power gaussian? let's assume 7m for a worst-case scenario~
                         fraction_pb = gaussian7m(sep.arcsec, mean_freq)
                         pixel_array[y][x].add_cs_tp((1.0/(scaled_cont_sens/fraction_pb))**2)
 
@@ -491,7 +495,7 @@ def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
         obs_json = observation_to_json(obs, counter)
         mean_freq = get_mean_freq(obs_json["frequency"])
         print(mean_freq)
-        array = obs_json["arrays"][0]
+        array = obs_json["arrays"][0].get("array")
         # since obs_json is a local object and needs to be edited by fill_pixels to change the observation's area, we need
         # to pass it as an argument and get the modified result
         obs_json = fill_pixels(obs_json, mean_freq, array, counter)
