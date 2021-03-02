@@ -221,12 +221,26 @@ export function updateCanvas(transform)
             background = 0
             break
         case "cs_comb":
-            color_scale.worst = 1//plot_properties.min_combined_cs
-            color_scale.best = plot_properties.max_combined_cs
-            color_scale.ref = plot_properties.max_combined_cs
-            color_scale.scale = d3.scaleSequential()
-                .interpolator(d3.interpolateCool)
-                .domain([color_scale.worst,color_scale.best]);
+            var fieldname
+            switch($("#cs-histogram-array").val())
+            {
+                case "12m":
+                    fieldname = "cs_comb_12m"
+                    color_scale.best = plot_properties.max_combined_cs_12m
+                    break
+                case "7m":
+                    fieldname = "cs_comb_7m"
+                    color_scale.best = plot_properties.max_combined_cs_7m
+                    break
+                case "tp":
+                    fieldname = "cs_comb_tp"
+                    color_scale.best = plot_properties.max_combined_cs_tp
+                    break
+            }
+            color_scale.worst = 0//plot_properties.min_combined_cs
+            color_scale.scale = d3.scaleDiverging()
+                .interpolator(d3.interpolateRdYlGn)
+                .domain([color_scale.worst, 1, color_scale.best]);
             axis_label = "factor (combined sensitivity)"
             inverse = false
             background = 0
@@ -256,11 +270,20 @@ export function updateCanvas(transform)
                 context.beginPath()
                 if(render_mode == "cs_comb")
                 {
-                    pixel_value = (point["cs_best"]/point["cs_comb"])
+                    if(point[fieldname] == null)
+                    {
+                        context.fillStyle = "#ededed"
+                    }
+                    else
+                    {
+                        context.fillStyle = scale(point["cs_best"]/point[fieldname])
+                    }
                 }
-                context.fillStyle = (pixel_value == null? scale(point[render_mode]): scale(pixel_value));
+                else
+                {
+                    context.fillStyle = scale(point[render_mode])
+                }
                 point.highlight ? context.globalAlpha = 1.0 : context.globalAlpha = 0.1 
-                
                 context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
             }
         }

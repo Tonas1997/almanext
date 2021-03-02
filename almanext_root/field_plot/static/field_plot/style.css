@@ -458,7 +458,7 @@ form
 #cs-plot-right
 {
   display: flex;
-  width: 70%;
+  width: 65%;
   flex-direction: column;
 }
 

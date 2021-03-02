@@ -16,7 +16,7 @@ export function showSensitivityPlot(plot_properties, plot_pixels)
     resolution = plot_properties.resolution
     document.getElementById("tab-gained-sensitivity").innerHTML = getPaneHTML()
 
-    width = $('#info-row').width() * 0.7;
+    width = $('#info-row').width() * 0.65;
     height = $('#info-row').height() - 95;
 
     xScale = d3.scaleLinear()
@@ -78,16 +78,23 @@ export function showSensitivityPlot(plot_properties, plot_pixels)
     const extent = [[margin.left, 0], [width - margin.right, 0]];
 
     transform_store = d3.zoomIdentity
+
+    // BRUSH OR ZOOM? NOT SURE...
+    
     svg.call(d3.zoom()
         .scaleExtent([1, 1000])
         .translateExtent(extent)
         .extent(extent)
         .on("zoom", () => zoomed(d3.event.transform)));
     
+        /*
+    svg.call(d3.brushX()
+        .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
+        .on("start brush"), () => getSelected())*/
+    
     $("#cs-histogram-best").checkboxradio().prop('checked',true).checkboxradio('refresh');
     $("#cs-histogram-best").click(function() {
         SHOW_BEST = $(this).is(":checked")
-        console.log(SHOW_BEST)
         changeVisibleBars()
     })
 
@@ -95,16 +102,6 @@ export function showSensitivityPlot(plot_properties, plot_pixels)
     $("#cs-histogram-comb").click(function() {
         SHOW_COMB = $(this).is(":checked")
         changeVisibleBars()
-        /*
-        {
-            SHOW_COMB = true
-            svg.selectAll(".bar-cont-comb").transition().duration(500).style("opacity", 0.5)
-        }
-        else
-        {
-            SHOW_COMB = false
-            svg.selectAll(".bar-cont-comb").transition().duration(500).style("opacity", 0.0)
-        }*/
     })
     $("#cs-histogram-array").selectmenu()
     // behavior is defined on controller.js as it affects other page displays
@@ -146,13 +143,9 @@ export function updateSensitivityPlot(plot_pixels)
     var bins_comb_12m   = h_comb_12m(plot_pixels
         .filter(d => d.cs_comb_12m != null))
         .filter(b => b.length > 0)
-    console.log("############ BEFORE ############")
-    console.log(plot_pixels)
     var bins_comb_7m    = h_comb_7m(plot_pixels
         .filter(d => d.cs_comb_7m != null))
         .filter(b => b.length > 0)
-    console.log("############ AFTER ############")
-    console.log(plot_pixels.filter(d => d.cs_comb_7m != null))
     var bins_comb_tp    = h_comb_tp(plot_pixels
         .filter(d => d.cs_comb_tp != null))
         .filter(b => b.length > 0)
@@ -219,6 +212,27 @@ function zoomed(transform)
     svg.selectAll("#x-axis1").call(xAxis.scale(transform_store.rescaleX(xScale)));
 }
 
+function getSelected()
+{
+    if(d3.event.selection != null)
+    {
+        var brush_coords = d3.brushedSelection(this)
+        drawArea.selectAll(".bar-cont-comb")
+        .filter(function() {
+            var x0 = d3.select(this).attr("x")
+            var x1 = d3.select(this).attr("x") + d3.select(this).attr("width")
+            return (covers(brush_coords, x0, x1))
+        })
+    }
+
+    function covers(coords, x0, x1) 
+    {
+        return ((coords[0] >= x1 && coords[0]) <= x0 ||
+                (coords[0] <= x0 && coords[1]) >= x1 ||
+                (coords[1] <= x1 && coords[1]) >= x1)
+    }
+}
+
 export function changeVisibleBars(array_id)
 {
     if(array_id != undefined) 
@@ -263,6 +277,18 @@ function getPaneHTML()
     <div id='tab-gained-sensitivity-wrapper'>
         <div id='cs-plot-left'>
             <div id='cs-plot-info'>
+                <div class='pane-frame'>
+                    <div class='info-wrapper'>
+                        <div class='value-box'><div class='value-box field label'>Best (avg.)</div>
+                            <div class='field value'><div id='cs-best-avg'> --.-- mJy</div></div></div>
+                        <div class='value-box'><div class='value-box field label'>Best (std. dev.)</div>
+                            <div class='field value'><div id='cs-best-err'> --.-- </div></div></div>
+                        <div class='value-box'><div class='value-box field label'>Combined&nbsp<span id='cs-comb-avg-array'></span> (avg.)</div>
+                            <div class='field value'><div id='cs-comb-avg'> --.-- mJy</div></div></div>
+                        <div class='value-box'><div class='value-box field label'>Combined&nbsp<span id='cs-comb-avg-array'></span> (std. dev.)</div>
+                            <div class='field value'><div id='cs-comb-err'> --.-- </div></div></div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class='sep-vertical'></div>

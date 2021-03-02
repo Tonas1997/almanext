@@ -360,12 +360,13 @@ function initializePlotView(data)
         //setHighlightOverlap(this.checked)
     }))
 
-    // FREQUENCY HISTOGRAM CONTROLS
+    // SENSITIVITY HISTOGRAM CONTROLS
     $("#cs-histogram-array").selectmenu(
     {
             change: function(event, ui)
             {
                 changeVisibleBars(ui.item.value)
+                updateCanvas()
             }
     })
 
@@ -399,6 +400,7 @@ function initializePlotView(data)
 function showPlotInfo(plot_properties)
 {
     console.log(plot_properties)
+    document.getElementById('plot-n-observations').innerHTML = plot_properties.n_observations
     document.getElementById('plot-total-area').innerHTML = "~" + plot_properties.total_area
     document.getElementById('plot-overlap-area').innerHTML = "~" + plot_properties.overlap_area
     document.getElementById('plot-overlap-area-pct').innerHTML = "~" + (plot_properties.overlap_area/plot_properties.total_area*100).toFixed(2)
@@ -440,6 +442,8 @@ function showPlotInfoTab()
             <div class="info-wrapper">	
                 <div id="tab-information-plot-info">
                     <div id="infobox-plot-num">
+                        <div class='value-box'><div class='value-box field label'>Number of observations</div>
+                            <div class='field value'><div id="plot-n-observations">--.--</div></div></div>
                         <div class='value-box'><div class='value-box field label'>Total area</div>
                             <div class='field value'><div id="plot-total-area">--.--</div>&nbsp arcsec<sup>2</sup></div></div>
                         <div class='value-box'><div class='value-box field label'>Overlapping area</div>
@@ -457,7 +461,7 @@ function showPlotInfoTab()
                     <div class='field value'><div id='pixel-ra'> --.-- </div>&nbsp deg</div></div>
                 <div class='value-box'><div class='value-box field label'>Dec</div>
                     <div class='field value'><div id='pixel-dec'> --.-- </div>&nbsp deg</div></div>
-                <div class='value-box'><div class='value-box field label'>Number of pointings</div>
+                <div class='value-box'><div class='value-box field label'>Pixel pointings</div>
                     <div class='field value'><div id='pixel-n-pointings'> --.-- </div></div></div>
                 <div class='value-box'><div class='value-box field label'>Average resolution</div>
                     <div class='field value'><div id='pixel-avg-res'> --.-- </div>&nbsp arcsec<sup>2</sup></div></div>
