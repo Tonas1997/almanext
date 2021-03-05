@@ -287,6 +287,8 @@ def fill_pixels(obs_json, mean_freq, array, counter):
     res = obs_json["spatial_resolution"]
     sens = obs_json["line_sensitivity"]
     int_time = obs_json["integration_time"]
+    obs_fov = obs_json["field_of_view"]
+    is_mosaic = obs_json["mosaic"]
 
     # normalize sensitivity to the common synthesized beam
     scaled_cont_sens = obs_json["continuum_sensitivity"] * (res/ref_psf)
@@ -299,7 +301,11 @@ def fill_pixels(obs_json, mean_freq, array, counter):
 
         # ignore this trace if it's faulty (e.g. the observation is a mosaic and
         # this trace has the same fov as the observation)
-        if(fov > 220):
+        # this solution isn't perfect since the traces file uses higher-precision values
+        # for the fov, so there's always a mismatch. For now we'll ignore those which are closer than 5 arcsec
+        # to the observation's listed fov.
+        diff = abs(fov - obs_fov)
+        if(diff < 5 and is_mosaic):
             continue
 
         # builds an Angle object for convenience
@@ -350,17 +356,19 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                         pixel_array[y][x].add_cs_12m((1.0/(scaled_cont_sens/fraction_pb))**2)
                         if((1.0/(scaled_cont_sens/fraction_pb))**2 < 1):
                             print("########### GOOD ###########")
-                            print(sep.arcsec)
-                            print(mean_freq)
-                            print(fraction_pb)
-                            print(scaled_cont_sens)
+                            print("SEPARAION: " + str(sep.arcsec))
+                            print("FRACTION_PB: " + str(fraction_pb))
+                            print("CONT_SENS: " + str(obs_json["continuum_sensitivity"]))
+                            print("CONT_SENS_SCALED: " + str(scaled_cont_sens/fraction_pb))
+                            print("COMPUTED: " + str(1.0/(scaled_cont_sens/fraction_pb)**2))
                             print("##############################")
                         else:
                             print("########### BAD ###########")
-                            print(sep.arcsec)
-                            print(mean_freq)
-                            print(fraction_pb)
-                            print(scaled_cont_sens)
+                            print("SEPARAION: " + str(sep.arcsec))
+                            print("FRACTION_PB: " + str(fraction_pb))
+                            print("CONT_SENS: " + str(obs_json["continuum_sensitivity"]))
+                            print("CONT_SENS_SCALED: " + str(scaled_cont_sens/fraction_pb))
+                            print("COMPUTED: " + str(1.0/(scaled_cont_sens/fraction_pb)**2))
                             print("##############################")
                     elif(array == "7"):
                         fraction_pb = gaussian7m(sep.arcsec, mean_freq)
