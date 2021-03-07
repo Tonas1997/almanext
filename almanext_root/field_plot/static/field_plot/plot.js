@@ -28,7 +28,7 @@ var axis_label;
 var filter_list = [];
 
 // TODO
-var render_mode = "count_pointings"
+var options = {render_mode: "count_pointings", pixel_tooltip: false}
 
 // Filter class and its exports
 class PlotFilter
@@ -87,7 +87,7 @@ export function setHighlightOverlap(bool)
 
 export function setRenderMode(mode)
 {
-    render_mode = mode
+    options.render_mode = mode
 }
 
 // ------------------- CODE -------------------
@@ -157,6 +157,15 @@ function updateDataset(plot_json)
         .translateExtent([[0,0],[width,width]])
         .on("zoom", () => updateCanvas(d3.event.transform)));
 
+    $("#plot").tooltip({
+        content: "coiso",
+        position: { my: "left-10 center", at: "right center" },
+        classes: 
+        {
+            "ui-tooltip": "plot-button-tooltip"
+        }
+    });
+
     return plot_properties
 }
 
@@ -174,7 +183,7 @@ export function updateCanvas(transform)
     var inverse // this will later help us define the direction of the scale's gradient
     var pixel_value // allows us to define more complex calculations vs. just reading a field
 
-    switch(render_mode)
+    switch(options.render_mode)
     {
         case "count_pointings":
             //color_scale.scale = function(value) {return d3.interpolateViridis(value)};
@@ -268,8 +277,10 @@ export function updateCanvas(transform)
                 const py = point.y
 
                 context.beginPath()
-                if(render_mode == "cs_comb")
+                // the coloring for the combined sensitivity is a bit more complex...
+                if(options.render_mode == "cs_comb")
                 {
+                    // paint the pixel grey if it's not covered by the selected array configuration
                     if(point[fieldname] == null)
                     {
                         context.fillStyle = "#ededed"
@@ -281,7 +292,7 @@ export function updateCanvas(transform)
                 }
                 else
                 {
-                    context.fillStyle = scale(point[render_mode])
+                    context.fillStyle = scale(point[options.render_mode])
                 }
                 point.highlight ? context.globalAlpha = 1.0 : context.globalAlpha = 0.1 
                 context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
@@ -418,7 +429,21 @@ export function getPixelInfo(mouse)
     var gridX = Math.floor(trueX / pixelWidth)
     var gridY = Math.floor(trueY / pixelWidth)
     var pixel = pixel_array[gridY][gridX]
-    
+
+    var fieldname = ""
+    switch($("#cs-histogram-array").val())
+    {
+        case "12m":
+            fieldname = "cs_comb_12m"
+            break
+        case "7m":
+            fieldname = "cs_comb_7m"
+            break
+        case "tp":
+            fieldname = "cs_comb_tp"
+            break
+    }
+
     if(pixel != 0)
     {
         var result
@@ -426,15 +451,39 @@ export function getPixelInfo(mouse)
             result = null
         else
         {
+            var ra = pixel.ra
+            var dec = pixel.dec
+            var count_pointings = pixel.count_pointings
+            var avg_res = pixel.avg_res
+            var avg_sens = pixel.avg_sens
+            var avg_int_time = pixel.avg_int_time
+            var cs_best = pixel.cs_best
+            var cs_comb = pixel[fieldname]
+
+            if(options.pixel_tooltip)
+                d3.select('#plot-tooltip')
+                    .attr('class', "plot-tooltip")
+                    .style('top', mouseY + 5 + 'px')
+                    .style('left', mouseX + 5 + 'px')
+                    .style('display', 'block')
+                    .html('Right ascension: ' + ra.toFixed(2) + '<br>' + 
+                        'Declination: ' + dec.toFixed(2) + '<br>' + 
+                        'Number of pointings: ' + count_pointings + '<br>' + 
+                        'Avg. resolution: ' + avg_res.toFixed(2) + '&nbsp arcsec<sup>2</sup><br>' + 
+                        'Avg. sensitivity: ' + avg_sens.toFixed(2) + '&nbsp mJy/beam<br>' + 
+                        'Avg. int. time: ' + avg_int_time.toFixed(2) + '&nbsp s<br>' + 
+                        'Sensitivity (best): ' + cs_best.toExponential(3) + '&nbsp mJy/beam<br>' +
+                        'Sensitivity (combined): ' + (cs_comb == null? "--.--" : pixel[fieldname].toExponential(3) + '&nbsp mJy/beam<br>'))  
+
             var result = {
-                "ra": pixel.ra.toFixed(2),
-                "dec": pixel.dec.toFixed(2),
-                "count_pointings": pixel.count_pointings,
-                "avg_res": pixel.avg_res.toFixed(2),
-                "avg_sens": pixel.avg_sens.toFixed(2),
-                "avg_int_time": pixel.avg_int_time.toFixed(2),
-                "cs_best" : pixel.cs_best,
-                "cs_comb": pixel.cs_comb,
+                "ra": ra,
+                "dec": dec,
+                "count_pointings": count_pointings,
+                "avg_res": avg_res,
+                "avg_sens": avg_sens,
+                "avg_int_time": avg_int_time,
+                "cs_best" : cs_best,
+                "cs_comb": cs_comb,
                 "obs": getPixelObservations(pixel.observations)
             }
         }
@@ -442,6 +491,8 @@ export function getPixelInfo(mouse)
     }
     else
     {
+        console.log('no')
+        d3.select('#plot-tooltip').style("display", "none");
         return null
     }
 }
@@ -459,8 +510,9 @@ export function showPlotControls()
                         </select>
                         <div id="plot-axis">
                             <svg id="plot-color-scale"></svg>
-                        </div>
-                    </div>`)
+                        </div>     
+                    </div>
+                    <div id="plot-tooltip"></div>`)
     $("#plot-color-property").selectmenu(
     {
         change: function(event, ui)
@@ -474,19 +526,21 @@ export function showPlotControls()
         }
     })
 
+    $("#plot-color-property").on('change', (function() {
+        setRenderMode(this.value)
+    }))
+
     $("#plot").append(`<div id="plot-control-buttons">
                         <button id="btn-tooltip" class="plot-button" title="">X</button>
                         <button id="btn-overlap" class="plot-button" title="">X</button>
                     </div>`)
-
-    
 
     $("#btn-tooltip").tooltip({
         content: "Toggle pixel tooltips",
         position: { my: "left-10 center", at: "right center" },
         classes: 
         {
-            "ui-tooltip": "plot-button-tooltip"
+            "ui-tooltip": "plot-tooltip"
         }
     });
 
@@ -495,9 +549,18 @@ export function showPlotControls()
         position: { my: "left-10 center", at: "right center" },
         classes: 
         {
-            "ui-tooltip": "plot-button-tooltip"
+            "ui-tooltip": "plot-tooltip"
         }
     });
+
+    $('#btn-tooltip').on('click', (function() {
+        options.pixel_tooltip = !options.pixel_tooltip
+        if(options.pixel_tooltip)
+            d3.select('#plot-tooltip').style("display", "block");
+        else
+            d3.select('#plot-tooltip').style("display", "none");
+    }))
+
     /*
     $("#btn-overlap").button({
         icons: {primary: 'ui-icon-custom', secondary: null}

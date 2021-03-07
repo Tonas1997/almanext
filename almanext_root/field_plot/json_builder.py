@@ -354,7 +354,7 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                     if(array == "12"):
                         fraction_pb = gaussian12m(sep.arcsec, mean_freq)
                         pixel_array[y][x].add_cs_12m((1.0/(scaled_cont_sens/fraction_pb))**2)
-                        if((1.0/(scaled_cont_sens/fraction_pb))**2 < 1):
+                        """ if((1.0/(scaled_cont_sens/fraction_pb))**2 < 1):
                             print("########### GOOD ###########")
                             print("SEPARAION: " + str(sep.arcsec))
                             print("FRACTION_PB: " + str(fraction_pb))
@@ -369,7 +369,7 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                             print("CONT_SENS: " + str(obs_json["continuum_sensitivity"]))
                             print("CONT_SENS_SCALED: " + str(scaled_cont_sens/fraction_pb))
                             print("COMPUTED: " + str(1.0/(scaled_cont_sens/fraction_pb)**2))
-                            print("##############################")
+                            print("##############################") """
                     elif(array == "7"):
                         fraction_pb = gaussian7m(sep.arcsec, mean_freq)
                         pixel_array[y][x].add_cs_7m((1.0/(scaled_cont_sens/fraction_pb))**2)

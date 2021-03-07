@@ -6,7 +6,6 @@ import
     updateCanvas, // plot update
     getPixelInfo, // gets the selected pixel
     canvas_chart, // canvas object
-    setRenderMode,
     showPlotControls
 } from "./plot.js"
 
@@ -68,7 +67,7 @@ function fillLinesMenu(linesJSON)
 var first_render = true
 var emission_lines = []
 var observations = []
-var options = {highlight_overlap: false}
+var options = {highlight_overlap: false, plot_tooltip: false}
 
 // ========================================================
 // ============== PLOT PARAMETERS MANAGEMENT ==============
@@ -248,9 +247,6 @@ $(function()
 /**
  * Sets the plot mode
  */
-$("#plot-color-property").on('change', (function() {
-    setRenderMode(this.value)
-}))
 
 /**
  * Defines the behaviour of the "render" submit button
@@ -341,7 +337,6 @@ function initializePlotView(data)
             highlightRows(null)
         }
         // highlight the hovered observations on the table
-
         
     });
     // defines the "highlight overlapping observations" behaviour
@@ -393,6 +388,11 @@ function initializePlotView(data)
     } );
 }
 
+function getTooltipContent(info)
+{
+
+}
+
 /**
  * Creates or updates the plot information display
  * @param {*} plot_properties The properties object
@@ -411,19 +411,20 @@ function showPlotInfo(plot_properties)
  */
 function updatePixelInfo(info)
 {
+    var nan = "--.--"
     if(info != null)
     {
-        document.getElementById('pixel-ra').innerHTML = info.ra
-        document.getElementById('pixel-dec').innerHTML = info.dec
-        document.getElementById('pixel-n-pointings').innerHTML = info.count_pointings
-        document.getElementById('pixel-avg-res').innerHTML = info.avg_res
-        document.getElementById('pixel-avg-sens').innerHTML = info.avg_sens
-        document.getElementById('pixel-avg-int-time').innerHTML = info.avg_int_time
-        document.getElementById('pixel-cs-improvement').innerHTML = (info.cs_best/info.cs_comb).toFixed(2)
+        document.getElementById('pixel-ra').innerHTML = info.ra.toFixed(2)
+        document.getElementById('pixel-dec').innerHTML = info.dec.toFixed(2)
+        document.getElementById('pixel-n-pointings').innerHTML = info.count_pointings.toFixed(2)
+        document.getElementById('pixel-avg-res').innerHTML = info.avg_res.toFixed(2)
+        document.getElementById('pixel-avg-sens').innerHTML = info.avg_sens.toFixed(2)
+        document.getElementById('pixel-avg-int-time').innerHTML = info.avg_int_time.toFixed(2)
+        var cs_improvement = (info.cs_comb == null ? nan : (info.cs_best/info.cs_comb).toFixed(2)) 
+        document.getElementById('pixel-cs-improvement').innerHTML = cs_improvement 
     }
     else
     {
-        var nan = "--.--"
         document.getElementById('pixel-ra').innerHTML = nan
         document.getElementById('pixel-dec').innerHTML = nan
         document.getElementById('pixel-n-pointings').innerHTML = nan
