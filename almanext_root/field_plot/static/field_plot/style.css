@@ -164,6 +164,24 @@ form
   color: rgb(100, 100, 100)
 }
 
+.input-error
+{
+  background-color: rgb(236, 178, 178);
+}
+
+.input-tooltip
+{
+  font-size: x-small;
+  position: absolute;
+  display: block;
+  z-index: 100;
+}
+
+.error-tooltip
+{
+  -webkit-box-shadow: 0 0 5px red
+}
+
 .plot-parameters-textbox-large input
 {
   height: 30px;
@@ -699,9 +717,19 @@ table.dataTable tr
   background-color: rgba(70, 70, 70, 0.5); /* Blue background */
 }
 
-.plot-tooltip
+.btn-tooltip
 {
   font-size: small;
+  position: absolute;
+  background-color: rgba(40, 40, 40, 0.5);
+  color: white;
+  border-radius: 2px;
+  z-index: 100;
+}
+
+.pixel-tooltip
+{
+  font-size: x-small;
   position: absolute;
   background-color: rgba(40, 40, 40, 0.5);
   color: white;

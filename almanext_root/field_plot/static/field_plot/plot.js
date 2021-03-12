@@ -462,7 +462,7 @@ export function getPixelInfo(mouse)
 
             if(options.pixel_tooltip)
                 d3.select('#plot-tooltip')
-                    .attr('class', "plot-tooltip")
+                    .attr('class', "pixel-tooltip")
                     .style('top', mouseY + 5 + 'px')
                     .style('left', mouseX + 5 + 'px')
                     .style('display', 'block')
@@ -540,7 +540,7 @@ export function showPlotControls()
         position: { my: "left-10 center", at: "right center" },
         classes: 
         {
-            "ui-tooltip": "plot-tooltip"
+            "ui-tooltip": "btn-tooltip"
         }
     });
 
@@ -549,7 +549,7 @@ export function showPlotControls()
         position: { my: "left-10 center", at: "right center" },
         classes: 
         {
-            "ui-tooltip": "plot-tooltip"
+            "ui-tooltip": "btn-tooltip"
         }
     });
 

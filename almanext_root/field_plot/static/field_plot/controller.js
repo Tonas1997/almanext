@@ -43,7 +43,7 @@ function fillLinesMenu(linesJSON)
     {
         var curr_line = linesJSON.lines[i];
         var line_str = curr_line.species + " (" + curr_line.line + ")"
-        console.log(line_str)
+        //console.log(line_str)
         emission_lines.push(
         {
             "line_id": curr_line.line_id, 
@@ -86,7 +86,7 @@ function getBands()
         if($(element_id).is(":checked"))
             band_list.push(i)
     }
-    console.log(band_list)
+    //console.log(band_list)
     return band_list
 }
 
@@ -177,6 +177,80 @@ function checkParams()
         return parameters
 }
 
+function convertHMStoDD(hms)
+{
+    var vals = hms.split(":")
+    console.log(vals[0]*15 + vals[1]/60 + vals[2]/3600)
+    return(vals[0]*15 + vals[1]/60 + vals[2]/3600)
+}
+
+function convertDMStoDD(hms)
+{
+    var vals = hms.split(":")
+    return(vals[0] + vals[1]/60 + vals[2]/3600)
+}
+
+function parseRA(str) 
+{
+    if(str == "")
+        return true
+    // first: see if the value was inserted as a decimal
+    var ra = parseFloat(str)
+    var regex = /^(?:2[0-3]|[01]?[0-9]):[0-5][0-9]:[0-5][0-9]/gm
+    if(!isNaN(str))
+    {
+        if(ra > 360 || ra < 0)
+            return "The inserted value must lie between 0 and 360 degrees."
+        else
+        {
+            return true
+        }
+    }
+    // if not, try the hh:mm:ss regex
+    else if(regex.test(str))
+    {
+        console.log("here")
+        ra = convertHMStoDD(str)
+        console.log(ra)
+        if(ra > 360 || ra < 0)
+            return "The inserted value must lie between 00:00:00 and 24:00:00 (not including the latter)."
+        else
+            return true
+    }
+    // else, return error
+    else
+    {
+        return "Right ascension must be represented in one of the following formats:<ul><li>Decimal degrees (ex: 23.128)</li><li>HH:MM:SS (ex: 18:50:34.9)</li></ul>"
+    }
+}
+function parseDec(str)
+{
+    if(str == "")
+        return true
+    // first: see if the value was inserted as a decimal
+    var dec = parseFloat(str)
+    var regex = /^(-+)?(?:90|[0-8][0-9]):[0-5][0-9]:[0-5][0-9]$/ 
+    if(!isNaN(str))
+        if(dec > 90 || dec < -90)
+            return "The inserted value must lie between -90 and 90 degrees."
+        else
+            return true
+    // if not, try the dd:mm:ss regex
+    else if(regex.test(str))
+    {
+        dec = convertDMStoDD(str)
+        console.log(dec)
+        if(dec > 90 || dec < -90)
+            return "The inserted value must lie between -90 and 90 degrees."
+        else
+            return true
+    }
+    else
+    {
+        return "Declination must be represented in one of the following formats:<ul><li>Decimal degrees (ex: 23.128)</li><li>DD:MM:SS (ex: 18:50:34.9)</li></ul>"
+    }
+}
+
 /**
  * Initializes the plot parameter controls
  */
@@ -231,13 +305,70 @@ $(function()
             url: '/get_lines/',
             data_type: 'json',
             success: function(data) {
-                console.log(data)
+                //console.log(data)
                 fillLinesMenu(JSON.parse(data))
                 $("#form-lines option:eq(1)").attr("selected","selected");
                 $("#form-lines").selectmenu("refresh")
             }
         }
     )
+
+    // initializes the error tooltip for the RA field
+    $("#formfield_ra").tooltip({
+        content: "asd",
+        position: { my: "left center", at: "left bottom+30" },
+        classes: 
+        {
+            "ui-tooltip": "input-tooltip error-tooltip"
+        }
+    })
+    $("#formfield_ra").tooltip("disable")
+    // verifies the RA input is valid
+    $("#formfield_ra").keyup(function()
+    {
+        var result = parseRA($(this).val())
+        if(result != true)
+        {
+            $(this).addClass("input-error")
+            $(this).tooltip("enable")
+            $(this).tooltip("option", "content", result)
+            $(this).tooltip("open")
+        }
+        else
+        {
+            $(this).removeClass("input-error")
+            $(this).tooltip("disable")
+            $(this).tooltip("close")
+        }    
+    })
+
+    // initializes the error tooltip for the Dec field
+    $("#formfield_dec").tooltip({
+        position: { my: "left center", at: "left bottom+30" },
+        classes: 
+        {
+            "ui-tooltip": "input-tooltip error-tooltip"
+        }
+    })
+    $("#formfield_dec").tooltip("disable")
+    // verifies the Dec input is valid
+    $("#formfield_dec").keyup(function()
+    {
+        var result = parseDec($(this).val())
+        if(result != true)
+        {
+            $(this).addClass("input-error")
+            $(this).tooltip("enable")
+            $(this).tooltip("option", "content", result)
+            $(this).tooltip("open")
+        }
+        else
+        {
+            $(this).removeClass("input-error")
+            $(this).tooltip('disable')
+            $(this).tooltip("close")
+        }
+    })
 });
 
 /**
