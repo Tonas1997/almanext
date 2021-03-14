@@ -1,7 +1,6 @@
 import
 {
-    addFilter, // add a filter
-    removeFilter, // remove a filter
+    updatePlotSelectedObs, // remove a filter
     renderData, // initial render
     updateCanvas, // plot update
     getPixelInfo, // gets the selected pixel
@@ -66,8 +65,8 @@ function fillLinesMenu(linesJSON)
 
 var first_render = true
 var emission_lines = []
-var observations = []
-var options = {highlight_overlap: false, plot_tooltip: false}
+var selected_observations = []
+var options = {highlight_overlap: false}
 
 // ========================================================
 // ============== PLOT PARAMETERS MANAGEMENT ==============
@@ -467,24 +466,23 @@ function initializePlotView(data)
             highlightFreqHistogram(null)
             highlightRows(null)
         }
-        // highlight the hovered observations on the table
-        
     });
-    // defines the "highlight overlapping observations" behaviour
-    $('#btn-overlap').on('click', (function() {
-        if(!options.highlight_overlap)
+
+    canvas_chart.on("click",function()
+    {
+        var info = getPixelInfo(d3.mouse(this));
+        if(info != null)
         {
-            addFilter('highlightOverlap', null);
-            options.highlight_overlap = true
+            var indexes = []
+            for(var o in info.obs)
+            {
+                indexes.push(info.obs[o].index)
+            }
+            updateSelectedObs(indexes)
         }
         else
-        {  
-            removeFilter('highlightOverlap', null)
-            options.highlight_overlap = false
-            console.log("highlightOverlap!")
-        }
-        //setHighlightOverlap(this.checked)
-    }))
+            updateSelectedObs([])
+    });
 
     // SENSITIVITY HISTOGRAM CONTROLS
     $("#cs-histogram-array").selectmenu(
@@ -505,23 +503,31 @@ function initializePlotView(data)
         var row = getObservationRowData($(this))
         // if it's selected, unselect
         if ($(this).hasClass('selected'))
-        {
-            console.log("vou tirar filtros...")
             $(this).removeClass('selected');
-            removeFilter('highlightObservation', row.index) 
-        }
         else
-        {
-            console.log("vou adicionar filtros...")
             $(this).addClass('selected');
-            addFilter('highlightObservation', row.index)
-        }
+        updateSelectedObs(row.index)
     } );
 }
 
-function getTooltipContent(info)
-{
-
+function updateSelectedObs(indexes)
+{   
+    var new_selected_obs = []
+    // if this is a single object, put it into an array
+    if(!Array.isArray(indexes))
+        indexes = [indexes]
+    indexes.forEach(i => 
+    {
+        new_selected_obs.push(i)
+    });
+    if(compareArrays(selected_observations, new_selected_obs))
+        new_selected_obs = []
+    selected_observations = new_selected_obs
+    console.log(selected_observations)
+    updatePlotSelectedObs(selected_observations)
+    //updateHistSelectedObs(selected_observations)
+    //updateSensSelectedObs(selected_observations)
+    //updateListSelectedObs(selected_observations)
 }
 
 /**
@@ -606,4 +612,26 @@ function showPlotInfoTab()
             </div>
         </div>
     </div>`
+}
+
+// needed for the plot selection/deselection
+function compareArrays(_arr1, _arr2)
+{
+    if(!Array.isArray(_arr1) || !Array.isArray(_arr2) || _arr1.length !== _arr2.length) 
+    {
+        return false;
+    }
+      
+    // .concat() to not mutate arguments
+    const arr1 = _arr1.concat().sort();
+    const arr2 = _arr2.concat().sort();
+    
+    for (let i = 0; i < arr1.length; i++) 
+    {
+        if (arr1[i] !== arr2[i]) {
+            return false;
+        }
+    }
+      
+    return true;
 }

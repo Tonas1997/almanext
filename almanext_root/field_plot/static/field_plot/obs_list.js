@@ -39,6 +39,24 @@ export function updateObservationList(data)
     obs_table.rows.add(data.observations).draw()
 }
 
+export function updateListSelectedObs(obs_list)
+{
+    if(obs_list != null)
+    {
+        var id_list = []
+        for (var i = 0; i < obs_list.length; i++)
+        {
+            id_list.push(obs_list[i]["index"])
+        }
+        obs_table.rows().every(function() 
+        {
+            var rowData = this.data();
+            if(id_list.includes(rowData.index))
+                $(this.node()).addClass('highlighted-row');
+        })
+    }
+}
+
 export function highlightRows(obs_list)
 {
     obs_table.rows().every(function() 

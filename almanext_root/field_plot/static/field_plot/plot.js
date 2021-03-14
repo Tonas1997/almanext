@@ -29,31 +29,9 @@ var filter_list = [];
 
 // TODO
 var options = {render_mode: "count_pointings", pixel_tooltip: false}
+var highlight_overlap = false
+var selected_observations = []
 
-// Filter class and its exports
-class PlotFilter
-{
-    constructor(id, arg)
-    {
-        this.id = id;
-        this.arg = arg;
-        switch(id)
-        {
-            case 'highlightOverlap':
-                this.filter_function = function(point) 
-                {
-                    return point.count_pointings > 1
-                }
-                break
-            case 'highlightObservation':
-                this.filter_function = function(point) 
-                {
-                    return point.observations.includes(arg)
-                }
-                break
-        }
-    }
-}
 
 export function addFilter(filter_id, argument)
 {   
@@ -80,9 +58,10 @@ export function removeFilter(filter_id, argument)
     console.log(filter_list)
 }
 
-export function setHighlightOverlap(bool)
+export function updatePlotSelectedObs(obs_list)
 {
-    highlight_overlap = bool
+    selected_observations = obs_list
+    updateHighlightedPixels()
 }
 
 export function setRenderMode(mode)
@@ -155,7 +134,8 @@ function updateDataset(plot_json)
     d3.select(context.canvas).call(d3.zoom()
         .scaleExtent([1,15])
         .translateExtent([[0,0],[width,width]])
-        .on("zoom", () => updateCanvas(d3.event.transform)));
+        .on("zoom", () => updateCanvas(d3.event.transform)))
+        .on("dblclick.zoom", null);
 
     $("#plot").tooltip({
         content: "coiso",
@@ -303,26 +283,38 @@ export function updateCanvas(transform)
     context.restore();
 }
 
-function updateFilters()
+function updateHighlightedPixels()
 {
-    var highlight_px = true
+    console.log(selected_observations)
+    var px_overlap
+    var px_observations
     for(var i = 0; i < pixel_array.length; i++)
         for(var j = 0; j < pixel_array[i].length; j++)
         {
             var point = pixel_array[i][j]
             if(point != 0)
             {
-                highlight_px = filter_list.every(function(f) 
+                px_overlap = true
+                px_observations = true
+                // if the pixel has more than one pointing and overlap highlighting is toggled
+                if(highlight_overlap)
+                    px_overlap = point.count_pointings > 1
+                // if there's at least one selected observation, check if this pixel covers it
+                // I deserve a lower grade for using labels...
+                // TODO 
+                id_1: if(selected_observations.length > 0)
                 {
-                    if(!f.filter_function(point))
+                    for(var o in selected_observations)
                     {
-                        return false
+                        if(point.observations.includes(selected_observations[o]))
+                            break id_1
                     }
-                    return true
-                })
-                point.highlight = highlight_px
+                    px_observations = false
+                }
+                point.highlight = px_overlap && px_observations
             }
         }
+    updateCanvas()
 }
 
 function updateColorScale(inverse)
@@ -354,14 +346,8 @@ function updateColorScale(inverse)
     var start = inverse? color_scale.best : color_scale.worst
     var end = inverse? color_scale.worst : color_scale.best
     var step = (end-start)/10
-    console.log("###########################")
-    console.log(start)
-    console.log(end)
-    console.log(step)
     for(var i = start; i <= end; i += step)
     {
-        
-        console.log(Math.round(i/end * 100) + "%")
         gradient.append('stop')
             .attr('offset', Math.round(i/end * 100) + "%")
             .attr('stop-color', color_scale.scale(i))
@@ -447,51 +433,47 @@ export function getPixelInfo(mouse)
     if(pixel != 0)
     {
         var result
-        if(!pixel.highlight)
-            result = null
-        else
-        {
-            var ra = pixel.ra
-            var dec = pixel.dec
-            var count_pointings = pixel.count_pointings
-            var avg_res = pixel.avg_res
-            var avg_sens = pixel.avg_sens
-            var avg_int_time = pixel.avg_int_time
-            var cs_best = pixel.cs_best
-            var cs_comb = pixel[fieldname]
+    
+        var ra = pixel.ra
+        var dec = pixel.dec
+        var count_pointings = pixel.count_pointings
+        var avg_res = pixel.avg_res
+        var avg_sens = pixel.avg_sens
+        var avg_int_time = pixel.avg_int_time
+        var cs_best = pixel.cs_best
+        var cs_comb = pixel[fieldname]
 
-            if(options.pixel_tooltip)
-                d3.select('#plot-tooltip')
-                    .attr('class', "pixel-tooltip")
-                    .style('top', mouseY + 5 + 'px')
-                    .style('left', mouseX + 5 + 'px')
-                    .style('display', 'block')
-                    .html('Right ascension: ' + ra.toFixed(2) + '<br>' + 
-                        'Declination: ' + dec.toFixed(2) + '<br>' + 
-                        'Number of pointings: ' + count_pointings + '<br>' + 
-                        'Avg. resolution: ' + avg_res.toFixed(2) + '&nbsp arcsec<sup>2</sup><br>' + 
-                        'Avg. sensitivity: ' + avg_sens.toFixed(2) + '&nbsp mJy/beam<br>' + 
-                        'Avg. int. time: ' + avg_int_time.toFixed(2) + '&nbsp s<br>' + 
-                        'Sensitivity (best): ' + cs_best.toExponential(3) + '&nbsp mJy/beam<br>' +
-                        'Sensitivity (combined): ' + (cs_comb == null? "--.--" : pixel[fieldname].toExponential(3) + '&nbsp mJy/beam<br>'))  
+        if(options.pixel_tooltip)
+            d3.select('#plot-tooltip')
+                .attr('class', "pixel-tooltip")
+                .style('top', mouseY + 5 + 'px')
+                .style('left', mouseX + 5 + 'px')
+                .style('display', 'block')
+                .html('Right ascension: ' + ra.toFixed(2) + '<br>' + 
+                    'Declination: ' + dec.toFixed(2) + '<br>' + 
+                    'Number of pointings: ' + count_pointings + '<br>' + 
+                    'Avg. resolution: ' + avg_res.toFixed(2) + '&nbsp arcsec<sup>2</sup><br>' + 
+                    'Avg. sensitivity: ' + avg_sens.toFixed(2) + '&nbsp mJy/beam<br>' + 
+                    'Avg. int. time: ' + avg_int_time.toFixed(2) + '&nbsp s<br>' + 
+                    'Sensitivity (best): ' + cs_best.toExponential(3) + '&nbsp mJy/beam<br>' +
+                    'Sensitivity (combined): ' + (cs_comb == null? "--.--" : pixel[fieldname].toExponential(3) + '&nbsp mJy/beam<br>'))  
 
-            var result = {
-                "ra": ra,
-                "dec": dec,
-                "count_pointings": count_pointings,
-                "avg_res": avg_res,
-                "avg_sens": avg_sens,
-                "avg_int_time": avg_int_time,
-                "cs_best" : cs_best,
-                "cs_comb": cs_comb,
-                "obs": getPixelObservations(pixel.observations)
-            }
+        var result = {
+            "ra": ra,
+            "dec": dec,
+            "count_pointings": count_pointings,
+            "avg_res": avg_res,
+            "avg_sens": avg_sens,
+            "avg_int_time": avg_int_time,
+            "cs_best" : cs_best,
+            "cs_comb": cs_comb,
+            "obs": getPixelObservations(pixel.observations)
         }
+        
         return result
     }
     else
     {
-        console.log('no')
         d3.select('#plot-tooltip').style("display", "none");
         return null
     }
@@ -559,6 +541,12 @@ export function showPlotControls()
             d3.select('#plot-tooltip').style("display", "block");
         else
             d3.select('#plot-tooltip').style("display", "none");
+    }))
+
+    // defines the "highlight overlapping observations" behaviour
+    $('#btn-overlap').on('click', (function() {
+        highlight_overlap = !highlight_overlap
+        updateHighlightedPixels()
     }))
 
     /*
