@@ -11,7 +11,7 @@ import
 import
 {
     showFreqHistogram, // initial render
-    highlightFreqHistogram, // plot update
+    highlightFreqHistogram, // update plot with new data (after first render)
     updateFreqHistogram // plot update - change axis
 } from "./freq_histogram.js"
 
@@ -25,9 +25,10 @@ import
 import
 {
     showObservationList, // initial render
-    updateObservationList, // list update
+    updateObservationList, // update list with new data (after first render)
     getObservationRowData, // get row data
-    highlightRows
+    updateListSelectedObs // update selected observations
+    //highlightRows
 } from "./obs_list.js"
 
 // ========================================================
@@ -459,12 +460,12 @@ function initializePlotView(data)
         {
             //console.log(info)
             highlightFreqHistogram(info.obs)
-            highlightRows(info.obs)
+            //highlightRows(info.obs)
         }
         else 
         {// weird that I have to do this...
             highlightFreqHistogram(null)
-            highlightRows(null)
+            //highlightRows(null)
         }
     });
 
@@ -473,15 +474,27 @@ function initializePlotView(data)
         var info = getPixelInfo(d3.mouse(this));
         if(info != null)
         {
+            
             var indexes = []
             for(var o in info.obs)
             {
                 indexes.push(info.obs[o].index)
             }
-            updateSelectedObs(indexes)
+            console.log("INDEXES")
+            console.log(indexes)
+            console.log("SELECTED_OBS")
+            console.log(selected_observations)
+            
+            if(compareArrays(indexes, selected_observations))
+                remSelectedObs()
+            else
+            {
+                remSelectedObs()
+                addSelectedObs(indexes)
+            }   
         }
         else
-            updateSelectedObs([])
+            remSelectedObs()
     });
 
     // SENSITIVITY HISTOGRAM CONTROLS
@@ -503,15 +516,22 @@ function initializePlotView(data)
         var row = getObservationRowData($(this))
         // if it's selected, unselect
         if ($(this).hasClass('selected'))
+        {
+            console.log("tem classe")
             $(this).removeClass('selected');
+            remSelectedObs(row.index)
+        }
         else
+        {
+            console.log("nao tem classe")
             $(this).addClass('selected');
-        updateSelectedObs(row.index)
+            addSelectedObs(row.index)
+        }
     } );
 }
 
-function updateSelectedObs(indexes)
-{   
+function updateSelectedObs()
+{   /*
     var new_selected_obs = []
     // if this is a single object, put it into an array
     if(!Array.isArray(indexes))
@@ -523,11 +543,50 @@ function updateSelectedObs(indexes)
     if(compareArrays(selected_observations, new_selected_obs))
         new_selected_obs = []
     selected_observations = new_selected_obs
+    */
     console.log(selected_observations)
     updatePlotSelectedObs(selected_observations)
     //updateHistSelectedObs(selected_observations)
     //updateSensSelectedObs(selected_observations)
-    //updateListSelectedObs(selected_observations)
+    updateListSelectedObs(selected_observations)
+}
+
+function addSelectedObs(obs)
+{
+    // if obs is a single observation, just add it to the list
+    if(!Array.isArray(obs))
+    {
+        selected_observations.push(obs)
+    }
+    // else, add one by one
+    else
+    {
+        for(var i in obs)
+        selected_observations.push(obs[i])
+    }
+    updateSelectedObs()
+}
+
+function remSelectedObs(obs)
+{
+    // if this function is called without arguments, unselect all observations
+    if(obs == undefined)
+        selected_observations = []
+    // if obj is a single observation, just append it to the list
+    else if(!Array.isArray(obs))
+    {
+        console.log(obs)
+        console.log(selected_observations)
+        selected_observations = selected_observations.filter(o => o != obs)
+    }
+    // else, remove one by one
+    else
+    {
+        
+        for(var i in obs)
+        selected_observations = selected_observations.filter(o => o != i)
+    }
+    updateSelectedObs()
 }
 
 /**

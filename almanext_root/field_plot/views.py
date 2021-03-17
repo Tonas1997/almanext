@@ -144,7 +144,7 @@ def get_plot(request):
 
 # =============================================================================
 
-    JSONplot = get_json_plot(center, size, res, obs_result, min_freq, max_freq)
+    JSONplot = get_json_plot(center, size, res, obs_result, min_freq, max_freq).delay()
 
 # =============================================================================
 #     RETURN A JSON OBJECT

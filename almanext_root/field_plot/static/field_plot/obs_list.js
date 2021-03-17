@@ -18,7 +18,7 @@ export function showObservationList(data)
             { "data": "total_area" },
             { "data": "overlap_area" }
         ],
-        "scrollY": "200px",
+        "scrollY": "180px",
         "paging": false,
         "searching": false,
         "info": false,
@@ -41,23 +41,30 @@ export function updateObservationList(data)
 
 export function updateListSelectedObs(obs_list)
 {
+    // remove all row highlights
+    obs_table.rows().every(function() 
+    {
+        this.nodes().to$().removeClass('selected')
+    })
     if(obs_list != null)
     {
         var id_list = []
         for (var i = 0; i < obs_list.length; i++)
         {
-            id_list.push(obs_list[i]["index"])
+            id_list.push(obs_list[i])
         }
         obs_table.rows().every(function() 
         {
             var rowData = this.data();
+            //console.log(id_list)
+            //console.log(rowData.index)
             if(id_list.includes(rowData.index))
-                $(this.node()).addClass('highlighted-row');
+                $(this.node()).addClass('selected');
         })
     }
 }
 
-export function highlightRows(obs_list)
+/*export function highlightRows(obs_list)
 {
     obs_table.rows().every(function() 
     {
@@ -77,4 +84,4 @@ export function highlightRows(obs_list)
                 $(this.node()).addClass('highlighted-row');
         })
     } 
-}
+}*/
