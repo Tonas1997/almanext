@@ -4,6 +4,7 @@ var obs_table
  */
 export function showObservationList(data)
 {
+    showListControlPane()
     //var table_string = '<table id="obs_list" class="display" width="100%"></table>'
     //$('#tab-observations').html(table_string)
     console.log(data.observations)
@@ -64,24 +65,11 @@ export function updateListSelectedObs(obs_list)
     }
 }
 
-/*export function highlightRows(obs_list)
+export function showListControlPane()
 {
-    obs_table.rows().every(function() 
-    {
-        this.nodes().to$().removeClass('highlighted-row')
-    })
-    if(obs_list != null)
-    {
-        var id_list = []
-        for (var i = 0; i < obs_list.length; i++)
-        {
-            id_list.push(obs_list[i]["index"])
-        }
-        obs_table.rows().every(function() 
-        {
-            var rowData = this.data();
-            if(id_list.includes(rowData.index))
-                $(this.node()).addClass('highlighted-row');
-        })
-    } 
-}*/
+    $("#observations-table").append(`<button class='ui-button ui-widget ui-corner-all submit-button' type='button'> 
+        Download data
+        <i class="fas fa-download" aria-hidden="true"></i></button>`)
+
+}
+
