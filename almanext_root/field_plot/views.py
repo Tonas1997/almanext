@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from common.models import Observation, SpectralWindow, Trace, Band, EmissionLine
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import Q, OuterRef, Exists
 
 ra_origin = 0
 dec_origin = 0
@@ -88,7 +89,7 @@ def get_plot(request):
     obs_result = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec, field_of_view__lte = 300)#.prefetch_related('traces')#.prefetch_related('spec_windows')#
     # if the redshift is zero AND we are looking into bands, no need to look into frequency support
     # temporary default
-    print(obs_result.query)
+    # print(obs_result.query)
     min_freq = 9999
     max_freq = -9999 
     if(z_max == 0 and frequency_options == 'freq-bands'):
@@ -126,7 +127,13 @@ def get_plot(request):
             min_f = em_freq / (1+z_min)
             max_f = em_freq / (1+z_max)
             z_bands.append({"start": min_f, "end": max_f})
-
+            windows = SpectralWindow.objects.filter(
+                Q(observation = OuterRef('pk')),
+                Q(start__lte = min_f, end__gte = min_f) | Q(start__lte = max_f, end__gte = max_f) | Q(start__gte = min_f, end__lte = max_f)
+            )
+            obs_result = obs_result.filter(Exists(windows))
+        
+        print(obs_result.query)
         # filter out the observations that fall outside the defined frequency range(s)
         exclude_ids = []
         for o in obs_result:
@@ -144,7 +151,7 @@ def get_plot(request):
 
 # =============================================================================
 
-    JSONplot = get_json_plot(center, size, res, obs_result, min_freq, max_freq).delay()
+    JSONplot = get_json_plot(center, size, res, obs_result, min_freq, max_freq)
 
 # =============================================================================
 #     RETURN A JSON OBJECT

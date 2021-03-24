@@ -83,6 +83,7 @@ function updateDataset(plot_json)
     total_area = plot_json.properties.total_area
     overlap_area = plot_json.properties.overlap_area
 
+    console.log("createArray")
     pixel_array = createArray(pixel_len, pixel_len)
     observation_array = new Array(plot_json.observations.length)
 
@@ -105,11 +106,15 @@ function updateDataset(plot_json)
 
     var observations = plot_json.observations
     var dataset = plot_json.pixels
+    console.log(observations.length)
     // Copy observations
+    console.log("copy observations")
     for (var i = 0; i < observations.length; i++) 
     {
         observation_array[i] = observations[i]
     }
+
+    console.log("copy pixels")
 
     // Copy pixels
     for (var i = 0; i < dataset.length; i++) {
@@ -128,6 +133,7 @@ function updateDataset(plot_json)
 
     // initial render
     plot_properties = plot_json.properties
+    console.log("updateCanvas")
     updateCanvas(d3.zoomIdentity)
 
     // zoom event
@@ -146,12 +152,14 @@ function updateDataset(plot_json)
         }
     });
 
+    console.log("returning")
     return plot_properties
 }
 
 // Plot external API
 export function updateCanvas(transform)
 {
+    console.log("updateCanvas start")
     // differentiates between zoom and plot colour update
     if(transform != undefined)
     {
@@ -162,6 +170,7 @@ export function updateCanvas(transform)
     var background
     var inverse // this will later help us define the direction of the scale's gradient
     var pixel_value // allows us to define more complex calculations vs. just reading a field
+
 
     switch(options.render_mode)
     {
@@ -278,7 +287,6 @@ export function updateCanvas(transform)
                 context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
             }
         }
-    
     updateColorScale(inverse)
     context.restore();
 }
@@ -345,13 +353,23 @@ function updateColorScale(inverse)
 
     var start = inverse? color_scale.best : color_scale.worst
     var end = inverse? color_scale.worst : color_scale.best
-    var step = (end-start)/10
-    for(var i = start; i <= end; i += step)
+    if(end == start)
     {
         gradient.append('stop')
             .attr('offset', Math.round(i/end * 100) + "%")
             .attr('stop-color', color_scale.scale(i))
             .attr('stop-opacity', 1);
+    }
+    else
+    {
+        var step = (end-start)/10
+        for(var i = start; i <= end; i += step)
+        {
+            gradient.append('stop')
+                .attr('offset', Math.round(i/end * 100) + "%")
+                .attr('stop-color', color_scale.scale(i))
+                .attr('stop-opacity', 1);
+        }
     }
 
     var left_margin = ($("#plot-color-scale")).width() * 0.1 / 2

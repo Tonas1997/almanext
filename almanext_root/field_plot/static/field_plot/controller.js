@@ -421,12 +421,15 @@ function initializePlotView(data)
      * ================== INITIALIZATION ==================
      */
     // defines some variables
+    console.log("success")
     if(first_render) showPlotControls()
+    console.log("render data")
     var plot_properties = renderData(data)
     var plot_cs = data.continuum_sensitivity
     var plot_pixels = data.pixels        
 
     // initializes the HTML handles for the plot properties
+    console.log("show plot info")
     showPlotInfoTab()
     showPlotInfo(plot_properties)
     

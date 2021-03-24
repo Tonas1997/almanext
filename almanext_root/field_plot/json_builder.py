@@ -4,7 +4,6 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from field_plot.utils import *
 from field_plot.class_pixel import Pixel
-from celery import task
 
 #from common.class_observation import ObservationClass
 #from common.class_spectral_window import SpectralWindowClass
@@ -450,7 +449,6 @@ def process_observation(obs):
     observations_list.append(obs_json)
     properties_list["n_observations"] += 1
 
-@task
 def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
 
     global properties_list, pixel_area, observations_list, pixel_list, lock_list, freq_list, min_freq, max_freq, min_cs, max_cs, counter
