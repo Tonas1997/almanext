@@ -46,12 +46,14 @@
     </style>
     <link href="{% static 'fontawesome-free-5.15.3-web/css/all.css' %}" rel="stylesheet">
     <script type="module" src="{% static 'fontawesome-free-5.15.3-web/js/all.js' %}"></script>
-
+    
     <link href="{% static 'jquery-ui-1.12.1/jquery-ui.min.css' %}" rel="stylesheet">
     <link href="{% static 'jquery-ui-1.12.1/jquery-ui.structure.min.css' %}" rel="stylesheet">
     <link href="{% static 'jquery-ui-1.12.1/jquery-ui.theme.min.css' %}" rel="stylesheet">
   </head>
   <body>
+    <div id="url-div-lines" data-url="{% url 'get_lines' %}"></div>
+    <div id="url-div-plot" data-url="{% url 'get_plot' %}"></div>
     <div id="loading"></div>
     <div id="navbar">
       <ul>

@@ -4,6 +4,12 @@
 
 {% block content %}
 
-Hello World!
+<link href="{% static 'sky_map/style.css' %}" rel="stylesheet" type="text/css" />
 
+<div id="skymap-wrapper">
+    <div id="skymap">
+
+    </div>
+    <script type="module" src="{% static 'sky_map/skymap.js' %}"></script>
+</div>
 {% endblock content %}

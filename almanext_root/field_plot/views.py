@@ -33,8 +33,6 @@ def get_min_max_f(o):
         max_f = max(max_f, w.start, w.end)
     return([min_f, max_f])
         
-
-
 def index(request):
     #return HttpResponse("<h1>Hello world</h1>")
     return render(request, 'field_plot/main.html')

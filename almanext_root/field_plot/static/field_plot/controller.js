@@ -302,10 +302,10 @@ $(function()
 
     $.ajax(    
         {
-            url: '/get_lines/',
+            url: $("#url-div-lines").data('url'),
             data_type: 'json',
-            success: function(data) 
-            {
+            success: function(data) {
+                console.log(data)
                 fillLinesMenu(JSON.parse(data))
                 $("#form-lines option:eq(1)").attr("selected","selected");
                 $("#form-lines").selectmenu("refresh")
@@ -396,7 +396,7 @@ $("#form-plot").on('submit', function(event)
         console.log(parameters)
         $.ajax(    
             {
-                url: '/get_plot/',
+                url: $("#url-div-plot").data('url'),
                 data: parameters,
                 data_type: 'json',
                 success: function(data) {
