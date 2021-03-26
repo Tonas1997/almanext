@@ -1,15 +1,20 @@
 var width, height
 var margin = {left: 50, right: 40, top: 10, bottom: 15, xLabel: 25, yLabel: 15}
 var xScale, xAxis, yScale, yAxis, svg, g, drawArea
-var bins_best, bins_comb
 var transform_store
 
 var resolution
 const N_BUCKETS = 200
+const ARRAY_CONFIG_DEFAULT = "12m"
+const VAL_NULL = "--.--"
 
 var SHOW_COMB = true
 var SHOW_BEST = true
-var ARRAY_CONFIG = "12m" // default
+var ARRAY_CONFIG
+
+// average and deviation values
+var avg_best, avg_comb_12m, avg_comb_7m, avg_comb_tp
+var err_best, err_comb_12m, err_comb_7m, err_comb_tp
 
 export function showSensitivityPlot(plot_properties, plot_pixels)
 {
@@ -135,21 +140,26 @@ export function updateSensitivityPlot(plot_pixels)
 
     /* filter empty bins - we also need to remove pixels which don't have a computed
     sensitivity for a given array configuration beforehand */
-    var bins_best       = h_best(plot_pixels
-        .filter(d => d.cs_best != null))
-        .filter(b => b.length > 0)
-    
-    console.log(plot_pixels.filter(d => d.cs_comb_7m != null))
-    var bins_comb_12m   = h_comb_12m(plot_pixels
-        .filter(d => d.cs_comb_12m != null))
-        .filter(b => b.length > 0)
-    var bins_comb_7m    = h_comb_7m(plot_pixels
-        .filter(d => d.cs_comb_7m != null))
-        .filter(b => b.length > 0)
-    var bins_comb_tp    = h_comb_tp(plot_pixels
-        .filter(d => d.cs_comb_tp != null))
-        .filter(b => b.length > 0)
-    console.log(bins_best)
+
+    var filtered_best   = plot_pixels.filter(d => d.cs_best != null)
+    var filtered_12m    = plot_pixels.filter(d => d.cs_comb_12m != null)
+    var filtered_7m     = plot_pixels.filter(d => d.cs_comb_7m != null)
+    var filtered_tp     = plot_pixels.filter(d => d.cs_comb_tp != null)
+
+    var bins_best       = h_best(filtered_best).filter(b => b.length > 0)
+    var bins_comb_12m   = h_comb_12m(filtered_12m).filter(b => b.length > 0)
+    var bins_comb_7m    = h_comb_7m(filtered_7m).filter(b => b.length > 0)
+    var bins_comb_tp    = h_comb_tp(filtered_tp).filter(b => b.length > 0)
+
+    avg_best        = d3.mean(filtered_best, f => f.cs_best)
+    avg_comb_12m    = d3.mean(filtered_12m, f => f.cs_comb_12m)
+    avg_comb_7m     = d3.mean(filtered_7m, f => f.cs_comb_7m)
+    avg_comb_tp     = d3.mean(filtered_tp, f => f.cs_comb_tp)
+
+    err_best        = d3.deviation(filtered_best, f => f.cs_best)
+    err_comb_12m    = d3.deviation(filtered_12m, f => f.cs_comb_12m)
+    err_comb_7m     = d3.deviation(filtered_7m, f => f.cs_comb_7m)
+    err_comb_tp     = d3.deviation(filtered_tp, f => f.cs_comb_tp)
 
     // obtain the highest column among all bins
     var maxYBest    = d3.max(bins_best, function(d) { return d.length; })
@@ -177,12 +187,25 @@ export function updateSensitivityPlot(plot_pixels)
 
     console.log(xScale.domain())
 
+    removeAllBins()
+
     appendBins(0, bins_best, "best", "bar-cont-best")
     appendBins(1, bins_comb_12m, "12m", "bar-cont-comb")
     appendBins(2, bins_comb_7m, "7m", "bar-cont-comb")
     appendBins(3, bins_comb_tp, "tp", "bar-cont-comb")
     
-    changeVisibleBars()
+    // update the best average/deviation values
+    $("#cs-best-avg").text(avg_best.toFixed(4))
+    $("#cs-best-err").text(err_best.toFixed(4))
+    changeVisibleBars(ARRAY_CONFIG_DEFAULT)
+}
+
+function removeAllBins()
+{
+    drawArea.selectAll("rect0").remove()
+    drawArea.selectAll("rect1").remove()
+    drawArea.selectAll("rect2").remove()
+    drawArea.selectAll("rect3").remove()
 }
 
 function appendBins(id, bin_set, array, css_class)
@@ -233,10 +256,62 @@ function getSelected()
     }
 }
 
+// updates the visible combined sensitivity bars 
 export function changeVisibleBars(array_id)
 {
-    if(array_id != undefined) 
+    // if this method was triggered by changing the array configuration, change it!
+    if(array_id != undefined)
+    { 
         ARRAY_CONFIG = array_id
+        switch(ARRAY_CONFIG)
+        {
+            case "12m":
+            {
+                if(avg_comb_12m != undefined)
+                {
+                    $("#cs-comb-avg").text(avg_comb_12m.toFixed(4))
+                    $("#cs-comb-err").text(err_comb_12m.toFixed(4))
+                }
+                else
+                {
+                    $("#cs-comb-avg").text(VAL_NULL)
+                    $("#cs-comb-err").text(VAL_NULL)
+                }
+                break;
+            }
+            case "7m" :
+            {
+
+                if(avg_comb_7m != undefined)
+                {
+                    $("#cs-comb-avg").text(avg_comb_7m.toFixed(4))
+                    $("#cs-comb-err").text(err_comb_7m.toFixed(4))
+                }
+                else
+                {
+                    $("#cs-comb-avg").text(VAL_NULL)
+                    $("#cs-comb-err").text(VAL_NULL)
+                }
+                break;
+            }
+            case "tp" :
+            {
+                if(avg_comb_tp != undefined)
+                {
+                    $("#cs-comb-avg").text(avg_comb_tp.toFixed(4))
+                    $("#cs-comb-err").text(err_comb_tp.toFixed(4))
+                }
+                else
+                {
+                    $("#cs-comb-avg").text(VAL_NULL)
+                    $("#cs-comb-err").text(VAL_NULL)
+                }
+                break;
+            }
+        }
+        $(".cs-comb-array").text(ARRAY_CONFIG)
+    }
+    // are the combined sensitivity bars toggled?
     if(SHOW_COMB)
     {
         drawArea.selectAll(".bar-cont-comb")
@@ -256,6 +331,8 @@ export function changeVisibleBars(array_id)
     {
         drawArea.selectAll(".bar-cont-comb").transition().duration(200).style("opacity", 0.0)
     }
+    // update the average/error values for the chosen array configuration
+    // are the best sensitivity bars toggled?
     if(SHOW_BEST)
     {
         drawArea.selectAll(".bar-cont-best")
@@ -279,14 +356,14 @@ function getPaneHTML()
             <div id='cs-plot-info'>
                 <div class='pane-frame'>
                     <div class='info-wrapper'>
-                        <div class='value-box'><div class='value-box field label'>Best (avg.)</div>
-                            <div class='field value'><div id='cs-best-avg'> --.-- mJy</div></div></div>
-                        <div class='value-box'><div class='value-box field label'>Best (std. dev.)</div>
-                            <div class='field value'><div id='cs-best-err'> --.-- </div></div></div>
-                        <div class='value-box'><div class='value-box field label'>Combined&nbsp<span id='cs-comb-avg-array'></span> (avg.)</div>
-                            <div class='field value'><div id='cs-comb-avg'> --.-- mJy</div></div></div>
-                        <div class='value-box'><div class='value-box field label'>Combined&nbsp<span id='cs-comb-avg-array'></span> (std. dev.)</div>
-                            <div class='field value'><div id='cs-comb-err'> --.-- </div></div></div>
+                        <div class='value-box compact'><div class='value-box field label'>Average best</div>
+                            <div class='field value'><div id='cs-best-avg'>--.--</div>&nbsp mJy</div></div>
+                        <div class='value-box compact'><div class='value-box field label'>Std. error best</div>
+                            <div class='field value'><div id='cs-best-err'>--.--</div></div></div>
+                        <div class='value-box compact'><div class='value-box field label'>Average combined&nbsp(<span class='cs-comb-array'></span>)</div>
+                            <div class='field value'><div id='cs-comb-avg'>--.--</div>&nbsp mJy</div></div>
+                        <div class='value-box compact'><div class='value-box field label'>Std. error combined&nbsp(<span class='cs-comb-array'></span>)</div>
+                            <div class='field value'><div id='cs-comb-err'>--.--</div></div></div>
                     </div>
                 </div>
             </div>

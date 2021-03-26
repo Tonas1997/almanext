@@ -531,8 +531,8 @@ export function showPlotControls()
     }))
 
     $("#plot").append(`<div id="plot-control-buttons">
-                        <button id="btn-tooltip" class="plot-button" title="">X</button>
-                        <button id="btn-overlap" class="plot-button" title="">X</button>
+                        <button id="btn-tooltip" class="plot-button" title=""><i class="fas fa-comment-alt plot-button-icon" aria-hidden="true"></i></button>
+                        <button id="btn-overlap" class="plot-button" title=""><i class="fas fa-dot-circle plot-button-icon" aria-hidden="true"></i></button>
                     </div>`)
 
     $("#btn-tooltip").tooltip({

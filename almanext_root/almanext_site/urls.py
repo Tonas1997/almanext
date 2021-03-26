@@ -20,6 +20,7 @@ from field_plot import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('field_plot.urls')),
+    path('sky_map/', include('sky_map.urls')),
+    path('field_plot/', include('field_plot.urls')),
 ]
 

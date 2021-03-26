@@ -304,8 +304,8 @@ $(function()
         {
             url: '/get_lines/',
             data_type: 'json',
-            success: function(data) {
-                //console.log(data)
+            success: function(data) 
+            {
                 fillLinesMenu(JSON.parse(data))
                 $("#form-lines option:eq(1)").attr("selected","selected");
                 $("#form-lines").selectmenu("refresh")

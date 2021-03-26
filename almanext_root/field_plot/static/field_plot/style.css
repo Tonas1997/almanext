@@ -600,6 +600,13 @@ form
   margin: 0px 0px 2px 0px;
 }
 
+.value-box.compact
+{
+  flex-direction: column;
+  line-height: 1.5;
+  margin: 0px 0px 2px 0px;
+}
+
 .value-box.field.label
 {
   display: flex;
@@ -707,7 +714,7 @@ table.dataTable tr
   width: 50px;
   height: 50px;
   border-radius: 2px;
-  padding: 16px 16px; /* Some padding */
+  padding: 8px 8px; /* Some padding */
   font-size: 16px; /* Set a font size */
   cursor: pointer; /* Mouse pointer on hover */
 }
@@ -737,11 +744,9 @@ table.dataTable tr
   z-index: 100;
 }
 
-.ui-icon-custom 
+.plot-button-icon
 { 
-  background-image: url(field_plot/images/coiso.png);
-  width: 50px;
-  height: 50px; 
+  font-size: x-large;
 }
 
 .svg-plot, .canvas-plot {

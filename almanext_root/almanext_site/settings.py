@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'common.apps.CommonConfig',
+    'sky_map.apps.SkyMapConfig',
     'field_plot.apps.FieldPlotConfig',
     'django.contrib.admin',
     'django.contrib.auth',
