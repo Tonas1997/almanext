@@ -1,10 +1,12 @@
 import numpy as np
+import pickle
 from field_plot.json_builder import *
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from django.shortcuts import render
 from django.http import JsonResponse
 from common.models import Observation, SpectralWindow, Trace, Band, EmissionLine
+from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q, OuterRef, Exists
 
@@ -74,7 +76,7 @@ def get_plot(request):
     z_max = float(z[1])
 
     # defines the center of the observation in the form of a SkyCoord object
-    center = SkyCoord(ra, dec, unit=(u.deg, u.deg))
+    # center = SkyCoord(ra, dec, unit=(u.deg, u.deg))
 
     min_ra = ra - (size / 2)
     max_ra = ra + (size / 2)
@@ -149,7 +151,10 @@ def get_plot(request):
 
 # =============================================================================
 
-    JSONplot = get_json_plot(center, size, res, obs_result, min_freq, max_freq)
+    obs_ids = obs_result.values_list('id', flat=True)
+    print(list(obs_ids))
+    
+    JSONplot = get_json_plot.delay(ra, dec, size, res, list(obs_ids), min_freq, max_freq)
 
 # =============================================================================
 #     RETURN A JSON OBJECT

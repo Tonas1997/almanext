@@ -1,9 +1,14 @@
 import json
+import pickle
 import math
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from field_plot.utils import *
 from field_plot.class_pixel import Pixel
+from common.models import Observation, SpectralWindow, Trace, Band, EmissionLine
+
+from celery import shared_task
+from celery_progress.backend import ProgressRecorder
 
 #from common.class_observation import ObservationClass
 #from common.class_spectral_window import SpectralWindowClass
@@ -449,12 +454,14 @@ def process_observation(obs):
     observations_list.append(obs_json)
     properties_list["n_observations"] += 1
 
-def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
+@shared_task(bind=True)
+def get_json_plot(self, ra, dec, plot_size, plot_res, obs_ids, min_f, max_f):
 
     global properties_list, pixel_area, observations_list, pixel_list, lock_list, freq_list, min_freq, max_freq, min_cs, max_cs, counter
 
     pixel_list = []
     observations_list = []
+    center = SkyCoord(ra, dec, unit=(u.deg, u.deg))
 
     reset_properties_list(plot_size, plot_res, min_f, max_f)
 
@@ -467,6 +474,7 @@ def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
     fill_frequency_list(min_freq, max_freq)
     pixel_area = properties_list["resolution"] ** 2
     
+    obs_set = Observation.objects.filter(id__in=obs_ids)
 
     # auxiliary variables
     global ra_origin, dec_origin, angle_size, angle_res, pixel_len, inc, pixel_array
@@ -497,17 +505,23 @@ def get_json_plot(center, plot_size, plot_res, obs_set, min_f, max_f):
     #pool.close()
     #pool.join()
 
-    for obs in obs_set: # this for statement will be changed to use actual model objects
-        #print("Processing observation " + str(index) + "(" + str(round(float(index/obs_set.count()), 2)*100) + "%)")
+    progress_recorder = ProgressRecorder(self)
+    set_size = obs_set.count()
+    for obs in obs_set: 
+        # converts the current observation (model object) to its JSON representation
         obs_json = observation_to_json(obs, counter)
         mean_freq = get_mean_freq(obs_json["frequency"])
+        project_code = obs_json["project_code"]
         print(mean_freq)
         array = obs_json["arrays"][0].get("array")
         # since obs_json is a local object and needs to be edited by fill_pixels to change the observation's area, we need
         # to pass it as an argument and get the modified result
         obs_json = fill_pixels(obs_json, mean_freq, array, counter)
+        # append the final observation JSON to the observations list
         observations_list.append(obs_json)
         counter += 1
+        # sets the task's progress
+        progress_recorder.set_progress(counter, set_size, f'Processing observation {project_code} ({counter}/{set_size})')
         properties_list["n_observations"] = counter
 
     # the root json structure

@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 
 from field_plot import views
 
@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('sky_map/', include('sky_map.urls')),
     path('field_plot/', include('field_plot.urls')),
+    re_path(r'^celery-progress/', include('celery_progress.urls'))
 ]
 
