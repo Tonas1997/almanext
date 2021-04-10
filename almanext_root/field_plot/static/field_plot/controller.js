@@ -305,7 +305,6 @@ $(function()
             url: $("#url-div-lines").data('url'),
             data_type: 'json',
             success: function(data) {
-                console.log(data)
                 fillLinesMenu(JSON.parse(data))
                 $("#form-lines option:eq(1)").attr("selected","selected");
                 $("#form-lines").selectmenu("refresh")
@@ -371,13 +370,34 @@ $(function()
     })
 });
 
-/**
- * Enable and disable frequency controls according to the selected option
- */
-
-/**
- * Sets the plot mode
- */
+function getPlotProgress(tid)
+{
+    $.ajax({
+        type: 'get',
+        url: $("#url-div-plot-progress").data('url'),
+        data: {'task_id': tid},
+        success: function (data) {
+            console.log(data)
+            if (data.state == 'PENDING') {
+                console.log('pending');
+            }
+            else if (data.state == 'PROGRESS') {
+                console.log('progress');
+            }
+            else if(data.state == 'SUCCESS'){
+                console.log('success');
+            }
+            if (data.state != 'SUCCESS') {
+                setTimeout(function () {
+                    getPlotProgress(tid)
+                }, 500);
+            }
+        },
+        error: function (data) {
+            console.log("error!");
+        }
+    });
+}
 
 /**
  * Defines the behaviour of the "render" submit button
@@ -400,7 +420,8 @@ $("#form-plot").on('submit', function(event)
                 data: parameters,
                 data_type: 'json',
                 success: function(data) {
-                    initializePlotView(JSON.parse(data))
+                    console.log(data)
+                    getPlotProgress(data)
                 }
             }
         )

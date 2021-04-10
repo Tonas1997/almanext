@@ -5,9 +5,9 @@
 {% block content %}
 
 <link href="{% static 'field_plot/style.css' %}" rel="stylesheet" type="text/css" />
-<script>
-	const IMAGE_DIR = "{% static 'field_plot/images/' %}"
-</script>
+<div id="url-div-lines" data-url="{% url 'get_lines' %}"></div>
+<div id="url-div-plot" data-url="{% url 'get_plot' %}"></div>
+<div id="url-div-plot-progress" data-url="{% url 'get_plot_progress' %}"></div>
 <div id="container">
 	<div id="plot-controller">
 		<div id="plot-parameters" class="pane-frame">
@@ -148,11 +148,20 @@
 		<script src="https://d3js.org/d3.v5.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-		<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.js"></script>
-		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.css">
+		
+		<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
+
 		<script type="module" src="{% static 'field_plot/plot.js' %}"></script>
 		<script type="module" src="{% static 'field_plot/freq_histogram.js' %}"></script>
 		<script type="module" src="{% static 'field_plot/controller.js' %}"></script>
+
+		<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.js"></script>
+		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.css">
+
+		<div class='progress-wrapper'>
+			<div id='progress-bar' class='progress-bar' style="background-color: #68a9ef; width: 0%;">&nbsp;</div>
+		</div>
+		<div id="progress-bar-message">Waiting for progress to start...</div>
 	</div>
 </div>	
 

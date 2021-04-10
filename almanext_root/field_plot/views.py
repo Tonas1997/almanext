@@ -9,6 +9,9 @@ from common.models import Observation, SpectralWindow, Trace, Band, EmissionLine
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q, OuterRef, Exists
+from django.http import HttpResponse
+
+from celery.result import AsyncResult
 
 ra_origin = 0
 dec_origin = 0
@@ -154,10 +157,33 @@ def get_plot(request):
     obs_ids = obs_result.values_list('id', flat=True)
     print(list(obs_ids))
     
-    JSONplot = get_json_plot.delay(ra, dec, size, res, list(obs_ids), min_freq, max_freq)
-
+    result = get_json_plot.delay(ra, dec, size, res, list(obs_ids), min_freq, max_freq)
+    print("Task id")
+    print(result.task_id)
+    return HttpResponse(result.task_id)
 # =============================================================================
 #     RETURN A JSON OBJECT
 # =============================================================================
 
-    return JsonResponse(JSONplot, safe=False)
+    #return JsonResponse(JSONplot, safe=False)
+
+def get_plot_progress(request):
+    task_id = request.GET.get('task_id', None)
+    print("Polled id")
+    print(task_id)
+    if task_id is not None:
+        task = AsyncResult(task_id)
+        if(task.ready()):
+            data = {
+                'state': task.state,
+                'result': task.get()
+            }
+            return JsonResponse(data, safe=False)
+        else:
+            data = {
+                'state': task.state,
+                'result': task.result,
+            }
+            return HttpResponse(json.dumps(data), content_type='application/json')
+    else:
+        return HttpResponse('No job id given.')

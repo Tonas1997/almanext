@@ -13,6 +13,7 @@ from celery_progress.backend import ProgressRecorder
 #from common.class_observation import ObservationClass
 #from common.class_spectral_window import SpectralWindowClass
 from django.core.serializers.json import DjangoJSONEncoder
+from django.http import JsonResponse
 
 
 # global vars
@@ -548,4 +549,5 @@ def get_json_plot(self, ra, dec, plot_size, plot_res, obs_ids, min_f, max_f):
     with open('query_result.json', 'w') as outfile:
         json.dump(json_builder, outfile, indent=4, cls=DjangoJSONEncoder)
 
-    return(json.dumps(json_builder, cls=DjangoJSONEncoder))
+    json_plot = json.dumps(json_builder, cls=DjangoJSONEncoder)
+    return json_plot

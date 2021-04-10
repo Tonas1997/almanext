@@ -7,6 +7,7 @@ from . import views
 urlpatterns = [
     url(r'^get_lines/$', views.get_lines, name='get_lines'),
     url(r'^get_plot/$', views.get_plot, name='get_plot'),
+    url(r'^get_plot_progress/$', views.get_plot_progress, name='get_plot_progress'),
     url(r'', views.index, name='index'),
 ]
 
