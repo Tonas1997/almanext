@@ -150,18 +150,16 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 		
 		<script src="{% static 'celery_progress/celery_progress.js' %}"></script>
-
-		<script type="module" src="{% static 'field_plot/plot.js' %}"></script>
-		<script type="module" src="{% static 'field_plot/freq_histogram.js' %}"></script>
-		<script type="module" src="{% static 'field_plot/controller.js' %}"></script>
-
+		
 		<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.js"></script>
 		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.css">
 
-		<div class='progress-wrapper'>
-			<div id='progress-bar' class='progress-bar' style="background-color: #68a9ef; width: 0%;">&nbsp;</div>
-		</div>
-		<div id="progress-bar-message">Waiting for progress to start...</div>
+		<script type="module" src="{% static 'field_plot/plot.js' %}"></script>
+		<script type="module" src="{% static 'field_plot/freq_histogram.js' %}"></script>
+		<script type="module" src="{% static 'field_plot/progressbar.js' %}"></script>
+		<script type="module" src="{% static 'field_plot/controller.js' %}"></script>
+
+		<div id='progress-bar' style='position: absolute;'></div>
 	</div>
 </div>	
 

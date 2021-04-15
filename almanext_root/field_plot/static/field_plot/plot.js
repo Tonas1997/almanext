@@ -88,6 +88,7 @@ function updateDataset(plot_json)
     observation_array = new Array(plot_json.observations.length)
 
     // Init Canvas
+    $('.canvas-plot').remove();
     canvas_chart = container.append('canvas').classed('canvas_chart', true)
         .attr('width', width)
         .attr('height', height)

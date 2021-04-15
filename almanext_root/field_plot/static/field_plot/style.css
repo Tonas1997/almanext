@@ -657,6 +657,19 @@ table.dataTable tr
   padding: 0px;
 }
 
+#progress-bar
+{
+  display: block;
+  position: relative;
+  text-align: center;
+  /*height: 200px;*/
+  width: 80%;
+  top: 50%;
+  left: 10%;
+  z-index: 100;
+  transition: 0.3s ease-out;
+}
+
 #plot-control-axis
 {
   display: block;

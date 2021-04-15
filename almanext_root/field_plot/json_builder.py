@@ -349,7 +349,7 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                         # update plot area   
                         properties_list["total_area"] += pixel_area
                     # else, increment the plot's overlapping area counter...
-                    elif(pixel.count_pointings >= 1):
+                    elif(pixel.count_pointings == 1):
                         properties_list["overlap_area"] += pixel_area
                         # ...and also for any other observations covering this pixel
                         obs_json["overlap_area"] += pixel_area

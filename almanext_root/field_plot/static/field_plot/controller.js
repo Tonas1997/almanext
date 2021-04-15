@@ -31,6 +31,7 @@ import
     //highlightRows
 } from "./obs_list.js"
 
+
 // ========================================================
 // ================= PAGE INITIALIZATION ==================
 // ========================================================
@@ -67,7 +68,7 @@ function fillLinesMenu(linesJSON)
 var first_render = true
 var emission_lines = []
 var selected_observations = []
-var options = {highlight_overlap: false}
+var progress_bar
 
 // ========================================================
 // ============== PLOT PARAMETERS MANAGEMENT ==============
@@ -370,6 +371,43 @@ $(function()
     })
 });
 
+function initializeProgressBar()
+{
+    progress_bar = new ProgressBar.Line('#progress-bar', {
+        color: "rgb(55,55,85)",
+        text: 
+        {
+            //className: 'progressbar__label',
+            style: 
+            {
+                color: '#828295',
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                padding: 0,
+                margin: 0,
+                transform: {
+                    prefix: true,
+                    value: 'translate(-50%, -50%)'
+                }
+            },
+            autoStyleContainer: false,    
+    }});
+}
+
+function updateProgressBar(data)
+{
+    progress_bar.animate(data.result.percent / 100, {
+        duration: 200
+    });
+    progress_bar.setText(data.result.description)
+}
+
+function destroyProgressBar()
+{
+    progress_bar.destroy()
+}
+
 function getPlotProgress(tid)
 {
     $.ajax({
@@ -378,16 +416,23 @@ function getPlotProgress(tid)
         data: {'task_id': tid},
         success: function (data) {
             console.log(data)
-            if (data.state == 'PENDING') {
+            if (data.state == 'PENDING') 
+            {
                 console.log('pending');
             }
-            else if (data.state == 'PROGRESS') {
+            else if (data.state == 'PROGRESS') 
+            {
+                updateProgressBar(data)
                 console.log('progress');
             }
-            else if(data.state == 'SUCCESS'){
+            else if(data.state == 'SUCCESS')
+            {
                 console.log('success');
+                destroyProgressBar()
+                initializePlotView(JSON.parse(data.result))
             }
-            if (data.state != 'SUCCESS') {
+            if (data.state != 'SUCCESS') 
+            {   
                 setTimeout(function () {
                     getPlotProgress(tid)
                 }, 500);
@@ -420,7 +465,7 @@ $("#form-plot").on('submit', function(event)
                 data: parameters,
                 data_type: 'json',
                 success: function(data) {
-                    console.log(data)
+                    initializeProgressBar()
                     getPlotProgress(data)
                 }
             }

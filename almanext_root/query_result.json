@@ -8,8 +8,8 @@
         "min_cs": 0.009970345,
         "max_cs": 0.136410849,
         "total_area": 21300.0,
-        "overlap_area": 16900.0,
-        "overlap_area_pct": 0.7934272300469484,
+        "overlap_area": 8300.0,
+        "overlap_area_pct": 0.38967136150234744,
         "min_count_pointings": 1,
         "max_count_pointings": 5,
         "min_avg_res": 0.314335477,
@@ -378,7 +378,7 @@
                 }
             ],
             "total_area": 3200.0,
-            "overlap_area": 2500.0,
+            "overlap_area": 1900.0,
             "gal_longitude": 236.7834702,
             "gal_latitude": 42.29977221,
             "frequency": [
@@ -467,7 +467,7 @@
                 }
             ],
             "total_area": 2900.0,
-            "overlap_area": 2900.0,
+            "overlap_area": 100.0,
             "gal_longitude": 236.7710796,
             "gal_latitude": 42.29379121,
             "frequency": [
@@ -734,7 +734,7 @@
                 }
             ],
             "total_area": 2900.0,
-            "overlap_area": 1100.0,
+            "overlap_area": 900.0,
             "gal_longitude": 236.74000120000002,
             "gal_latitude": 42.29716284,
             "frequency": [
@@ -823,7 +823,7 @@
                 }
             ],
             "total_area": 2900.0,
-            "overlap_area": 2900.0,
+            "overlap_area": 1800.0,
             "gal_longitude": 236.75898619999998,
             "gal_latitude": 42.30013585,
             "frequency": [
@@ -912,7 +912,7 @@
                 }
             ],
             "total_area": 9300.0,
-            "overlap_area": 6200.0,
+            "overlap_area": 2300.0,
             "gal_longitude": 236.77151030000002,
             "gal_latitude": 42.29423894,
             "frequency": [

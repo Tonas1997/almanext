@@ -13,8 +13,8 @@ var SHOW_BEST = true
 var ARRAY_CONFIG
 
 // average and deviation values
-var avg_best, avg_comb_12m, avg_comb_7m, avg_comb_tp
-var err_best, err_comb_12m, err_comb_7m, err_comb_tp
+var avg_best, avg_best_12m, avg_best_7m, avg_best_tp, avg_comb_12m, avg_comb_7m, avg_comb_tp
+var err_best, err_best_12m, err_best_7m, err_best_tp, err_comb_12m, err_comb_7m, err_comb_tp
 
 export function showSensitivityPlot(plot_properties, plot_pixels)
 {
@@ -152,11 +152,20 @@ export function updateSensitivityPlot(plot_pixels)
     var bins_comb_tp    = h_comb_tp(filtered_tp).filter(b => b.length > 0)
 
     avg_best        = d3.mean(filtered_best, f => f.cs_best)
+    avg_best_12m    = d3.mean(filtered_12m, f => f.cs_best)
+    avg_best_7m     = d3.mean(filtered_7m, f => f.cs_best)
+    avg_best_tp     = d3.mean(filtered_tp, f => f.cs_best)
+
     avg_comb_12m    = d3.mean(filtered_12m, f => f.cs_comb_12m)
     avg_comb_7m     = d3.mean(filtered_7m, f => f.cs_comb_7m)
     avg_comb_tp     = d3.mean(filtered_tp, f => f.cs_comb_tp)
 
+
     err_best        = d3.deviation(filtered_best, f => f.cs_best)
+    err_best_12m    = d3.deviation(filtered_12m, f => f.cs_best)
+    err_best_7m     = d3.deviation(filtered_7m, f => f.cs_best)
+    err_best_tp     = d3.deviation(filtered_tp, f => f.cs_best)
+
     err_comb_12m    = d3.deviation(filtered_12m, f => f.cs_comb_12m)
     err_comb_7m     = d3.deviation(filtered_7m, f => f.cs_comb_7m)
     err_comb_tp     = d3.deviation(filtered_tp, f => f.cs_comb_tp)
@@ -202,10 +211,10 @@ export function updateSensitivityPlot(plot_pixels)
 
 function removeAllBins()
 {
-    drawArea.selectAll("rect0").remove()
-    drawArea.selectAll("rect1").remove()
-    drawArea.selectAll("rect2").remove()
-    drawArea.selectAll("rect3").remove()
+    drawArea.selectAll("rect").remove()
+    drawArea.selectAll("rect").remove()
+    drawArea.selectAll("rect").remove()
+    drawArea.selectAll("rect").remove()
 }
 
 function appendBins(id, bin_set, array, css_class)
@@ -269,11 +278,15 @@ export function changeVisibleBars(array_id)
             {
                 if(avg_comb_12m != undefined)
                 {
+                    $("#cs-best-avg").text(avg_best_12m.toFixed(4))
+                    $("#cs-best-err").text(err_best_12m.toFixed(4))
                     $("#cs-comb-avg").text(avg_comb_12m.toFixed(4))
                     $("#cs-comb-err").text(err_comb_12m.toFixed(4))
                 }
                 else
                 {
+                    $("#cs-best-avg").text(VAL_NULL)
+                    $("#cs-best-err").text(VAL_NULL)
                     $("#cs-comb-avg").text(VAL_NULL)
                     $("#cs-comb-err").text(VAL_NULL)
                 }
@@ -284,11 +297,15 @@ export function changeVisibleBars(array_id)
 
                 if(avg_comb_7m != undefined)
                 {
+                    $("#cs-best-avg").text(avg_best_7m.toFixed(4))
+                    $("#cs-best-err").text(err_best_7m.toFixed(4))
                     $("#cs-comb-avg").text(avg_comb_7m.toFixed(4))
                     $("#cs-comb-err").text(err_comb_7m.toFixed(4))
                 }
                 else
                 {
+                    $("#cs-best-avg").text(VAL_NULL)
+                    $("#cs-best-err").text(VAL_NULL)
                     $("#cs-comb-avg").text(VAL_NULL)
                     $("#cs-comb-err").text(VAL_NULL)
                 }
@@ -298,11 +315,15 @@ export function changeVisibleBars(array_id)
             {
                 if(avg_comb_tp != undefined)
                 {
+                    $("#cs-best-avg").text(avg_best_tp.toFixed(4))
+                    $("#cs-best-err").text(err_best_tp.toFixed(4))
                     $("#cs-comb-avg").text(avg_comb_tp.toFixed(4))
                     $("#cs-comb-err").text(err_comb_tp.toFixed(4))
                 }
                 else
                 {
+                    $("#cs-best-avg").text(VAL_NULL)
+                    $("#cs-best-err").text(VAL_NULL)
                     $("#cs-comb-avg").text(VAL_NULL)
                     $("#cs-comb-err").text(VAL_NULL)
                 }
@@ -356,9 +377,9 @@ function getPaneHTML()
             <div id='cs-plot-info'>
                 <div class='pane-frame'>
                     <div class='info-wrapper'>
-                        <div class='value-box compact'><div class='value-box field label'>Average best</div>
+                        <div class='value-box compact'><div class='value-box field label'>Average best&nbsp(<span class='cs-comb-array'></span>)</div>
                             <div class='field value'><div id='cs-best-avg'>--.--</div>&nbsp mJy</div></div>
-                        <div class='value-box compact'><div class='value-box field label'>Std. error best</div>
+                        <div class='value-box compact'><div class='value-box field label'>Std. error best&nbsp(<span class='cs-comb-array'></span>)</div>
                             <div class='field value'><div id='cs-best-err'>--.--</div></div></div>
                         <div class='value-box compact'><div class='value-box field label'>Average combined&nbsp(<span class='cs-comb-array'></span>)</div>
                             <div class='field value'><div id='cs-comb-avg'>--.--</div>&nbsp mJy</div></div>
