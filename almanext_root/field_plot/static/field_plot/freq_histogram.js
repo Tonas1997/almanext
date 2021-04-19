@@ -19,6 +19,10 @@ var maxFO;
 var minFA;
 var maxFA;
 
+var datasets = {}
+var left_axis = "obs_count"
+var datatype = "hist"
+
 export function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
 {
     minF = plot_properties.min_frequency // lowest frequency bucket
@@ -139,20 +143,43 @@ export function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
     linesArea = svg.append("g")
         .attr("clip-path", "url(#clip2)")
 
+    plot_freqs = removeEmpty(plot_freqs)
+
+    // generate two additional levels of detail
+    buildDatasets(plot_freqs)
+
+    console.log(datasets)
+
     // draw the CS graph
-    drawCSPoints(plot_freqs) //I have to fix the scaling issues
-    drawFreqObsBars(plot_freqs)
+    //drawCSPoints(plot_freqs) //I have to fix the scaling issues
+    //drawFreqObsBars(plot_freqs)
     drawEmissionLines(emission_lines)
     drawControls()
     
     const extent = [[margin.left, 0], [width - margin.right, 0]];
 
     transform_store = d3.zoomIdentity
+    zoomed()
+
     svg.call(d3.zoom()
         .scaleExtent([1, 1000])
         .translateExtent(extent)
         .extent(extent)
         .on("zoom", () => zoomed(d3.event.transform)));
+}
+
+function buildDatasets(plot_freqs)
+{
+    datasets = {}
+    var log_length = Math.floor(Math.log10(plot_freqs.length))
+    for(var i = 1; i < log_length; i++)
+    {
+        console.log(10**(i + 1))
+        var new_lod = d3.histogram().value(f => f.freq).domain(xScale.domain()).thresholds(10**(i + 1))
+        var buckets = new_lod(plot_freqs).filter(b => b.length > 0)
+        datasets["lod" + i] = buckets
+    }
+    datasets["lod" + log_length] = plot_freqs
 }
 
 function zoomed(transform)
@@ -162,13 +189,74 @@ function zoomed(transform)
         transform_store = transform
     }
     var new_xScale = transform_store.rescaleX(xScale)
-    drawArea.selectAll("rect")
-        .attr("transform", "translate(" + transform_store.x+",0)scale(" + transform_store.k + ",1)")
-    drawArea.selectAll("path")
-        .attr("transform", "translate(" + transform_store.x+",0)scale(" + transform_store.k + ",1)")
+    updateVisibleBars(new_xScale)
+    /*drawArea.selectAll("rect")
+        .attr("transform", "translate(" + transform_store.x+",0)scale(" + transform_store.k + ",1)")*/
+    /*drawArea.selectAll("path")
+        .attr("transform", "translate(" + transform_store.x+",0)scale(" + transform_store.k + ",1)")*/
     svg.selectAll("#x-axis").call(xAxis.scale(transform_store.rescaleX(xScale)));
     linesArea.selectAll("svg")
         .attr("x", function(l) {return(new_xScale(l.frequency/(1+z)))})
+}
+
+function updateVisibleBars(new_xScale)
+{
+    var zoom_level = Math.round(Math.log10(transform_store.k) + 1)
+    var dataset = datasets["lod" + zoom_level]
+    drawBarsByDomain(new_xScale, dataset)
+}
+
+function drawBarsByDomain(xScale, dataset)
+{
+    var minX = xScale.domain()[0]
+    var maxX = xScale.domain()[1]
+    var f_dataset
+
+    // is the dataset a histogram?
+    if(dataset[0].x0 != undefined)
+    {
+        datatype = "hist"
+        f_dataset = dataset.filter(d => (d.x0 < minX && d.x1 > minX) || 
+                                    (d.x0 > minX && d.x1 < maxX) || 
+                                    (d.x0 < maxX && d.x1 > maxX))
+        
+        drawArea.selectAll('rect').remove()
+
+        drawArea.selectAll('rect')
+        .data(f_dataset)
+        .enter()
+        .append('rect')
+            .attr("type", "static")
+            .attr("observations", function(f) { return f.observations})
+            .attr("x", function(f) { return xScale(f.x0)})
+            .attr("y", function(f) { return yScale1(getAvgBinVal(f)) + margin.top})
+            .attr("width", function(f) { return getWidth(f.x0, f.x1) * transform_store.k})
+            .attr("height", function(f) { return height - margin.top - margin.bottom - yScale1(getAvgBinVal(f))})
+            .attr("class", "freq-histogram-obs-bar")
+
+    }
+    // else, it's the full point set!
+    else
+    {
+        datatype = "point"
+        f_dataset = dataset.filter(d => (d.freq < minX && d.freq + getWidth(bucket_size) > minX) || 
+                                    (d.freq > minX && d.freq + getWidth(bucket_size) < maxX) || 
+                                    (d.freq < maxX && d.freq + getWidth(bucket_size) > maxX))
+
+        drawArea.selectAll('rect').remove()
+
+        drawArea.selectAll('rect')
+        .data(f_dataset)
+        .enter()
+        .append('rect')
+            .attr("type", "static")
+            .attr("observations", function(f) { return f.observations})
+            .attr("x", function(f) { return xScale(f.freq)})
+            .attr("y", function(f) { return yScale1(f.observations.length) + margin.top})
+            .attr("width", function() { return getWidth(bucket_size) * transform_store.k})
+            .attr("height", function(f) { return height - margin.top - margin.bottom - yScale1(f.observations.length)})
+            .attr("class", "freq-histogram-obs-bar")
+    }
 }
 
 export function updateFreqHistogram(plot_properties, plot_freqs, emission_lines)
@@ -197,8 +285,10 @@ export function updateFreqHistogram(plot_properties, plot_freqs, emission_lines)
     
     // redraw the CS graph
     //drawCSPoints(plot_freqs)
-    drawFreqObsBars(plot_freqs)
+    //drawFreqObsBars(plot_freqs)
+    buildDatasets(plot_freqs)
     drawEmissionLines(emission_lines)
+    zoomed()
 }
 
 export function highlightFreqHistogram(pixel_obs)
@@ -269,10 +359,9 @@ export function drawEmissionLines(emission_lines)
     createLinesSVG(em_lines_g)
 }
 
-export function changeAxisData(data_id)
+export function changeAxisData()
 {
-    console.log(data_id)
-    switch(data_id)
+    switch(left_axis)
     {
         case "obs_count":
         {
@@ -282,8 +371,12 @@ export function changeAxisData(data_id)
             drawArea.selectAll('rect')
                 .transition()
                 .duration(500)
-                .attr("y", function(f) { return yScale1(f.observations.length) + margin.top})
-                .attr("height", function(f) { return height - margin.top - margin.bottom - yScale1(f.observations.length)})
+                .attr("y", function(f) { 
+                    return (datatype == "point" ? yScale1(f.observations.length) : yScale1(getAvgBinVal(f))) + margin.top
+                })
+                .attr("height", function(f) { 
+                    return height - margin.top - margin.bottom - (datatype == "point" ? yScale1(f.observations.length) : yScale1(getAvgBinVal(f)))
+                })
             break
         }
         case "total_area":
@@ -294,11 +387,38 @@ export function changeAxisData(data_id)
             drawArea.selectAll('rect')
                 .transition()
                 .duration(500)
-                .attr("y", function(f) { return yScale1(f.total_area) + margin.top})
-                .attr("height", function(f) { return height - margin.top - margin.bottom - yScale1(f.total_area)})
+                .attr("y", function(f) { 
+                    return (datatype == "point" ? yScale1(f.total_area) : yScale1(getAvgBinVal(f))) + margin.top
+                })
+                .attr("height", function(f) { 
+                    return height - margin.top - margin.bottom - (datatype == "point" ? yScale1(f.total_area) : yScale1(getAvgBinVal(f)))
+                })
             break
         }
     }
+}
+
+function getAvgBinVal(set)
+{
+    var total = 0
+    console.log(left_axis)
+    console.log(set)
+    switch(left_axis)
+    {
+        case "obs_count":
+        {
+            Array.from(set).forEach(b => total += b.observations.length)
+            break;
+        }
+        case "total_area":
+        {
+            Array.from(set).forEach(b => total += b.total_area)
+            break;
+        }
+    }
+    console.log(total)
+    console.log(set.length)
+    return total / set.length
 }
 
 function drawControls()
@@ -335,7 +455,8 @@ function drawControls()
     {
         change: function(event, ui)
         {
-            changeAxisData(ui.item.value)
+            left_axis = ui.item.value
+            changeAxisData()
         }
     })
     $("#freq-histogram-emissionlines").checkboxradio();
@@ -426,6 +547,7 @@ function createLinesSVG(em_lines_g)
         .attr("x1", "5")
         .attr("stroke-width", "2")
         .attr("fill", "none")
+
 }
 
 // returns the width of a given element given its start and end values
