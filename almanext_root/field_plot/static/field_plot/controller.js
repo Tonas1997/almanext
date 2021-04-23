@@ -1,4 +1,4 @@
-import
+/*import
 {
     updatePlotSelectedObs, // remove a filter
     renderData, // initial render
@@ -12,8 +12,9 @@ import
 {
     showFreqHistogram, // initial render
     highlightFreqHistogram, // update plot with new data (after first render)
-    updateFreqHistogram // plot update - change axis
-} from "./freq_histogram.js"
+    updateFreqHistogram,
+    drawArea // plot update - change axis
+} from "./freq_histogram.js"*/
 
 import
 {
@@ -69,6 +70,7 @@ var first_render = true
 var emission_lines = []
 var selected_observations = []
 var progress_bar
+var plot_properties
 
 // ========================================================
 // ============== PLOT PARAMETERS MANAGEMENT ==============
@@ -487,10 +489,9 @@ function initializePlotView(data)
      * ================== INITIALIZATION ==================
      */
     // defines some variables
-    console.log("success")
     if(first_render) showPlotControls()
     console.log("render data")
-    var plot_properties = renderData(data)
+    plot_properties = renderData(data)
     var plot_cs = data.continuum_sensitivity
     var plot_pixels = data.pixels        
 
@@ -520,52 +521,6 @@ function initializePlotView(data)
      */
     // PLOT CONTROLS
     // sets the behaviour for mouse panning on the plot
-    canvas_chart.on("mousemove",function()
-    {
-        var info = getPixelInfo(d3.mouse(this)); 
-        // update pixel info
-        updatePixelInfo(info)
-        if(info != null)
-        {
-            //console.log(info)
-            highlightFreqHistogram(info.obs)
-            //highlightRows(info.obs)
-        }
-        else 
-        {// weird that I have to do this...
-            highlightFreqHistogram(null)
-            //highlightRows(null)
-        }
-    });
-
-    canvas_chart.on("click",function()
-    {
-        var info = getPixelInfo(d3.mouse(this));
-        if(info != null)
-        {
-            
-            var indexes = []
-            for(var o in info.obs)
-            {
-                indexes.push(info.obs[o].index)
-            }
-            console.log("INDEXES")
-            console.log(indexes)
-            console.log("SELECTED_OBS")
-            console.log(selected_observations)
-            
-            if(compareArrays(indexes, selected_observations))
-                remSelectedObs()
-            else
-            {
-                remSelectedObs()
-                addSelectedObs(indexes)
-            }   
-        }
-        else
-            remSelectedObs()
-    });
-
     // SENSITIVITY HISTOGRAM CONTROLS
     $("#cs-histogram-array").selectmenu(
     {
@@ -575,6 +530,7 @@ function initializePlotView(data)
                 updateCanvas()
             }
     })
+
 
     // LIST CONTROLS
     // highlights the panned-over observation
@@ -600,21 +556,8 @@ function initializePlotView(data)
 }
 
 function updateSelectedObs()
-{   /*
-    var new_selected_obs = []
-    // if this is a single object, put it into an array
-    if(!Array.isArray(indexes))
-        indexes = [indexes]
-    indexes.forEach(i => 
-    {
-        new_selected_obs.push(i)
-    });
-    if(compareArrays(selected_observations, new_selected_obs))
-        new_selected_obs = []
-    selected_observations = new_selected_obs
-    */
-    console.log(selected_observations)
-    updatePlotSelectedObs(selected_observations)
+{   
+    updateHighlightedPixels()
     //updateHistSelectedObs(selected_observations)
     //updateSensSelectedObs(selected_observations)
     updateListSelectedObs(selected_observations)
@@ -631,7 +574,7 @@ function addSelectedObs(obs)
     else
     {
         for(var i in obs)
-        selected_observations.push(obs[i])
+            selected_observations.push(obs[i])
     }
     updateSelectedObs()
 }
@@ -763,3 +706,1242 @@ function compareArrays(_arr1, _arr2)
       
     return true;
 }
+
+// ================================================================================================
+// ========================================== PLOT ===============================================
+// ================================================================================================
+
+
+// plot rendering variables
+const plot_margin = {top: 0, right: 0, bottom: 0, left: 0};
+var plot_width = $('#plot').height();
+var plot_height = $('#plot').width();
+
+// color legend variables
+const plot_scale_size = {width: '90%', height: 10, radius: 5};
+var plot_scale_svg;
+
+// dataset variables
+var pixel_len;
+var pixel_array
+var observation_array
+
+// interface variables
+var plot_canvas_chart
+var context;
+var plot_transform_store;
+var plot_color_scale = {scale: null, worst: 0, best: 0, ref: 0};
+var plot_axis_label;
+
+// TODO
+var plot_ui_options = {render_mode: "count_pointings", pixel_tooltip: false, highlight_overlap: false}
+
+/**
+ * Updates and renders a new dataset
+ * @param {*} plot_json The JSON representation of the current field
+ * @returns 
+ */
+function renderData(plot_json)
+{
+    pixel_len = plot_json.properties.pixel_len
+
+    console.log("createArray")
+    pixel_array = createArray(pixel_len, pixel_len)
+    observation_array = new Array(plot_json.observations.length)
+
+    // Init Canvas
+    $('.canvas-plot').remove();
+    plot_canvas_chart = d3.select('#plot').append('canvas').classed('canvas_chart', true)
+        .attr('width', plot_width)
+        .attr('height', plot_height)
+        .style('margin-left', plot_margin.left + 'px')
+        .style('margin-top', plot_margin.top + 'px')
+        .style('z-index', 0)
+        .style('height', document.getElementById('plot').offsetHeight)
+        .attr('class', 'canvas-plot');
+
+    context = plot_canvas_chart.node().getContext('2d');
+
+    // fill canvas with a default background color
+    context.beginPath();
+    context.fillStyle = d3.interpolateViridis(0);
+    context.fillRect( 0, 0, context.canvas.width, context.canvas.height );
+
+    var observations = plot_json.observations
+    var dataset = plot_json.pixels
+    console.log(observations.length)
+    // Copy observations
+    for (var i = 0; i < observations.length; i++) 
+    {
+        observation_array[i] = observations[i]
+    }
+
+    // Copy pixels
+    for (var i = 0; i < dataset.length; i++) 
+    {
+        // get the point
+        var point = dataset[i]
+        
+        // fill the pixel "cache" array with this pixel
+        if(point.x < pixel_len)
+        {
+            pixel_array[point.x][point.y] = point    
+        }
+        point.highlight = true
+    }
+
+    // initial render
+    plot_properties = plot_json.properties
+    console.log("updateCanvas")
+    updateCanvas(d3.zoomIdentity)
+
+    // EVENTS
+    // Zooming
+    d3.select(context.canvas).call(d3.zoom()
+        .scaleExtent([1,15])
+        .translateExtent([[0,0],[plot_width,plot_width]])
+        .on("zoom", () => updateCanvas(d3.event.transform)))
+        .on("dblclick.zoom", null);
+
+    // Moving the mouse around and highlighting different pixels
+    plot_canvas_chart.on("mousemove",function()
+    {
+        var info = getPixelInfo(d3.mouse(this)); 
+        // update pixel info
+        updatePixelInfo(info)
+        if(info != null)
+        {
+            //console.log(info)
+            highlightFreqHistogram(info.obs)
+            //highlightRows(info.obs)
+        }
+        else 
+        {// weird that I have to do this...
+            highlightFreqHistogram(null)
+            //highlightRows(null)
+        }
+    });
+
+    // Clicking on a pixel and selecting its observations
+    plot_canvas_chart.on("click",function()
+    {
+        var info = getPixelInfo(d3.mouse(this));
+        if(info != null)
+        {
+            
+            var indexes = []
+            for(var o in info.obs)
+            {
+                indexes.push(info.obs[o].index)
+            }
+            console.log("INDEXES")
+            console.log(indexes)
+            console.log("SELECTED_OBS")
+            console.log(selected_observations)
+            
+            if(compareArrays(indexes, selected_observations))
+                remSelectedObs()
+            else
+            {
+                remSelectedObs()
+                addSelectedObs(indexes)
+            }   
+        }
+        else
+            remSelectedObs()
+    });
+
+
+    $("#plot").tooltip({
+        content: "coiso",
+        position: { my: "left-10 center", at: "right center" },
+        classes: 
+        {
+            "ui-tooltip": "plot-button-tooltip"
+        }
+    });
+
+    return plot_properties
+}
+
+/**
+ * Updates the plot to reflect changes in scaling, render modes, etc
+ * @param {} transform The new transform object, if one exists
+ */
+function updateCanvas(transform)
+{
+    console.log("updateCanvas start")
+    // differentiates between zoom and plot colour update
+    if(transform != undefined)
+    {
+        //transform = d3.zoomIdentity.translate(0,0).scale(1)
+        plot_transform_store = transform
+    }
+
+    var inverse // this will later help us define the direction of the scale's gradient
+
+    switch(plot_ui_options.render_mode)
+    {
+        case "count_pointings":
+            //plot_color_scale.scale = function(value) {return d3.interpolateViridis(value)};
+            plot_color_scale.worst = plot_properties.min_count_pointings
+            plot_color_scale.best = plot_properties.max_count_pointings
+            plot_color_scale.scale = d3.scaleSequential()
+                .interpolator(d3.interpolateViridis)
+                .domain([plot_color_scale.worst,plot_color_scale.best]);
+            plot_axis_label = ""
+            inverse = false
+            break
+        case "avg_res":
+            //plot_color_scale.scale = function(value) {return d3.interpolateInferno(Math.abs(1-value))};
+            plot_color_scale.worst = plot_properties.max_avg_res
+            plot_color_scale.best = plot_properties.min_avg_res
+            plot_color_scale.scale = d3.scaleSequential()
+                .interpolator(d3.interpolateInferno)
+                .domain([plot_color_scale.worst,plot_color_scale.best]);
+            plot_axis_label = "arcsec2"
+            inverse = true
+            break
+        case "avg_sens":
+            //plot_color_scale.scale = function(value) {return d3.interpolateYlGnBu(value)};
+            plot_color_scale.worst = plot_properties.max_avg_sens
+            plot_color_scale.best = plot_properties.min_avg_sens
+            plot_color_scale.scale = d3.scaleSequential()
+                .interpolator(d3.interpolateYlGnBu)
+                .domain([plot_color_scale.best,plot_color_scale.worst]);
+            plot_axis_label = "mJy/beam"
+            inverse = true
+            break
+        case "avg_int_time":
+            //plot_color_scale.scale = function(value) {return d3.interpolateCividis(value)};
+            plot_color_scale.worst = plot_properties.min_avg_int_time
+            plot_color_scale.best = plot_properties.max_avg_int_time
+            plot_color_scale.scale = d3.scaleSequential()
+                .interpolator(d3.interpolateCividis)
+                .domain([plot_color_scale.worst,plot_color_scale.best]);
+            plot_axis_label = "seconds"
+            inverse = false
+            break
+        case "cs_comb":
+            var fieldname
+            switch($("#cs-histogram-array").val())
+            {
+                case "12m":
+                    fieldname = "cs_comb_12m"
+                    plot_color_scale.best = plot_properties.max_combined_cs_12m
+                    break
+                case "7m":
+                    fieldname = "cs_comb_7m"
+                    plot_color_scale.best = plot_properties.max_combined_cs_7m
+                    break
+                case "tp":
+                    fieldname = "cs_comb_tp"
+                    plot_color_scale.best = plot_properties.max_combined_cs_tp
+                    break
+            }
+            plot_color_scale.worst = 0//plot_properties.min_combined_cs
+            plot_color_scale.scale = d3.scaleDiverging()
+                .interpolator(d3.interpolateRdYlGn)
+                .domain([plot_color_scale.worst, 1, plot_color_scale.best]);
+            plot_axis_label = "factor (combined sensitivity)"
+            inverse = false
+            break
+    }
+
+    var scale = plot_color_scale.scale
+    context.save()
+    context.fillStyle = "#FFFFFF" //plot_color_scale(background)
+    context.fillRect( 0, 0, context.canvas.width, context.canvas.height );
+
+    context.translate(plot_transform_store.x, plot_transform_store.y)
+    context.scale(plot_transform_store.k, plot_transform_store.k)
+
+    var pixelScale = plot_width / pixel_len
+    context.beginPath();
+    for(var i = 0; i < pixel_array.length; i++)
+        for(var j = 0; j < pixel_array[i].length; j++)
+        {
+            var point = pixel_array[i][j]
+            if(point != 0)
+            {
+                const px = point.x
+                const py = point.y
+
+                context.beginPath()
+                // the coloring for the combined sensitivity is a bit more complex...
+                if(plot_ui_options.render_mode == "cs_comb")
+                {
+                    // paint the pixel grey if it's not covered by the selected array configuration
+                    if(point[fieldname] == null)
+                    {
+                        context.fillStyle = "#ededed"
+                    }
+                    else
+                    {
+                        context.fillStyle = scale(point["cs_best"]/point[fieldname])
+                    }
+                }
+                else
+                {
+                    context.fillStyle = scale(point[plot_ui_options.render_mode])
+                }
+                point.highlight ? context.globalAlpha = 1.0 : context.globalAlpha = 0.1 
+                context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
+            }
+        }
+    updateColorScale(inverse)
+    context.restore();
+}
+
+/**
+ * Updates the pixels which have to be highlighted in the current context
+ */
+function updateHighlightedPixels()
+{
+    var px_overlap
+    var px_observations
+    for(var i = 0; i < pixel_array.length; i++)
+        for(var j = 0; j < pixel_array[i].length; j++)
+        {
+            var point = pixel_array[i][j]
+            if(point != 0)
+            {
+                px_overlap = true
+                px_observations = true
+                // if the pixel has more than one pointing and overlap highlighting is toggled
+                if(plot_ui_options.highlight_overlap)
+                    px_overlap = point.count_pointings > 1
+                // if there's at least one selected observation, check if this pixel covers it
+                // I deserve a lower grade for using labels...
+                // TODO 
+                id_1: if(selected_observations.length > 0)
+                {
+                    for(var o in selected_observations)
+                    {
+                        if(point.observations.includes(selected_observations[o]))
+                            break id_1
+                    }
+                    px_observations = false
+                }
+                point.highlight = px_overlap && px_observations
+            }
+        }
+    updateCanvas()
+}
+
+/**
+ * Updates the UI color scale and its label
+ * @param {} inverse 
+ */
+function updateColorScale(inverse)
+{
+    if(plot_scale_svg != null)
+    {
+        //plot_scale_svg.selectAll('*').remove();
+        $("#plot-color-scale").empty()
+    }
+
+    plot_scale_svg = d3.select('#plot-color-scale')
+        .attr('width', '100%')
+        .attr('height', '100%')
+    
+    // defines the direction of the gradient
+    var min, max
+    if(!inverse) { min = '0%'; max = '100%' }
+    else { min = '100%'; max = '0%' }
+
+    var gradient = plot_scale_svg.append('defs')
+        .append('linearGradient')
+        .attr('id', 'gradient')
+        .attr('x1', min) // left
+        .attr('y1', '0%')
+        .attr('x2', max) // right
+        .attr('y2', '0%')
+        .attr('spreadMethod', 'pad');
+
+    var start = inverse? plot_color_scale.best : plot_color_scale.worst
+    var end = inverse? plot_color_scale.worst : plot_color_scale.best
+    if(end == start)
+    {
+        gradient.append('stop')
+            .attr('offset', Math.round(i/end * 100) + "%")
+            .attr('stop-color', plot_color_scale.scale(i))
+            .attr('stop-opacity', 1);
+    }
+    else
+    {
+        var step = (end-start)/10
+        for(var i = start; i <= end; i += step)
+        {
+            gradient.append('stop')
+                .attr('offset', Math.round(i/end * 100) + "%")
+                .attr('stop-color', plot_color_scale.scale(i))
+                .attr('stop-opacity', 1);
+        }
+    }
+
+    var left_margin = ($("#plot-color-scale")).width() * 0.1 / 2
+
+    plot_scale_svg.append('rect')
+        .attr('id', 'colorscale')
+        .attr('x', left_margin)
+        .attr('y', 0)
+        .attr('width', plot_scale_size.width)
+        .attr('height', plot_scale_size.height)
+        .attr('rx', plot_scale_size.radius)
+        .attr('ry', plot_scale_size.radius)
+        .attr('left', '5%')
+        .style('fill', 'url(#gradient)');
+
+    plot_scale_svg.append("text")             
+        .attr("transform", "translate(" +  ($("#plot-color-scale")).width()/2 + ", " + 40 +")")
+        .style("font-size", "11px")
+        .style("text-anchor", "middle")
+        .text(plot_axis_label);
+
+    var legendScale = d3.scaleLinear()
+        .domain([plot_color_scale.worst, plot_color_scale.best])
+        .range([0, $("#colorscale").width()]);
+
+    var legendAxis = d3.axisBottom()
+        .scale(legendScale)
+
+    plot_scale_svg.append("g")
+        .attr("transform", "translate(" + left_margin + ", " + plot_scale_size.height + ")")
+        .call(legendAxis);
+}
+
+/**
+ * Gets the information of the currently hovered pixel, if one exists
+ * @param {*} mouse The mouse position object
+ * @returns The currently hovered pixel if one exists, otherwise null
+ */
+function getPixelInfo(mouse)
+{
+    // get mouse position
+    var mouseX = mouse[0];
+    var mouseY = mouse[1];
+    if(mouseX < 0 || mouseY < 0)
+        return;
+    // get grid position
+    var element = document.getElementById("plot");
+    var sizeString = getComputedStyle(element).width
+    sizeString = sizeString.substring(0, sizeString.length - 2);
+
+    // plot size in pixels
+    // var size = parseFloat(sizeString);
+    var trueX = plot_transform_store.invertX(mouseX);
+    var trueY = plot_transform_store.invertY(mouseY);
+
+    var pixelWidth = (plot_width / pixel_len)
+    var gridX = Math.floor(trueX / pixelWidth)
+    var gridY = Math.floor(trueY / pixelWidth)
+    var pixel = pixel_array[gridY][gridX]
+
+    var fieldname = ""
+    switch($("#cs-histogram-array").val())
+    {
+        case "12m":
+            fieldname = "cs_comb_12m"
+            break
+        case "7m":
+            fieldname = "cs_comb_7m"
+            break
+        case "tp":
+            fieldname = "cs_comb_tp"
+            break
+    }
+
+    if(pixel != 0)
+    {
+        var result
+    
+        var ra = pixel.ra
+        var dec = pixel.dec
+        var count_pointings = pixel.count_pointings
+        var avg_res = pixel.avg_res
+        var avg_sens = pixel.avg_sens
+        var avg_int_time = pixel.avg_int_time
+        var cs_best = pixel.cs_best
+        var cs_comb = pixel[fieldname]
+
+        if(plot_ui_options.pixel_tooltip)
+            d3.select('#plot-tooltip')
+                .attr('class', "pixel-tooltip")
+                .style('top', mouseY + 5 + 'px')
+                .style('left', mouseX + 5 + 'px')
+                .style('display', 'block')
+                .html('Right ascension: ' + ra.toFixed(2) + '<br>' + 
+                    'Declination: ' + dec.toFixed(2) + '<br>' + 
+                    'Number of pointings: ' + count_pointings + '<br>' + 
+                    'Avg. resolution: ' + avg_res.toFixed(2) + '&nbsp arcsec<sup>2</sup><br>' + 
+                    'Avg. sensitivity: ' + avg_sens.toFixed(2) + '&nbsp mJy/beam<br>' + 
+                    'Avg. int. time: ' + avg_int_time.toFixed(2) + '&nbsp s<br>' + 
+                    'Sensitivity (best): ' + cs_best.toExponential(3) + '&nbsp mJy/beam<br>' +
+                    'Sensitivity (combined): ' + (cs_comb == null? "--.--" : pixel[fieldname].toExponential(3) + '&nbsp mJy/beam<br>'))  
+
+        var result = {
+            "ra": ra,
+            "dec": dec,
+            "count_pointings": count_pointings,
+            "avg_res": avg_res,
+            "avg_sens": avg_sens,
+            "avg_int_time": avg_int_time,
+            "cs_best" : cs_best,
+            "cs_comb": cs_comb,
+            "obs": getPixelObservations(pixel.observations)
+        }
+        
+        return result
+    }
+    else
+    {
+        d3.select('#plot-tooltip').style("display", "none");
+        return null
+    }
+}
+
+/**
+ * Sets the HTML for the plot controls and initializes their behaviours
+ */
+function showPlotControls()
+{
+    // Axis and color scale options
+    $("#plot").append(`<div id="plot-control-axis" class="plot-control-hidden">
+                        <select id="plot-color-property">
+                            <option value="count_pointings">Pointings count</option>
+                            <option value="avg_res">Average resolution</option>
+                            <option value="avg_sens">Average sensitivity (10km/s)</option>
+                            <option value="avg_int_time">Average integration time</option>
+                            <option value="cs_comb">CS improvement factor</option>
+                        </select>
+                        <div id="plot-axis">
+                            <svg id="plot-color-scale"></svg>
+                        </div>     
+                    </div>
+                    <div id="plot-tooltip"></div>`)
+    $("#plot-color-property").selectmenu(
+    {
+        change: function(event, ui)
+        {
+            plot_ui_options.render_mode = ui.item.value
+            updateCanvas()
+        },
+        position:
+        {
+            collision: "flip"
+        }
+    })
+
+    $("#plot-color-property").on('change', (function() {
+        plot_ui_options.render_mode = this.value
+    }))
+
+    $("#plot").append(`<div id="plot-control-buttons">
+                        <button id="btn-tooltip" class="plot-button" title=""><i class="fas fa-comment-alt plot-button-icon" aria-hidden="true"></i></button>
+                        <button id="btn-overlap" class="plot-button" title=""><i class="fas fa-dot-circle plot-button-icon" aria-hidden="true"></i></button>
+                    </div>`)
+
+    $("#btn-tooltip").tooltip({
+        content: "Toggle pixel tooltips",
+        position: { my: "left-10 center", at: "right center" },
+        classes: 
+        {
+            "ui-tooltip": "btn-tooltip"
+        }
+    });
+
+    $("#btn-overlap").tooltip({
+        content: "Toggle overlap highlight",
+        position: { my: "left-10 center", at: "right center" },
+        classes: 
+        {
+            "ui-tooltip": "btn-tooltip"
+        }
+    });
+
+    $('#btn-tooltip').on('click', (function() {
+        plot_ui_options.pixel_tooltip = !plot_ui_options.pixel_tooltip
+        if(plot_ui_options.pixel_tooltip)
+            d3.select('#plot-tooltip').style("display", "block");
+        else
+            d3.select('#plot-tooltip').style("display", "none");
+    }))
+
+    // defines the "highlight overlapping observations" behaviour
+    $('#btn-overlap').on('click', (function() {
+        plot_ui_options.highlight_overlap = !plot_ui_options.highlight_overlap
+        updateHighlightedPixels()
+    }))
+
+}
+
+// ------------------- AUXILIARY FUNCTIONS -------------------
+
+/**
+ * Aux function that creates a double (square) array filled with zeros
+ * @param {} length The length of the array
+ * @returns The array
+ */
+function createArray(length)
+{
+    var arr = Array(length).fill(0).map(x => Array(length).fill(0))
+    return arr;
+}
+
+/**
+ * Returns a list of the indexes of the observations covering a given pixel
+ * @param {*} px_observations 
+ * @returns The index list of the observations
+ */
+function getPixelObservations(px_observations)
+{
+    var observations = []
+
+    for(var i = 0; i < px_observations.length; i++)
+    {
+        var observation = observation_array[px_observations[i]]
+        observations.push(observation)
+    }
+    return observations
+}
+
+// ================================================================================================
+// ====================================== FREQUENCY PLOT ==========================================
+// ================================================================================================
+
+var freq_hist_width //= $('#infotabs').width() - 50;
+var freq_hist_height //= $('#infotabs').height() - 40;
+const freq_hist_margin = {left: 50, right: 40, top: 10, bottom: 15, xlabel: 25, ylabelLeft: 15, ylabelRight: 10};
+
+var freq_hist_svg
+var freq_hist_xScale
+var freq_hist_yScale1
+var yScale2
+var freq_hist_xAxis
+var freq_hist_yAxis1
+var yAxis2
+var freq_hist_lines_area
+var freq_hist_draw_area
+var freq_hist_transform_store
+
+
+var bucket_size = 0.01 // in GHz
+var z = 0 // selected redshift
+const c = 299792458 // speed of light
+
+var minF;
+var maxF;
+var minC;
+var maxC;
+var minS;
+var maxS;
+var minFO;
+var maxFO;
+var minFA;
+var maxFA;
+
+var datasets = {}
+var max_lod = 0
+var left_axis = "obs_count"
+var datatype = "hist"
+
+/**
+ * Initializes the frequency histogram, given its properties, frequency buckets and emission lines
+ * @param {*} plot_properties The plot properties object
+ * @param {*} plot_freqs The plot frequency object
+ * @param {*} emission_lines The emission lines found in the plot's frequency range
+ */
+function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
+{
+    minF = plot_properties.min_frequency // lowest frequency bucket
+    maxF = plot_properties.max_frequency // highest frequency bucket
+    minC = plot_properties.min_cs
+    maxC = plot_properties.max_cs
+    minS = plot_properties.min_avg_sens
+    maxS = plot_properties.max_avg_sens
+    minFO = plot_properties.min_freq_obs_count // highest number of observations covering any bucket
+    maxFO = plot_properties.max_freq_obs_count // see above
+    minFA = plot_properties.min_freq_obs_t_area
+    maxFA = plot_properties.max_freq_obs_t_area
+
+    freq_hist_width = $('#info-row').width() - 20;
+    freq_hist_height = $('#info-row').height() - 95;
+    var g = 0
+
+    document.getElementById("tab-frequency-coverage").innerHTML = `
+    <div class="tab-histogram">
+        <div id='freq-histogram'>
+        </div>
+        <div id="freq-histogram-controls" class='histogram-controls-wrapper'>
+        </div>
+    </div>`
+    //margin = 5;
+    
+    // =========== DEFINE AXIS ===========
+    // frequency buckets
+    freq_hist_xScale = d3.scaleLinear()
+        .domain([minF, maxF])
+        .range([freq_hist_margin.left, freq_hist_width - freq_hist_margin.right]);
+    freq_hist_xAxis = d3.axisBottom()
+        .scale(freq_hist_xScale)
+
+    // left scale - default: number of observations per frequency
+    freq_hist_yScale1 = d3.scaleLinear()
+        .domain([minFO, maxFO])
+        .range([freq_hist_height - freq_hist_margin.bottom - freq_hist_margin.top, 0])
+    freq_hist_yAxis1 = d3.axisLeft() 
+        .scale(freq_hist_yScale1)
+
+    // line sensitivity
+    yScale2 = d3.scaleLinear()
+        .domain([maxC, minC])
+        .range([freq_hist_height - freq_hist_margin.bottom, freq_hist_margin.top])
+    yAxis2 = d3.axisRight() 
+        .scale(yScale2).ticks(10)
+
+
+    // Create an SVG object
+    freq_hist_svg = d3.select("#freq-histogram")
+        .append("svg")
+        .attr("width", freq_hist_width)
+        .attr("height", freq_hist_height + freq_hist_margin.bottom)
+        .attr("display", "block")
+        .style("margin-top", freq_hist_margin.top)
+
+    g = freq_hist_svg.append("g")
+        .attr('id', 'x-axis')
+        .attr('transform', 'translate(0,' + (freq_hist_height-freq_hist_margin.bottom) + ')')
+        .call(freq_hist_xAxis)
+    g = freq_hist_svg.append("text")             
+        .attr("transform", "translate(" + (freq_hist_width/2) + " ," + (freq_hist_height - freq_hist_margin.bottom + freq_hist_margin.xlabel) + ")")
+        .attr("class", "axis-label")
+        .style("text-anchor", "middle")
+        .text("Frequency (GHz)");
+
+    // left Y axis
+    g = freq_hist_svg.append("g")
+        .attr('id', 'y-axis1')
+        .attr('transform', 'translate(' + freq_hist_margin.left + ',' + freq_hist_margin.top + ')')
+        .call(freq_hist_yAxis1
+            .tickFormat(d3.format(".0s")))
+    g = freq_hist_svg.append("text")
+        .attr("id", "y-axis1-label")             
+        .attr("transform", "translate(" + freq_hist_margin.ylabelLeft + "," + (freq_hist_height/2) + ")rotate(-90)")
+        .attr("class", "axis-label")
+        .style("text-anchor", "middle")
+        .text("Observation count");
+
+    // right Y axis
+    g = freq_hist_svg.append("g")
+        .attr('id', 'y-axis2')
+        .attr('transform', 'translate(' + (freq_hist_width - freq_hist_margin.right) + ',0)')
+        .call(yAxis2)
+    g = freq_hist_svg.append("text")             
+        .attr("transform", "translate(" + (freq_hist_width + freq_hist_margin.ylabelRight) + "," + (freq_hist_height/2) + ")rotate(-90)")
+        .attr("class", "axis-label")
+        .style("text-anchor", "middle")
+        .text("Line sensitivity (mJy/beam)");
+
+    var clip1 = freq_hist_svg.append("defs").append("svg:clipPath")
+        .attr("id", "clip1")
+        .append("svg:rect")
+        .attr("width", freq_hist_width - freq_hist_margin.left - freq_hist_margin.right)
+        .attr("height", freq_hist_height - freq_hist_margin.top - freq_hist_margin.bottom)
+        .attr("x", freq_hist_margin.left)
+        .attr("y", freq_hist_margin.top);
+    
+    var clip2 = freq_hist_svg.append("defs").append("svg:clipPath")
+        .attr("id", "clip2")
+        .append("svg:rect")
+        .attr("width", freq_hist_width - freq_hist_margin.left - freq_hist_margin.right)
+        .attr("height", freq_hist_height - freq_hist_margin.top - freq_hist_margin.bottom)
+        .attr("x", freq_hist_margin.left)
+        .attr("y", freq_hist_margin.top);
+    
+    freq_hist_draw_area = freq_hist_svg.append("g")
+        .attr("clip-path", "url(#clip1)")
+
+    freq_hist_lines_area = freq_hist_svg.append("g")
+        .attr("clip-path", "url(#clip2)")
+
+    plot_freqs = removeEmpty(plot_freqs)
+
+    // generate two additional levels of detail
+    buildDatasets(plot_freqs)
+
+    console.log(datasets)
+
+    // draw the CS graph
+    //drawCSPoints(plot_freqs) //I have to fix the scaling issues
+    //drawFreqObsBars(plot_freqs)
+    drawEmissionLines(emission_lines)
+    drawControls()
+    
+    const extent = [[freq_hist_margin.left, 0], [freq_hist_width - freq_hist_margin.right, 0]];
+
+    freq_hist_transform_store = d3.zoomIdentity
+    freqHistZoomed()
+
+    freq_hist_svg.call(d3.zoom()
+        .scaleExtent([1, 1000])
+        .translateExtent(extent)
+        .extent(extent)
+        .on("zoom", () => freqHistZoomed(d3.event.transform)));
+}
+
+/**
+ * Creates a list of histograms, each representing a different level-of-detail for the frequency bins
+ * @param {} plot_freqs The plot frequency object
+ */
+function buildDatasets(plot_freqs)
+{
+    datasets = {}
+    var log_length = Math.floor(Math.log10(plot_freqs.length))
+    for(var i = 1; i < log_length; i++)
+    {
+        var new_lod = d3.histogram().value(f => f.freq).domain(freq_hist_xScale.domain()).thresholds(10**(i + 1))
+        var buckets = new_lod(plot_freqs).filter(b => b.length > 0)
+        datasets["lod" + i] = buckets
+    }
+    max_lod = log_length
+    datasets["lod" + log_length] = plot_freqs
+}
+
+/**
+ * Updates the frequency histogram (triggered by zooming or panning)
+ * @param {*} transform The transform object, if there's one
+ */
+function freqHistZoomed(transform)
+{
+    if(transform != undefined)
+    {
+        freq_hist_transform_store = transform
+    }
+    // get the new x scale
+    var new_xScale = freq_hist_transform_store.rescaleX(freq_hist_xScale)
+    // adjust the visible bars based on the current domain
+    updateVisibleBars(new_xScale)
+    // update the axis
+    freq_hist_svg.selectAll("#x-axis").call(freq_hist_xAxis.scale(freq_hist_transform_store.rescaleX(freq_hist_xScale)));
+    // update the position of the emission lines
+    freq_hist_lines_area.selectAll("svg")
+        .attr("x", function(l) {return(new_xScale(l.frequency/(1+z)))})
+}
+
+/**
+ * Redraws the histogram bars based on the current zoom level (ergo, dataset)
+ * @param {*} new_xScale 
+ */
+function updateVisibleBars(new_xScale)
+{
+    var zoom_level = Math.round(Math.log10(freq_hist_transform_store.k) + 1)
+    zoom_level = Math.min(zoom_level, max_lod)
+    var dataset = datasets["lod" + zoom_level]
+    drawBarsByDomain(new_xScale, dataset)
+}
+
+/**
+ * Draws the frequency bars given the new domain and the appropriate dataset
+ * @param {*} freq_hist_xScale The modified x scale
+ * @param {*} dataset The dataset (LOD) that will be rendered
+ */
+function drawBarsByDomain(freq_hist_xScale, dataset)
+{
+    var minX = freq_hist_xScale.domain()[0]
+    var maxX = freq_hist_xScale.domain()[1]
+    var f_dataset
+
+    // is the dataset a histogram?
+    if(dataset[0].x0 != undefined)
+    {
+        datatype = "hist"
+        f_dataset = dataset.filter(d => (d.x0 < minX && d.x1 > minX) || 
+                                    (d.x0 > minX && d.x1 < maxX) || 
+                                    (d.x0 < maxX && d.x1 > maxX))
+        
+        freq_hist_draw_area.selectAll('rect').remove()
+
+        freq_hist_draw_area.selectAll('rect')
+        .data(f_dataset)
+        .enter()
+        .append('rect')
+            .attr("type", "static")
+            .attr("observations", function(f) { return getObsFromSet(f)})
+            .attr("x", function(f) { return freq_hist_xScale(f.x0)})
+            .attr("y", function(f) { return freq_hist_yScale1(getAvgBinVal(f)) + freq_hist_margin.top})
+            .attr("width", function(f) { return getWidth(f.x0, f.x1) * freq_hist_transform_store.k})
+            .attr("height", function(f) { return freq_hist_height - freq_hist_margin.top - freq_hist_margin.bottom - freq_hist_yScale1(getAvgBinVal(f))})
+            .attr("class", "freq-histogram-obs-bar")
+            .on("click", function(f) { 
+                alert("bam")
+                console.log(getObsFromSet(f))})
+
+    }
+    // else, it's the full point set!
+    else
+    {
+        datatype = "point"
+        f_dataset = dataset.filter(d => (d.freq < minX && d.freq + getWidth(bucket_size) > minX) || 
+                                    (d.freq > minX && d.freq + getWidth(bucket_size) < maxX) || 
+                                    (d.freq < maxX && d.freq + getWidth(bucket_size) > maxX))
+
+        freq_hist_draw_area.selectAll('rect').remove()
+
+        freq_hist_draw_area.selectAll('rect')
+        .data(f_dataset)
+        .enter()
+        .append('rect')
+            .attr("type", "static")
+            .attr("observations", function(f) { return f.observations})
+            .attr("x", function(f) { return freq_hist_xScale(f.freq)})
+            .attr("y", function(f) { return freq_hist_yScale1(f.observations.length) + freq_hist_margin.top})
+            .attr("width", function() { return getWidth(bucket_size) * freq_hist_transform_store.k})
+            .attr("height", function(f) { return freq_hist_height - freq_hist_margin.top - freq_hist_margin.bottom - freq_hist_yScale1(f.observations.length)})
+            .attr("class", "freq-histogram-obs-bar")
+    }
+}
+
+/**
+ * Updates the frequency histogram with new data (never called on the first page load)
+ * @param {*} plot_properties The properties object
+ * @param {*} plot_freqs The frequency object
+ * @param {*} emission_lines The emission lines found in the plot's frequency range
+ */
+function updateFreqHistogram(plot_properties, plot_freqs, emission_lines)
+{
+    // get the new plot's properties
+    minF = plot_properties.min_frequency
+    maxF = plot_properties.max_frequency
+    console.log(minF)
+    console.log(minF)
+    minC = plot_properties.min_cs
+    maxC = plot_properties.max_cs
+    minS = plot_properties.min_avg_sens
+    maxS = plot_properties.max_avg_sens
+    minFO = plot_properties.min_freq_obs_count 
+    maxFO = plot_properties.max_freq_obs_count
+    minFA = plot_properties.min_freq_obs_t_area
+    maxFA = plot_properties.max_freq_obs_t_area
+    // update the axis (with animations!)
+    freq_hist_xScale.domain([minF, maxF])
+    freq_hist_yScale1.domain([minFO, maxFO])
+    yScale2.domain([maxC, minC])
+    
+    freq_hist_svg.select("#x-axis").transition().duration(2000).call(freq_hist_xAxis)
+    freq_hist_svg.select("#y-axis1").transition().duration(2000).call(freq_hist_yAxis1)
+    freq_hist_svg.select("#y-axis2").transition().duration(2000).call(yAxis2)
+
+    buildDatasets(plot_freqs)
+    drawEmissionLines(emission_lines)
+    freqHistZoomed()
+}
+
+/**
+ * Highlights the bars containing at least one of the given index list
+ * @param {*} pixel_obs The observation index list
+ */
+function highlightFreqHistogram(pixel_obs)
+{
+    freq_hist_draw_area.selectAll('rect').attr("class", "freq-histogram-obs-bar")
+    if(pixel_obs != null)
+    {
+        freq_hist_draw_area.selectAll('rect').each(function() {
+            var rect = d3.select(this)
+            var rect_obs = rect.attr("observations")
+            var bar_obs = rect_obs.split(",").map(Number)
+            pixel_obs.some(function(obs)
+            {
+                var index = obs.index
+                if(bar_obs.includes(index))
+                {
+                    rect.attr("class", "freq-histogram-obs-bar highlight")
+                    return true
+                }
+                else
+                    rect.attr("class", "freq-histogram-obs-bar")
+            })
+        })
+    }
+}
+
+function drawCSPoints(plot_freqs)
+{
+    console.log(freq_hist_yScale1.domain())
+    freq_hist_draw_area.selectAll('path').remove()
+
+    var cs_line = d3.line()
+        .defined(function(d) { return d.cs != null })
+        .x(function(d) { return freq_hist_xScale(d.freq)})
+        .y(function(d) { return yScale2(d.cs)})
+
+    freq_hist_draw_area.append('path')
+        //.data([plot_freqs].filter(cs_line.defined()))
+        .attr('class', 'line')
+        .attr('d', cs_line(plot_freqs))
+}
+
+/**
+ * Creates the SVG representation of the given emission lines
+ * @param {*} emission_lines The list of the emission lines
+ */
+function drawEmissionLines(emission_lines)
+{
+    freq_hist_lines_area.selectAll("svg").remove()
+    // only render those lines that fall inside the frequency interval
+    var visible_lines = emission_lines.filter((em) => {return(em.frequency/(1+z) > minF && em.frequency/(1+z) < maxF)})
+    // create a group to place the emission lines
+    var em_lines_g = freq_hist_lines_area.selectAll("svg")
+        .data(visible_lines)
+    createLinesSVG(em_lines_g)
+}
+
+/**
+ * Updates the left axis data
+ */
+function changeAxisData()
+{
+    switch(left_axis)
+    {
+        case "obs_count":
+        {
+            freq_hist_yScale1.domain([minFO, maxFO])
+            freq_hist_svg.select("#y-axis1").transition().duration(1000).call(freq_hist_yAxis1)
+            $('#y-axis1-label').html("Observation count")
+            freq_hist_draw_area.selectAll('rect')
+                .transition()
+                .duration(500)
+                .attr("y", function(f) { 
+                    return (datatype == "point" ? freq_hist_yScale1(f.observations.length) : freq_hist_yScale1(getAvgBinVal(f))) + freq_hist_margin.top
+                })
+                .attr("height", function(f) { 
+                    return freq_hist_height - freq_hist_margin.top - freq_hist_margin.bottom - (datatype == "point" ? freq_hist_yScale1(f.observations.length) : freq_hist_yScale1(getAvgBinVal(f)))
+                })
+            break
+        }
+        case "total_area":
+        {
+            freq_hist_yScale1.domain([minFA, maxFA])
+            freq_hist_svg.select("#y-axis1").transition().duration(1000).call(freq_hist_yAxis1)
+            $('#y-axis1-label').html("Area (arcsec&#178;)")
+            freq_hist_draw_area.selectAll('rect')
+                .transition()
+                .duration(500)
+                .attr("y", function(f) { 
+                    return (datatype == "point" ? freq_hist_yScale1(f.total_area) : freq_hist_yScale1(getAvgBinVal(f))) + freq_hist_margin.top
+                })
+                .attr("height", function(f) { 
+                    return freq_hist_height - freq_hist_margin.top - freq_hist_margin.bottom - (datatype == "point" ? freq_hist_yScale1(f.total_area) : freq_hist_yScale1(getAvgBinVal(f)))
+                })
+            break
+        }
+    }
+}
+
+/**
+ * Gets the average value for the currently-selected metric
+ * @param {*} set The bin
+ * @returns The bin's average value for the chosen axis option
+ */
+function getAvgBinVal(set)
+{
+    var total = 0
+    switch(left_axis)
+    {
+        case "obs_count":
+        {
+            Array.from(set).forEach(b => total += b.observations.length)
+            break;
+        }
+        case "total_area":
+        {
+            Array.from(set).forEach(b => total += b.total_area)
+            break;
+        }
+    }
+    //console.log(total)
+    //console.log(set.length)
+    return total / set.length
+}
+
+/**
+ * Returns a list of all the observations contained in a bin, removing duplicates
+ * @param {*} set The bin
+ * @returns The observation index list
+ */
+function getObsFromSet(set)
+{
+    var obs_list = []
+    for(var s = 0; s < set.length; s++)
+    {
+        var step_obs = set[s].observations
+        for(var o = 0; o < step_obs.length; o++)
+        {
+            var obs = step_obs[o]
+            if(!obs_list.includes(obs))
+                obs_list.push(obs)
+        }
+    }
+    return obs_list
+}
+
+/**
+ * Initializes the histogram controls' HTML
+ */
+function drawControls()
+{
+    document.getElementById("freq-histogram-controls").innerHTML = `
+            <div class='histogram-control'>
+                <span class='text-label'>Vertical axis</span> 
+                <select id='freq-histogram-yaxis1'>
+                    <option value='obs_count'>Number of observations</option>
+                    <option value='total_area'>Total area</option>
+                </select>
+            </div>
+            <div class="sep-vertical-small"></div>
+            <div class='histogram-control'>
+                <span class='text-label'>Show emission lines</span>
+                <input type="checkbox" name="checkbox-1" id="freq-histogram-emissionlines">
+                <label for="freq-histogram-emissionlines" class="checkbox-clean"></label>
+            </div>
+            <div class="histogram-control">
+                <span class='text-label'>Redshift</span>
+                <div id="freq-histogram-redshift" class="freq-histogram-slider-range"></div>
+            </div>
+            <div class="histogram-control">
+                <div class='z-tiny-labels'>
+                    z= <span id='z-factor'></span><br>
+                    v= <span id='z-speed'></span> km/s
+                </div>
+            </div>
+            `
+    updateSliderLabels(0)
+
+    // convert the above elements to JQueryUI instances
+    $("#freq-histogram-yaxis1").selectmenu(
+    {
+        change: function(event, ui)
+        {
+            left_axis = ui.item.value
+            changeAxisData()
+        }
+    })
+    $("#freq-histogram-emissionlines").checkboxradio();
+    $("#freq-histogram-emissionlines").click(function() {
+        if($(this).is(":checked"))
+        {
+            $("#freq-histogram-redshift").slider("enable")
+            freq_hist_lines_area.selectAll("svg").transition().duration(500).style("opacity", 1.0)
+        }
+        else
+        {
+            $("#freq-histogram-redshift").slider("disable")
+            freq_hist_lines_area.selectAll("svg").transition().duration(500).style("opacity", 0.0)
+        }
+    })
+    $("#freq-histogram-redshift").slider(
+    {
+        // this redshift is expressed in km/s
+        min: -0.004, 
+        max: 0.004,  
+        value:[0],
+        step: 0.0001,
+        disabled: true,
+        slide: function(event, ui) 
+        {   
+            z = ui.value      
+            updateSliderLabels(z)
+            freqHistZoomed()
+        }
+    })
+    $("#freq-histogram-redshift").dblclick(function() {
+        z = 0
+        $(this).slider("value", 0)
+        updateSliderLabels(0)
+        freqHistZoomed()
+    })
+
+    function updateSliderLabels(z)
+    {
+        $("#z-factor").text(z.toFixed(5))
+        $("#z-speed").text((z/1000*c).toFixed(2))
+    }
+}
+
+/**
+ * Creates the SVG representation of an emission lines
+ * @param {} em_lines_g The SVG group to place the lines in
+ */
+function createLinesSVG(em_lines_g)
+{
+    var line = em_lines_g
+        .enter()
+        .append("svg")
+        .attr("x", function(e) {return freq_hist_xScale(e.frequency/(1+z))-5})
+        .attr("y", freq_hist_margin.top)
+        .attr("width", 50)
+        .attr("height", 200)
+        .style("opacity", 0.0)
+    line.append("rect")
+        .attr("x", 0)
+        .attr("y", 45)
+        .attr("width", 10)
+        .attr("height", 30)
+        .attr("stroke", "#b4b40f")
+        .attr("stroke-width", 4)
+        .attr("fill", "#b4b40f")
+    line.append("text")
+        .attr("dominant-baseline", "middle")
+        .attr("font-family", "verdana")
+        .attr("font-size", "10px")
+        .attr("fill", "white")
+        .attr("text-anchor", "middle")
+        .attr("transform", "translate(6,60) rotate(270)")
+        .text(function(e) {return e.species})
+    line.append("line")
+        .attr("stroke", "#b4b40f")
+        .attr("stroke-linecap", "null")
+        .attr("stroke-linejoin", "null")
+        .attr("y2", "45")
+        .attr("x2", "5")
+        .attr("y1", "0")
+        .attr("x1", "5")
+        .attr("stroke-width", "2")
+        .attr("fill", "none")
+    line.append("line")
+        .attr("stroke", "#b4b40f")
+        .attr("stroke-linecap", "null")
+        .attr("stroke-linejoin", "null")
+        .attr("y2", "200")
+        .attr("x2", "5")
+        .attr("y1", "75")
+        .attr("x1", "5")
+        .attr("stroke-width", "2")
+        .attr("fill", "none")
+
+}
+
+/**
+ * Returns the width of an element based on its start and end frequencies
+ * @param {*} start The start frequency
+ * @param {*} end The end frequency
+ * @returns The width in pixels
+ */
+function getWidth(start, end)
+{
+    // this allows us to get the width of any number smaller than minF
+    if(arguments.length == 1)
+        return freq_hist_xScale(start) - freq_hist_xScale(0)
+    return freq_hist_xScale(end) - freq_hist_xScale(start)
+}
+
+/**
+ * Removes frequency datapoints that are not covered by any observation
+ * @param {*} freq_array The frequency array
+ * @returns The cleaned frequency array
+ */
+function removeEmpty(freq_array)
+{
+    return freq_array.filter((d) => {return d.observations.length != 0})
+}
+

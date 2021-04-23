@@ -1,62 +1,28 @@
 // plot rendering variables
 const plot_margin = {top: 0, right: 0, bottom: 0, left: 0};
-var outerWidth = $('#plot').height();
-var outerHeight = $('#plot').width();
-var width = outerWidth - plot_margin.left - plot_margin.right;
-var height = outerHeight - plot_margin.top - plot_margin.bottom;
-const container = d3.select('#plot');
+var plot_width = $('#plot').height();
+var plot_height = $('#plot').width();
 
 // color legend variables
-const scale_size = {width: '90%', height: 10, radius: 5};
-var scaleSvg;
+const plot_scale_size = {width: '90%', height: 10, radius: 5};
+var plot_scale_svg;
 
 // dataset variables
 var pixel_len;
-var overlap_area;
-var total_area;
-
 var pixel_array
 var observation_array
 var plot_properties
 
 // interface variables
-export var canvas_chart
-var transform_store;
+export var plot_canvas_chart
 var context;
-var color_scale = {scale: null, worst: 0, best: 0, ref: 0};
-var axis_label;
-var filter_list = [];
+var plot_transform_store;
+var plot_color_scale = {scale: null, worst: 0, best: 0, ref: 0};
+var plot_axis_label;
 
 // TODO
-var options = {render_mode: "count_pointings", pixel_tooltip: false}
-var highlight_overlap = false
+var plot_ui_options = {render_mode: "count_pointings", pixel_tooltip: false, highlight_overlap: false}
 var selected_observations = []
-
-
-export function addFilter(filter_id, argument)
-{   
-    //console.log('========== ADD ==========')
-    console.log('filter_id: ' + filter_id + ' argument: ' + argument)
-    var new_filter = new PlotFilter(filter_id, argument)
-    filter_list.push(new_filter)
-    updateFilters()
-    updateCanvas()
-    console.log(filter_list)
-}
-
-export function removeFilter(filter_id, argument)
-{
-    //console.log('========== REM ==========')
-    console.log('filter_id: ' + filter_id + ' argument: ' + argument)
-    // these filters have to be always destroyed
-    filter_list = filter_list.filter(function(plot_filter) 
-    {
-        return !(plot_filter.id == filter_id && plot_filter.arg == argument)
-    });
-    updateFilters()
-    updateCanvas()
-    console.log(filter_list)
-}
 
 export function updatePlotSelectedObs(obs_list)
 {
@@ -66,7 +32,7 @@ export function updatePlotSelectedObs(obs_list)
 
 export function setRenderMode(mode)
 {
-    options.render_mode = mode
+    plot_ui_options.render_mode = mode
 }
 
 // ------------------- CODE -------------------
@@ -75,8 +41,8 @@ function updateDataset(plot_json)
 {
     console.log("fire")
 
-    overlap_area = 0;
-    total_area = 0;
+    var overlap_area = 0;
+    var total_area = 0;
     // Plot info
 
     pixel_len = plot_json.properties.pixel_len
@@ -89,16 +55,16 @@ function updateDataset(plot_json)
 
     // Init Canvas
     $('.canvas-plot').remove();
-    canvas_chart = container.append('canvas').classed('canvas_chart', true)
-        .attr('width', width)
-        .attr('height', height)
+    plot_canvas_chart = d3.select('#plot').append('canvas').classed('canvas_chart', true)
+        .attr('width', plot_width)
+        .attr('height', plot_height)
         .style('margin-left', plot_margin.left + 'px')
         .style('margin-top', plot_margin.top + 'px')
         .style('z-index', 0)
         .style('height', document.getElementById('plot').offsetHeight)
         .attr('class', 'canvas-plot');
 
-    context = canvas_chart.node().getContext('2d');
+    context = plot_canvas_chart.node().getContext('2d');
 
     // fill canvas with a default background color
     context.beginPath();
@@ -140,7 +106,7 @@ function updateDataset(plot_json)
     // zoom event
     d3.select(context.canvas).call(d3.zoom()
         .scaleExtent([1,15])
-        .translateExtent([[0,0],[width,width]])
+        .translateExtent([[0,0],[plot_width,plot_width]])
         .on("zoom", () => updateCanvas(d3.event.transform)))
         .on("dblclick.zoom", null);
 
@@ -165,59 +131,52 @@ export function updateCanvas(transform)
     if(transform != undefined)
     {
         //transform = d3.zoomIdentity.translate(0,0).scale(1)
-        transform_store = transform
+        plot_transform_store = transform
     }
 
-    var background
     var inverse // this will later help us define the direction of the scale's gradient
-    var pixel_value // allows us to define more complex calculations vs. just reading a field
 
-
-    switch(options.render_mode)
+    switch(plot_ui_options.render_mode)
     {
         case "count_pointings":
-            //color_scale.scale = function(value) {return d3.interpolateViridis(value)};
-            color_scale.worst = plot_properties.min_count_pointings
-            color_scale.best = plot_properties.max_count_pointings
-            color_scale.scale = d3.scaleSequential()
+            //plot_color_scale.scale = function(value) {return d3.interpolateViridis(value)};
+            plot_color_scale.worst = plot_properties.min_count_pointings
+            plot_color_scale.best = plot_properties.max_count_pointings
+            plot_color_scale.scale = d3.scaleSequential()
                 .interpolator(d3.interpolateViridis)
-                .domain([color_scale.worst,color_scale.best]);
-            axis_label = ""
+                .domain([plot_color_scale.worst,plot_color_scale.best]);
+            plot_axis_label = ""
             inverse = false
-            background = 0
             break
         case "avg_res":
-            //color_scale.scale = function(value) {return d3.interpolateInferno(Math.abs(1-value))};
-            color_scale.worst = plot_properties.max_avg_res
-            color_scale.best = plot_properties.min_avg_res
-            color_scale.scale = d3.scaleSequential()
+            //plot_color_scale.scale = function(value) {return d3.interpolateInferno(Math.abs(1-value))};
+            plot_color_scale.worst = plot_properties.max_avg_res
+            plot_color_scale.best = plot_properties.min_avg_res
+            plot_color_scale.scale = d3.scaleSequential()
                 .interpolator(d3.interpolateInferno)
-                .domain([color_scale.worst,color_scale.best]);
-            axis_label = "arcsec2"
+                .domain([plot_color_scale.worst,plot_color_scale.best]);
+            plot_axis_label = "arcsec2"
             inverse = true
-            background = 1
             break
         case "avg_sens":
-            //color_scale.scale = function(value) {return d3.interpolateYlGnBu(value)};
-            color_scale.worst = plot_properties.max_avg_sens
-            color_scale.best = plot_properties.min_avg_sens
-            color_scale.scale = d3.scaleSequential()
+            //plot_color_scale.scale = function(value) {return d3.interpolateYlGnBu(value)};
+            plot_color_scale.worst = plot_properties.max_avg_sens
+            plot_color_scale.best = plot_properties.min_avg_sens
+            plot_color_scale.scale = d3.scaleSequential()
                 .interpolator(d3.interpolateYlGnBu)
-                .domain([color_scale.best,color_scale.worst]);
-            axis_label = "mJy/beam"
+                .domain([plot_color_scale.best,plot_color_scale.worst]);
+            plot_axis_label = "mJy/beam"
             inverse = true
-            background = 1
             break
         case "avg_int_time":
-            //color_scale.scale = function(value) {return d3.interpolateCividis(value)};
-            color_scale.worst = plot_properties.min_avg_int_time
-            color_scale.best = plot_properties.max_avg_int_time
-            color_scale.scale = d3.scaleSequential()
+            //plot_color_scale.scale = function(value) {return d3.interpolateCividis(value)};
+            plot_color_scale.worst = plot_properties.min_avg_int_time
+            plot_color_scale.best = plot_properties.max_avg_int_time
+            plot_color_scale.scale = d3.scaleSequential()
                 .interpolator(d3.interpolateCividis)
-                .domain([color_scale.worst,color_scale.best]);
-            axis_label = "seconds"
+                .domain([plot_color_scale.worst,plot_color_scale.best]);
+            plot_axis_label = "seconds"
             inverse = false
-            background = 0
             break
         case "cs_comb":
             var fieldname
@@ -225,37 +184,36 @@ export function updateCanvas(transform)
             {
                 case "12m":
                     fieldname = "cs_comb_12m"
-                    color_scale.best = plot_properties.max_combined_cs_12m
+                    plot_color_scale.best = plot_properties.max_combined_cs_12m
                     break
                 case "7m":
                     fieldname = "cs_comb_7m"
-                    color_scale.best = plot_properties.max_combined_cs_7m
+                    plot_color_scale.best = plot_properties.max_combined_cs_7m
                     break
                 case "tp":
                     fieldname = "cs_comb_tp"
-                    color_scale.best = plot_properties.max_combined_cs_tp
+                    plot_color_scale.best = plot_properties.max_combined_cs_tp
                     break
             }
-            color_scale.worst = 0//plot_properties.min_combined_cs
-            color_scale.scale = d3.scaleDiverging()
+            plot_color_scale.worst = 0//plot_properties.min_combined_cs
+            plot_color_scale.scale = d3.scaleDiverging()
                 .interpolator(d3.interpolateRdYlGn)
-                .domain([color_scale.worst, 1, color_scale.best]);
-            axis_label = "factor (combined sensitivity)"
+                .domain([plot_color_scale.worst, 1, plot_color_scale.best]);
+            plot_axis_label = "factor (combined sensitivity)"
             inverse = false
-            background = 0
             break
     }
 
-    var ref = color_scale.ref
-    var scale = color_scale.scale
+    var ref = plot_color_scale.ref
+    var scale = plot_color_scale.scale
     context.save()
-    context.fillStyle = "#FFFFFF" //color_scale(background)
+    context.fillStyle = "#FFFFFF" //plot_color_scale(background)
     context.fillRect( 0, 0, context.canvas.width, context.canvas.height );
 
-    context.translate(transform_store.x, transform_store.y)
-    context.scale(transform_store.k, transform_store.k)
+    context.translate(plot_transform_store.x, plot_transform_store.y)
+    context.scale(plot_transform_store.k, plot_transform_store.k)
 
-    var pixelScale = width / pixel_len
+    var pixelScale = plot_width / pixel_len
     context.beginPath();
     for(var i = 0; i < pixel_array.length; i++)
         for(var j = 0; j < pixel_array[i].length; j++)
@@ -268,7 +226,7 @@ export function updateCanvas(transform)
 
                 context.beginPath()
                 // the coloring for the combined sensitivity is a bit more complex...
-                if(options.render_mode == "cs_comb")
+                if(plot_ui_options.render_mode == "cs_comb")
                 {
                     // paint the pixel grey if it's not covered by the selected array configuration
                     if(point[fieldname] == null)
@@ -282,7 +240,7 @@ export function updateCanvas(transform)
                 }
                 else
                 {
-                    context.fillStyle = scale(point[options.render_mode])
+                    context.fillStyle = scale(point[plot_ui_options.render_mode])
                 }
                 point.highlight ? context.globalAlpha = 1.0 : context.globalAlpha = 0.1 
                 context.fillRect( py*pixelScale, px*pixelScale, 1*pixelScale, 1*pixelScale);
@@ -306,7 +264,7 @@ function updateHighlightedPixels()
                 px_overlap = true
                 px_observations = true
                 // if the pixel has more than one pointing and overlap highlighting is toggled
-                if(highlight_overlap)
+                if(plot_ui_options.highlight_overlap)
                     px_overlap = point.count_pointings > 1
                 // if there's at least one selected observation, check if this pixel covers it
                 // I deserve a lower grade for using labels...
@@ -328,13 +286,13 @@ function updateHighlightedPixels()
 
 function updateColorScale(inverse)
 {
-    if(scaleSvg != null)
+    if(plot_scale_svg != null)
     {
-        //scaleSvg.selectAll('*').remove();
+        //plot_scale_svg.selectAll('*').remove();
         $("#plot-color-scale").empty()
     }
 
-    scaleSvg = d3.select('#plot-color-scale')
+    plot_scale_svg = d3.select('#plot-color-scale')
         .attr('width', '100%')
         .attr('height', '100%')
     
@@ -343,7 +301,7 @@ function updateColorScale(inverse)
     if(!inverse) { min = '0%'; max = '100%' }
     else { min = '100%'; max = '0%' }
 
-    var gradient = scaleSvg.append('defs')
+    var gradient = plot_scale_svg.append('defs')
         .append('linearGradient')
         .attr('id', 'gradient')
         .attr('x1', min) // left
@@ -352,13 +310,13 @@ function updateColorScale(inverse)
         .attr('y2', '0%')
         .attr('spreadMethod', 'pad');
 
-    var start = inverse? color_scale.best : color_scale.worst
-    var end = inverse? color_scale.worst : color_scale.best
+    var start = inverse? plot_color_scale.best : plot_color_scale.worst
+    var end = inverse? plot_color_scale.worst : plot_color_scale.best
     if(end == start)
     {
         gradient.append('stop')
             .attr('offset', Math.round(i/end * 100) + "%")
-            .attr('stop-color', color_scale.scale(i))
+            .attr('stop-color', plot_color_scale.scale(i))
             .attr('stop-opacity', 1);
     }
     else
@@ -368,39 +326,39 @@ function updateColorScale(inverse)
         {
             gradient.append('stop')
                 .attr('offset', Math.round(i/end * 100) + "%")
-                .attr('stop-color', color_scale.scale(i))
+                .attr('stop-color', plot_color_scale.scale(i))
                 .attr('stop-opacity', 1);
         }
     }
 
     var left_margin = ($("#plot-color-scale")).width() * 0.1 / 2
 
-    scaleSvg.append('rect')
+    plot_scale_svg.append('rect')
         .attr('id', 'colorscale')
         .attr('x', left_margin)
         .attr('y', 0)
-        .attr('width', scale_size.width)
-        .attr('height', scale_size.height)
-        .attr('rx', scale_size.radius)
-        .attr('ry', scale_size.radius)
+        .attr('width', plot_scale_size.width)
+        .attr('height', plot_scale_size.height)
+        .attr('rx', plot_scale_size.radius)
+        .attr('ry', plot_scale_size.radius)
         .attr('left', '5%')
         .style('fill', 'url(#gradient)');
 
-    scaleSvg.append("text")             
+    plot_scale_svg.append("text")             
         .attr("transform", "translate(" +  ($("#plot-color-scale")).width()/2 + ", " + 40 +")")
         .style("font-size", "11px")
         .style("text-anchor", "middle")
-        .text(axis_label);
+        .text(plot_axis_label);
 
     var legendScale = d3.scaleLinear()
-        .domain([color_scale.worst, color_scale.best])
+        .domain([plot_color_scale.worst, plot_color_scale.best])
         .range([0, $("#colorscale").width()]);
 
     var legendAxis = d3.axisBottom()
         .scale(legendScale)
 
-    scaleSvg.append("g")
-        .attr("transform", "translate(" + left_margin + ", " + scale_size.height + ")")
+    plot_scale_svg.append("g")
+        .attr("transform", "translate(" + left_margin + ", " + plot_scale_size.height + ")")
         .call(legendAxis);
 }
 
@@ -427,10 +385,10 @@ export function getPixelInfo(mouse)
 
     // plot size in pixels
     // var size = parseFloat(sizeString);
-    var trueX = transform_store.invertX(mouseX);
-    var trueY = transform_store.invertY(mouseY);
+    var trueX = plot_transform_store.invertX(mouseX);
+    var trueY = plot_transform_store.invertY(mouseY);
 
-    var pixelWidth = (outerWidth / pixel_len)
+    var pixelWidth = (plot_width / pixel_len)
     var gridX = Math.floor(trueX / pixelWidth)
     var gridY = Math.floor(trueY / pixelWidth)
     var pixel = pixel_array[gridY][gridX]
@@ -462,7 +420,7 @@ export function getPixelInfo(mouse)
         var cs_best = pixel.cs_best
         var cs_comb = pixel[fieldname]
 
-        if(options.pixel_tooltip)
+        if(plot_ui_options.pixel_tooltip)
             d3.select('#plot-tooltip')
                 .attr('class', "pixel-tooltip")
                 .style('top', mouseY + 5 + 'px')
@@ -555,8 +513,8 @@ export function showPlotControls()
     });
 
     $('#btn-tooltip').on('click', (function() {
-        options.pixel_tooltip = !options.pixel_tooltip
-        if(options.pixel_tooltip)
+        plot_ui_options.pixel_tooltip = !plot_ui_options.pixel_tooltip
+        if(plot_ui_options.pixel_tooltip)
             d3.select('#plot-tooltip').style("display", "block");
         else
             d3.select('#plot-tooltip').style("display", "none");
@@ -564,7 +522,7 @@ export function showPlotControls()
 
     // defines the "highlight overlapping observations" behaviour
     $('#btn-overlap').on('click', (function() {
-        highlight_overlap = !highlight_overlap
+        plot_ui_options.highlight_overlap = !plot_ui_options.highlight_overlap
         updateHighlightedPixels()
     }))
 
