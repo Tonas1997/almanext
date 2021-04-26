@@ -558,13 +558,14 @@ function initializePlotView(data)
 function updateSelectedObs()
 {   
     updateHighlightedPixels()
-    //updateHistSelectedObs(selected_observations)
+    selectFreqHistBars()
     //updateSensSelectedObs(selected_observations)
     updateListSelectedObs(selected_observations)
 }
 
 function addSelectedObs(obs)
 {
+    console.log(obs)
     // if obs is a single observation, just add it to the list
     if(!Array.isArray(obs))
     {
@@ -574,30 +575,35 @@ function addSelectedObs(obs)
     else
     {
         for(var i in obs)
-            selected_observations.push(obs[i])
+        {
+            if(!selected_observations.includes(obs[i]))
+                selected_observations.push(obs[i])
+        }
     }
     updateSelectedObs()
 }
 
 function remSelectedObs(obs)
 {
+    console.log(selected_observations)
+    console.log(obs)
     // if this function is called without arguments, unselect all observations
     if(obs == undefined)
         selected_observations = []
     // if obj is a single observation, just append it to the list
     else if(!Array.isArray(obs))
     {
-        console.log(obs)
-        console.log(selected_observations)
         selected_observations = selected_observations.filter(o => o != obs)
     }
     // else, remove one by one
     else
     {
-        
-        for(var i in obs)
-        selected_observations = selected_observations.filter(o => o != i)
+        selected_observations = selected_observations.filter(function(o)
+        {
+            return !obs.includes(o)
+        })
     }
+    console.log(selected_observations)
     updateSelectedObs()
 }
 
@@ -812,12 +818,12 @@ function renderData(plot_json)
         if(info != null)
         {
             //console.log(info)
-            highlightFreqHistogram(info.obs)
+            //highlightFreqHistogram(info.obs)
             //highlightRows(info.obs)
         }
         else 
         {// weird that I have to do this...
-            highlightFreqHistogram(null)
+            //highlightFreqHistogram(null)
             //highlightRows(null)
         }
     });
@@ -1525,8 +1531,8 @@ function freqHistZoomed(transform)
     // update the axis
     freq_hist_svg.selectAll("#x-axis").call(freq_hist_xAxis.scale(freq_hist_transform_store.rescaleX(freq_hist_xScale)));
     // update the position of the emission lines
-    freq_hist_lines_area.selectAll("svg")
-        .attr("x", function(l) {return(new_xScale(l.frequency/(1+z)))})
+    freq_hist_lines_area.selectAll("svg").attr("x", function(l) {return(new_xScale(l.frequency/(1+z)))})
+    selectFreqHistBars()
 }
 
 /**
@@ -1539,6 +1545,7 @@ function updateVisibleBars(new_xScale)
     zoom_level = Math.min(zoom_level, max_lod)
     var dataset = datasets["lod" + zoom_level]
     drawBarsByDomain(new_xScale, dataset)
+    //updateFreqHistogram()
 }
 
 /**
@@ -1573,9 +1580,18 @@ function drawBarsByDomain(freq_hist_xScale, dataset)
             .attr("width", function(f) { return getWidth(f.x0, f.x1) * freq_hist_transform_store.k})
             .attr("height", function(f) { return freq_hist_height - freq_hist_margin.top - freq_hist_margin.bottom - freq_hist_yScale1(getAvgBinVal(f))})
             .attr("class", "freq-histogram-obs-bar")
-            .on("click", function(f) { 
-                alert("bam")
-                console.log(getObsFromSet(f))})
+            .on("click", function(f) 
+            { 
+                if(!d3.select(this).classed("highlight"))
+                {
+                    var obs_list = getObsFromSet(f)
+                    addSelectedObs(obs_list)
+                }
+                else
+                {
+                    remSelectedObs(getObsFromSet(f))
+                }
+            })
 
     }
     // else, it's the full point set!
@@ -1599,6 +1615,40 @@ function drawBarsByDomain(freq_hist_xScale, dataset)
             .attr("width", function() { return getWidth(bucket_size) * freq_hist_transform_store.k})
             .attr("height", function(f) { return freq_hist_height - freq_hist_margin.top - freq_hist_margin.bottom - freq_hist_yScale1(f.observations.length)})
             .attr("class", "freq-histogram-obs-bar")
+            .on("click", function(f) 
+            { 
+                if(!d3.select(this).classed("highlight"))
+                {
+                    addSelectedObs(f.observations)
+                }
+                else
+                {
+                    remSelectedObs(f.observations)
+                }
+            })
+    }
+}
+
+/**
+ * Highlights the bars containing at least one of the given index list
+ */
+function selectFreqHistBars()
+{
+    //freq_hist_draw_area.selectAll('rect').classed("highlight", false)
+    if(selected_observations != null)
+    {
+        console.log(freq_hist_draw_area.selectAll('rect'))
+        freq_hist_draw_area.selectAll('rect').each(function(d,i) 
+        {
+            console.log("coiso")
+            var rect = d3.select(this)
+            var rect_obs = rect.attr("observations")
+            var bar_obs = rect_obs.split(",").map(Number)
+            rect.classed("highlight", bar_obs.some(function(obs)
+            {
+                return(selected_observations.includes(obs))
+            }))
+        })
     }
 }
 
@@ -1610,6 +1660,9 @@ function drawBarsByDomain(freq_hist_xScale, dataset)
  */
 function updateFreqHistogram(plot_properties, plot_freqs, emission_lines)
 {
+    console.log(plot_properties)
+    console.log(plot_freqs)
+    console.log(emission_lines)
     // get the new plot's properties
     minF = plot_properties.min_frequency
     maxF = plot_properties.max_frequency
@@ -1635,34 +1688,6 @@ function updateFreqHistogram(plot_properties, plot_freqs, emission_lines)
     buildDatasets(plot_freqs)
     drawEmissionLines(emission_lines)
     freqHistZoomed()
-}
-
-/**
- * Highlights the bars containing at least one of the given index list
- * @param {*} pixel_obs The observation index list
- */
-function highlightFreqHistogram(pixel_obs)
-{
-    freq_hist_draw_area.selectAll('rect').attr("class", "freq-histogram-obs-bar")
-    if(pixel_obs != null)
-    {
-        freq_hist_draw_area.selectAll('rect').each(function() {
-            var rect = d3.select(this)
-            var rect_obs = rect.attr("observations")
-            var bar_obs = rect_obs.split(",").map(Number)
-            pixel_obs.some(function(obs)
-            {
-                var index = obs.index
-                if(bar_obs.includes(index))
-                {
-                    rect.attr("class", "freq-histogram-obs-bar highlight")
-                    return true
-                }
-                else
-                    rect.attr("class", "freq-histogram-obs-bar")
-            })
-        })
-    }
 }
 
 function drawCSPoints(plot_freqs)
