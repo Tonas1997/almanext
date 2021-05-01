@@ -104,3 +104,4 @@ class EmissionLine(models.Model):
     species = models.CharField(max_length=25)
     line = models.CharField(max_length=25)
     frequency = models.FloatField()
+    image_file = models.CharField(max_length=25, null=True)

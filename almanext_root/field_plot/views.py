@@ -51,7 +51,8 @@ def get_lines(request):
             "line_id": l.line_id,
             "species": l.species,
             "line": l.line,
-            "frequency": l.frequency
+            "frequency": l.frequency,
+            "image_file": l.image_file
         })
     
     lines_json = json.dumps({"lines": lines_list}, cls=DjangoJSONEncoder)
@@ -109,8 +110,8 @@ def get_plot(request):
             for b in Band.objects.filter(designation__in = frequency):
                 print(b.start)
                 print(z_min)
-                f1 = b.start / (1+z_min) # cosmological redshift
-                f2 = b.end / (1+z_max)
+                f1 = b.start / (1+z_max) # cosmological redshift
+                f2 = b.end / (1+z_min)
                 new_z_band = {
                     "start": min(f1, f2), 
                     "end": max(f1, f2)
@@ -121,14 +122,14 @@ def get_plot(request):
                 z_bands.append(new_z_band)
         # frequency range
         elif(frequency_options == 'freq-range'):
-            min_f = float(frequency[0]) / (1+z_min)
-            max_f = float(frequency[1]) / (1+z_max)
+            min_f = float(frequency[0]) / (1+z_max)
+            max_f = float(frequency[1]) / (1+z_min)
             z_bands.append({"start": min_f, "end": max_f})
         # emission line
         else:
             em_freq = float(frequency[0])
-            min_f = em_freq / (1+z_min)
-            max_f = em_freq / (1+z_max)
+            min_f = em_freq / (1+z_max)
+            max_f = em_freq / (1+z_min)
             z_bands.append({"start": min_f, "end": max_f})
             windows = SpectralWindow.objects.filter(
                 Q(observation = OuterRef('pk')),

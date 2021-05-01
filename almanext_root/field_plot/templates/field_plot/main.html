@@ -3,7 +3,9 @@
 {% load static %}
 
 {% block content %}
-
+<script type="text/javascript">
+    const IMAGE_DIR = "{% static 'field_plot/images/' %}";
+</script>
 <link href="{% static 'field_plot/style.css' %}" rel="stylesheet" type="text/css" />
 <div id="url-div-lines" data-url="{% url 'get_lines' %}"></div>
 <div id="url-div-plot" data-url="{% url 'get_plot' %}"></div>

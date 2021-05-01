@@ -51,7 +51,8 @@ function fillLinesMenu(linesJSON)
             "line_id": curr_line.line_id, 
             "species": curr_line.species, 
             "line": curr_line.line, 
-            "frequency": curr_line.frequency
+            "frequency": curr_line.frequency,
+            "image_file": curr_line.image_file
         })
     }
 
@@ -62,6 +63,7 @@ function fillLinesMenu(linesJSON)
         }));
     });
 }
+
 // ========================================================
 // =================== STATE VARIABLES ====================
 // ========================================================
@@ -1378,12 +1380,25 @@ function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
     document.getElementById("tab-frequency-coverage").innerHTML = `
     <div class="tab-histogram">
         <div id='freq-histogram'>
+            <div id="freq-histogram-tooltip">
+                <div id="line-tooltip-img"></div>
+                <div class="sep-horizontal-small"></div>
+                <div class="line-tooltip-vals">
+                    <div class="label">Chemical species</div>
+                        <div id="line-tooltip-chem"></div>
+                    <div class="label">Emission line</div>
+                        <div id="line-tooltip-line"></div>
+                    <div class="label">Frequency (z=<span id="line-z"></span>)</div>
+                        <div id="line-tooltip-freq-div"><span id="line-tooltip-freq"></span>&nbspGHz</div>
+                </div>
+            </div>
         </div>
-        <div id="freq-histogram-controls" class='histogram-controls-wrapper'>
-        </div>
+        <div id="freq-histogram-controls" class='histogram-controls-wrapper'></div>
     </div>`
     //margin = 5;
     
+    d3.select('#freq-histogram-tooltip').style("display", "none");
+
     // =========== DEFINE AXIS ===========
     // frequency buckets
     freq_hist_xScale = d3.scaleLinear()
@@ -1637,10 +1652,8 @@ function selectFreqHistBars()
     //freq_hist_draw_area.selectAll('rect').classed("highlight", false)
     if(selected_observations != null)
     {
-        console.log(freq_hist_draw_area.selectAll('rect'))
         freq_hist_draw_area.selectAll('rect').each(function(d,i) 
         {
-            console.log("coiso")
             var rect = d3.select(this)
             var rect_obs = rect.attr("observations")
             var bar_obs = rect_obs.split(",").map(Number)
@@ -1907,6 +1920,11 @@ function createLinesSVG(em_lines_g)
         .attr("width", 50)
         .attr("height", 200)
         .style("opacity", 0.0)
+        /*
+        .on("mouseout", function() {
+            d3.select("#freq-histogram-tooltip")
+                .style("display", "none")
+        })*/
     line.append("rect")
         .attr("x", 0)
         .attr("y", 45)
@@ -1937,12 +1955,63 @@ function createLinesSVG(em_lines_g)
         .attr("stroke", "#b4b40f")
         .attr("stroke-linecap", "null")
         .attr("stroke-linejoin", "null")
-        .attr("y2", "200")
+        .attr("y2", "120")
         .attr("x2", "5")
         .attr("y1", "75")
         .attr("x1", "5")
         .attr("stroke-width", "2")
         .attr("fill", "none")
+
+    line.style("cursor", "default")
+
+    line.on("mouseover", function(e) {
+        if($("#freq-histogram-emissionlines").is(":checked"))
+        {
+            // first of all, display and position the tooltip...
+            var line_svg = d3.select(this)
+            d3.select("#freq-histogram-tooltip")
+                .attr('class', "line-tooltip")
+                .style('top', -120 + 'px')
+                .style('left', (line_svg.attr("x") - 48) + 'px')
+                .style('display', 'block')
+
+            // then load the image and fill in the line information...
+            var img = document.createElement("img")
+            img.src = IMAGE_DIR + e.image_file
+            img.width = 100
+            img.height = 100
+            $("#line-tooltip-img").empty()
+            $("#line-tooltip-img").append(img)
+            $("#line-tooltip-chem").html(e.species)
+            $("#line-tooltip-line").html(e.line)
+            $("#line-tooltip-freq").html((e.frequency/(1+z)).toFixed(4))
+            $("#line-z").html(z)
+
+            // reduce opacity of the other lines to highlight the current one
+            var self = line_svg
+            freq_hist_lines_area.selectAll("svg")
+                .filter(function(x) { return self != this; })
+                .transition()
+                .duration(200)
+                .style("opacity", 0.2)
+                
+            line_svg.transition().duration(50).style("opacity", 1.0)
+            
+        }
+    })
+    line.on("mouseout", function() {
+        // hide the tooltip
+        d3.select("#freq-histogram-tooltip")
+            .style("display", "none")
+
+        // set normal opacities!
+        if($("#freq-histogram-emissionlines").is(":checked"))
+            freq_hist_lines_area.selectAll("svg")
+                .filter(function(x) { return self != this; })
+                .transition()
+                .duration(200)
+                .style("opacity", 1.0)
+    })
 
 }
 

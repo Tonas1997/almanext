@@ -404,6 +404,25 @@ form
   opacity: 0.1;
 }
 
+#freq-histogram-tooltip
+{
+  font-size: x-small;
+  position: absolute;
+  background-color: white;
+  border: solid;
+  border-radius: 10px;
+  border-color: #bfbf0f;
+  border-width: 2px;
+  box-shadow: 2px 2px 2px lightgrey;
+  z-index: 100;
+  width: 100px;
+}
+
+.line-tooltip-vals
+{
+  padding: 2px;
+}
+
 .highlight
 {
   opacity: 1.0
@@ -516,7 +535,7 @@ form
   font-size: 14px;
 }
 
-.field.label
+.label
 {
   color: grey;
 }
