@@ -16,9 +16,13 @@ def iterate_obs():
 
     obs_set = Observation.objects.all()
     overlap_list = []
+    obs_count = obs_set.count()
+    index = 1
 
     for o1 in obs_set:
-        print("Processing observation " + str(o1.project_code) + "...")
+        if(index > 100):
+            break
+        print("Processing observation " + str(o1.project_code) + "... (" + str(index) + "/" + str(obs_count) + ") - " + str(round(index/obs_count*100, 2)) + "%")
         # get the coordinates and fov of the current observation
         c1 = SkyCoord(o1.ra, o1.dec, unit=(u.deg, u.deg), frame='icrs')
         f1 = Angle(o1.field_of_view, u.arcsec)
@@ -49,6 +53,7 @@ def iterate_obs():
                     print("area: " + str(area))
                     overlap_json = {"obs1": o1.project_code, "obs2": o2.project_code, "area": area}
                     overlap_list.append(overlap_json)
+        index += 1
     # insert all overlaps into the database at once
     json_builder = {"overlaps": overlap_list}
     with open('overlaps.json', 'w') as outfile:

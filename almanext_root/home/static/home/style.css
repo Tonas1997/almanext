@@ -1,0 +1,95 @@
+html, body 
+{
+    margin: 0; 
+    height: 100%; 
+    overflow: hidden
+}
+
+#container
+{
+    display: flex;
+    flex: 1 1 100vh;
+    padding-left: 20px;
+}
+
+#left
+{
+    width: 75%
+}
+
+#right
+{
+    width: 25%
+}
+
+#greeting
+{
+    font-size: xx-large;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    color: grey;
+}
+
+#archive-info
+{
+    display: flex;
+    flex-direction: row;
+    padding: 5px;
+}
+
+.infobox
+{
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    padding: 5px;
+    margin: 10px;
+}
+
+.infobox-label
+{
+    text-align: left;
+    height: 2em;
+    color: grey;
+}
+
+.infobox-value
+{
+    text-align: right;
+    font-size: x-large;
+    padding-right: 15px;
+}
+
+#observation-list
+{
+    display: block;
+}
+
+table.dataTable th
+{
+  font-size: 12px;
+  font-weight: normal;
+  text-align: left;
+  color: grey;
+  border-top: 1px black;
+  border-bottom: 1px black;
+}
+
+table.dataTable tr
+{
+  font-size: 12px;
+  font-weight: normal !important;
+  text-align: left;
+  border-top: 1px black;
+  border-bottom: 1px black;
+}
+
+.table-search-textbox
+{
+    width: 70px;
+}
+
+.overflow
+{
+    overflow-x: auto;
+}

@@ -551,57 +551,6 @@ form
   margin-bottom: 2px;
 }
 
-.separator {
-  content: '';
-  display: block;
-  height: 4px;
-  margin: 1px;
-  border-radius: 2px;
-  background-color: rgb(70, 70, 70);
-}
-
-.sep-horizontal-small {
-  content: '';
-  display: block;
-  height: 1px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  margin-left: 1px;
-  margin-right: 1px;
-  border-radius: 1px;
-  background-color: grey;
-}
-
-.sep-vertical 
-{
-  content: '';
-  display: block;
-  width: 1px;
-  margin: 5px;
-  margin-left: 10px;
-  margin-right: 10px;
-  border-radius: 1px;
-  background-color: grey;
-}
-
-.sep-vertical-small {
-  content: '';
-  display: block;
-  width: 1px;
-  margin-left: 5px;
-  margin-right: 5px;
-  border-radius: 1px;
-  background-color: grey;
-}
-
-.sep-vertical-plot {
-  content: '';
-  display: block;
-  width: 1px;
-  border-radius: 1px;
-  background-color: grey;
-}
-
 .values-container
 {
   display: flex;
