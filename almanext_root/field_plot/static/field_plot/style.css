@@ -463,16 +463,6 @@ form
   outline: 0 !important;
 }
 
-.freq-histogram-slider-range
-{
-  background-color: #d3d3d3 !important;
-  vertical-align: middle;
-  margin-left: 10px;
-  height: 7px;
-  border-radius: 5px;
-  width: 200px;
-}
-
 .z-tiny-labels
 {
   font-size: xx-small;

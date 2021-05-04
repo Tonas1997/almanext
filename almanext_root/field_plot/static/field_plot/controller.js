@@ -1844,7 +1844,7 @@ function drawControls()
             </div>
             <div class="histogram-control">
                 <span class='text-label'>Redshift</span>
-                <div id="freq-histogram-redshift" class="freq-histogram-slider-range"></div>
+                <div id="freq-histogram-redshift" class="slider-range-bar"></div>
             </div>
             <div class="histogram-control">
                 <div class='z-tiny-labels'>

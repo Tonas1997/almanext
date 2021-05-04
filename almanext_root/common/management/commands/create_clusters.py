@@ -12,7 +12,23 @@ import json
 
 tolerance = 0.5 # in degrees
 
-def iterate_obs():
+def create_clusters():
+    obs_set = Observation.objects.all()
+    df = pd.DataFrame.from_records(obs_set.values("ra", "dec"))
+    print(df)
+
+    kmeans = KMeans(n_clusters=int(len(df.index)/10))
+    kmeans.fit(df)
+
+    labels = kmeans.predict(df)
+    centroids = kmeans.cluster_centers_
+
+    clusters = pd.DataFrame(centroids, columns=["ra", "dec"])
+    print(clusters)
+
+
+
+def get_obs_areas():
 
     obs_set = Observation.objects.all()
     overlap_list = []
@@ -59,6 +75,7 @@ def iterate_obs():
     with open('overlaps.json', 'w') as outfile:
         json.dump(json_builder, outfile, indent=4, cls=DjangoJSONEncoder)
     #objs = Overlap.objects.bulk_create(overlap_list)
+
 
 def calc_overlap(obs1, obs2):
 
@@ -123,7 +140,7 @@ class Command(BaseCommand):
         #obs1 = Observation.objects.filter(source_name="NGC_3044", mosaic=0).first()
         #obs2 = Observation.objects.filter(source_name="NGC_3044", mosaic=1).last()
     
-        iterate_obs()
+        create_clusters()
 
     def handle(self, *args, **options):
         self._create_clusters()

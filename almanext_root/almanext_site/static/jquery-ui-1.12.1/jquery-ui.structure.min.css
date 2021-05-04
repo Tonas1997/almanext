@@ -767,7 +767,7 @@ z-index:9999
 {
 	display: block;
 	max-height: 350px;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 .ui-selectmenu-text
 {

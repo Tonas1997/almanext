@@ -5,11 +5,43 @@
 {% block content %}
 
 <link href="{% static 'sky_map/style.css' %}" rel="stylesheet" type="text/css" />
+<div class="container">
+    <div id="skymap-wrapper">
+        <div id="skymap"></div>
+    </div>
+    <div class='sep-vertical-large'></div>
+    <div id="plot-options">
 
-<div id="skymap-wrapper">
-    <div id="skymap">
+        <div class="options name center">Coordinate system</div>
+        <div class="options horizontal">
+            <button id="btn-ecs" class="options button" title=""></button>
+            <button id="btn-gal" class="options button" title=""></button>
+        </div>
+        <div class='sep-horizontal-small'></div>
+        <div class="options name">Cluster size</div>
+        <div class="options vertical">
+            <div id="opt-clustersize-scale" class="slider-range-bar options"></div>
+            <select id='opt-clustersize' class='no-scroll'>
+                <option value='count_obs'>Observation count</option>
+                <option value='area_total'>Total area</option>
+                <option value='area_overlap'>Overlapping count</option>
+            </select>
+        </div>
+        <div class="options vertical">
+        <div class="options name">Cluster opacity</div>
+            <div id="opt-clusteropacity-scale" class="slider-range-bar options"></div>
+            <select id='opt-clusteropacity'>
+                <option value='count_obs'>Observation count</option>
+                <option value='area_total'>Total area</option>
+                <option value='area_overlap'>Overlapping area</option>
+            </select>
+        </div>
 
     </div>
-    <script type="module" src="{% static 'sky_map/skymap.js' %}"></script>
 </div>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<script type="module" src="{% static 'sky_map/skymap.js' %}"></script> 
+
 {% endblock content %}

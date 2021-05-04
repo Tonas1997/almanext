@@ -52,3 +52,13 @@
     border-radius: 1px;
     background-color: grey;
 }
+
+.slider-range-bar
+{
+    background-color: #d3d3d3 !important;
+    vertical-align: middle !important;
+    margin-left: 10px !important;
+    height: 7px !important;
+    border-radius: 5px !important;
+    width: 200px;
+}

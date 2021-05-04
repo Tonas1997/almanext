@@ -25,5 +25,6 @@ urlpatterns = [
     path('field_plot/', include('field_plot.urls')),
     path('celery_progress/', include('celery_progress.urls')),
     path('home/', include('home.urls')),
+    #path('', include('home.urls')),
 ]
 
