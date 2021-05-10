@@ -295,15 +295,10 @@ $(function()
        $("#redshift-val-min").html(ui.values[0])
        $("#redshift-val-max").html(ui.values[1])
     }))
+
     // Line selection menu
     $("#form-lines").selectmenu({
         maxHeight: '500px'})
-    $("#infotabs").tabs();
-    $("#freq-histogram-yaxis2").selectmenu();
-    $("#freq-histogram-redshift").slider({min: 0, max: 100, value:50, values:[10,90],slide: function(event, ui) {
-        console.log(ui.value)
-    }
-    });
 
     $.ajax(    
         {
@@ -1214,6 +1209,46 @@ function getPixelInfo(mouse)
  */
 function showPlotControls()
 {
+    $("#plot-controller-placeholder").remove()
+    $("#plot-controller").append(`<div id="plot-information">
+			<div id="info-row">
+				<div id="infotabs">
+					<ul>
+						<li><a href="#tab-plot-information">Plot information</a></li>
+						<li><a href="#tab-frequency-coverage">Frequency support</a></li>
+						<li><a href="#tab-gained-sensitivity">Gained sensitivity</a></li>
+					</ul>	
+					<div id="tab-plot-information" class='pane-frame'></div>
+					<div id="tab-frequency-coverage" class='center'></div>
+					<div id="tab-gained-sensitivity" class='center'></div>
+				</div>
+			</div>
+			<div class="sep-horizontal-small"></div>
+			<div id="observations-table">
+				<div class="info-wrapper">
+					<table id='obs_list' class='display compact' width='90%'>
+						<thead>
+							<tr>
+								<th>Project code</th>
+								<th>Source name</th>
+								<th>RA</th>
+								<th>Dec</th>
+								<th>Total area</th>
+								<th>Overlapping area</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+			</div>
+		</div>`)
+
+    $("#infotabs").tabs();
+    $("#freq-histogram-yaxis2").selectmenu();
+    $("#freq-histogram-redshift").slider({min: 0, max: 100, value:50, values:[10,90],slide: function(event, ui) {
+        console.log(ui.value)
+    }
+    });
+
     // Axis and color scale options
     $("#plot").append(`<div id="plot-control-axis" class="plot-control-hidden">
                         <select id="plot-color-property">

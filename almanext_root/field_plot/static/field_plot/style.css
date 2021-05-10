@@ -272,6 +272,16 @@ form
 
 
 /* ============= INFO ============= */
+#plot-controller-placeholder
+{
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: grey;
+}
+
 .pane-frame
 {
   margin: 10px 0px 0px 10px;

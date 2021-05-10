@@ -4,6 +4,7 @@ const margin = {bottom: 50, left: 50, top: 50, right: 50}
 
 var svg
 var xScale, xAxis, yScale, yAxis, plot_svg, x_svg, y_svg
+var x = 150, y = 30
 
 $(function() 
 {
@@ -78,7 +79,34 @@ function createSkymap()
         .style("text-anchor", "middle")
         .text("Declination");
 
-    
+    plot_svg.append("circle")
+          .attr("cx", xScale(x))
+          .attr("cy", yScale(y))
+          .attr("r", 40)
+          .style("fill", "#68b2a1")
+
+    const extent = [[0, 0], [width, height]];
+
+    plot_svg.call(d3.zoom()
+        .scaleExtent([1, 1000])
+        .translateExtent(extent)
+        .extent(extent)
+        .on("zoom", zoomed))
+}
+
+function zoomed()
+{
+    // create new scale ojects based on event
+    var new_xScale = d3.event.transform.rescaleX(xScale);
+    var new_yScale = d3.event.transform.rescaleY(yScale);
+    // update axes
+    x_svg.selectAll("#x-axis").call(xAxis.scale(d3.event.transform.rescaleX(xScale)));
+    y_svg.selectAll("#y-axis").call(yAxis.scale(d3.event.transform.rescaleY(yScale)));
+    plot_svg.selectAll("circle")
+        .attr('cx', function() {return new_xScale(x)})
+        .attr('cy', function() {return new_yScale(y)})
+        .transition().duration(100).style('opacity', function() {
+            return (new_xScale(x) < margin.left * 2 || new_yScale(y) > height - margin.bottom * 2) ? 0.5 : 1.0})
 }
 
 function getSkymapData()
