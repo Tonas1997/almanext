@@ -1,10 +1,14 @@
+from astropy.coordinates.sky_coordinate import SkyCoord
 from django.core.management.base import BaseCommand
+from numpy.lib.utils import source
+from pandas.core import frame
 from common.models import Observation, Trace
 from sky_map.models import Cluster_0, Cluster_1, Overlap
 from astropy import units as u
-from astropy.coordinates import SkyCoord, Angle
+from astropy import coordinates, units as u
 from sklearn.cluster import KMeans
 from django.core.serializers.json import DjangoJSONEncoder
+from astroquery.alma import utils, Alma
 
 import pandas as pd
 import math
@@ -31,6 +35,14 @@ def create_clusters():
 def get_obs_areas():
 
     obs_set = Observation.objects.all()
+    for o in obs_set:
+        print(o.source_name)
+        center = SkyCoord(o.ra*u.deg, o.dec*u.deg,frame="icrs")
+        payload = {'project_code' : o.project_code, 'asdm_uid' : o.asdm_uid, 'source_name' : o.source_name}
+        query_obj = Alma.query(payload=payload, science=True)
+        print(query_obj["s_region"])
+
+    """obs_set = Observation.objects.all()
     overlap_list = []
     obs_count = obs_set.count()
     index = 1
@@ -48,10 +60,10 @@ def get_obs_areas():
         max_dec = o1.dec + t.degree
         min_ra = o1.ra - Angle(math.asin(t.radian), u.radian).degree / math.cos(Angle(o1.dec, u.degree).radian)
         max_ra = o1.ra + Angle(math.asin(t.radian), u.radian).degree / math.cos(Angle(o1.dec, u.degree).radian)
-        """print(min_dec)
+        print(min_dec)
         print(max_dec)
         print(min_ra)
-        print(max_ra)"""
+        print(max_ra)
         cut_set = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec)
         for o2 in cut_set:
             # get the coordinates and fov of the current surrounding observation
@@ -73,7 +85,7 @@ def get_obs_areas():
     # insert all overlaps into the database at once
     json_builder = {"overlaps": overlap_list}
     with open('overlaps.json', 'w') as outfile:
-        json.dump(json_builder, outfile, indent=4, cls=DjangoJSONEncoder)
+        json.dump(json_builder, outfile, indent=4, cls=DjangoJSONEncoder)"""
     #objs = Overlap.objects.bulk_create(overlap_list)
 
 
@@ -140,7 +152,7 @@ class Command(BaseCommand):
         #obs1 = Observation.objects.filter(source_name="NGC_3044", mosaic=0).first()
         #obs2 = Observation.objects.filter(source_name="NGC_3044", mosaic=1).last()
     
-        create_clusters()
+        get_obs_areas()
 
     def handle(self, *args, **options):
         self._create_clusters()

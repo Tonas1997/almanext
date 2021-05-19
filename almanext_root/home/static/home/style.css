@@ -60,36 +60,29 @@ html, body
     padding-right: 15px;
 }
 
-#observation-list
+#area-by-freq
 {
-    display: block;
+    display: flex;
+    height: 30vh;
 }
 
-table.dataTable th
+.plot-axis line, path, text
 {
-  font-size: 12px;
-  font-weight: normal;
-  text-align: left;
   color: grey;
-  border-top: 1px black;
-  border-bottom: 1px black;
 }
 
-table.dataTable tr
+.axis-label
 {
-  font-size: 12px;
-  font-weight: normal !important;
-  text-align: left;
-  border-top: 1px black;
-  border-bottom: 1px black;
+  fill: grey;
+  font-size: x-small;
 }
 
-.table-search-textbox
+.band-display
 {
-    width: 70px;
+    fill: #ebebf4;
 }
 
-.overflow
+.band-label
 {
-    overflow-x: auto;
+    fill: white;
 }

@@ -3,7 +3,8 @@
 {% load static %}
 
 {% block content %}
-<link href="{% static 'home/style.css' %}" rel="stylesheet" type="text/css" />
+<div id="url-div-bands" data-url="{% url 'get_bands' %}"></div>
+<link href="{% static 'home/style.css' %}" rel="stylesheet" type="text/css"/>
 <div id="container">
     <div id="left">
         <div id="greeting">
@@ -24,33 +25,18 @@
                 <div class="infobox-value" id="overlap-area">asd</div>
             </div>
         </div>
-        <div id="observation-list">
-            <table id='obs-list' class='display nowrap' style="width:100%; display:block">
-                <thead>
-                    <tr>
-                        <th>Project code</th>
-                        <th>Source name</th>
-                        <th>RA</th>
-                        <th>Dec</th>
-                        <th>Mosaic?</th>
-                        <th>Bands</th>
-                        <th>Integration time</th>
-                        <th>Field of view</th>
-                        <th>Largest angular scale</th>
-                        <th>Observation date</th>
-                    </tr>     
-                </thead>
-            </table>
+        <div id="area-by-freq">
+            
         </div>
     </div>
     <div class="sep-vertical-large"></div>
     <div id="right">
         <div id="feed">
-            <a class="twitter-timeline" height="calc(100vh - 50px)" href="https://twitter.com/almaobs?ref_src=twsrc%5Etfw">Tweets by almaobs</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+            <a class="twitter-timeline" height="calc(100vh - 50px)" href="https://twitter.com/tonas1997/lists/almanext-15665?ref_src=twsrc%5Etfw">Tweets by @almaobs and @IAstroPT</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
         </div>
     </div>
 </div>
-
+<script src="https://d3js.org/d3.v5.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
@@ -58,7 +44,5 @@
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.css">
 
 <script type="module" src="{% static 'home/main.js' %}"></script>
-
-
 
 {% endblock content %}

@@ -5,6 +5,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    url(r'^get_bands/$', views.get_bands, name='get_bands'),
     url(r'', views.index, name='index'),
 ]
 
