@@ -73,6 +73,7 @@ class Observation(models.Model):
     scientific_cat = models.CharField(max_length=100)
     asa_project_code = models.CharField(max_length=14)
     footprint = models.CharField(max_length=10000)
+    total_area = models.FloatField()
 
     def __str__(self):
         return self.project_code
