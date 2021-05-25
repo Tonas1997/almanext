@@ -76,7 +76,7 @@ class Observation(models.Model):
     total_area = models.FloatField()
 
     def __str__(self):
-        return self.project_code
+        return self.project_code + " - " + self.source_name
 
 
 class SpectralWindow(models.Model):
@@ -101,7 +101,7 @@ class Trace(models.Model):
         return(str(self.ra) + ", " + str(self.dec) + ", " + str(self.fov) + " arcsec")
 
 class EmissionLine(models.Model):
-    line_id = models.CharField(max_length=35) 
+    line_id = models.CharField(max_length=35)
     species = models.CharField(max_length=25)
     line = models.CharField(max_length=25)
     frequency = models.FloatField()

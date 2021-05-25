@@ -1,6 +1,7 @@
 from sky_map.models import Overlap
 from django.core.management.base import BaseCommand
 from django.db.models import Q
+from django.core.serializers.json import DjangoJSONEncoder
 from common.models import Observation
 from spherical_geometry.polygon import SphericalPolygon as sp
 from astropy.coordinates import Angle
@@ -47,10 +48,10 @@ def footprint_to_polygon(fp):
         # at this point we can cast the list to float
         non_num = non_num.split()
         float_map = map(float, non_num)
-        float_list = list(float_map) 
+        float_list = list(float_map)
         # is this a circle?
         if(len(non_num) == 3):
-            polygon = sp.from_cone(float_list[0], float_list[1], float_list[2])
+            polygon = sp.from_cone(float_list[0], float_list[1], float_list[2], steps=32)
         # else, it's a polygon
         else:
             # separate vertices into two lists, containing ra and dec values
@@ -63,47 +64,95 @@ def footprint_to_polygon(fp):
     # finally, create the polygon from all polygons added to the list
     return sp.multi_union(polygon_list)
 
-def calc_obs_areas():
+def debug_obs_footprint(id):
+    obs = Observation.objects.filter(pk=id)
+    for o in obs:
+        l = Angle(o.field_of_view*3, u.arcsec)
+        print(l.radian)
+        # first-cut bounding box
+        min_dec = o.dec - l.degree
+        max_dec = o.dec + l.degree
+        if(l.radian < 1):
+            min_ra = o.ra - Angle(math.asin(l.radian), u.radian).degree / math.cos(Angle(o.dec, u.degree).radian)
+            max_ra = o.ra + Angle(math.asin(l.radian), u.radian).degree / math.cos(Angle(o.dec, u.degree).radian)
+        else:
+            min_ra = o.ra - Angle(l.radian, u.radian).degree / math.cos(Angle(o.dec, u.degree).radian)
+            max_ra = o.ra + Angle(l.radian, u.radian).degree / math.cos(Angle(o.dec, u.degree).radian)
+        # find all observations within the box
+        print(min_ra)
+        print(max_ra)
+        cut_set = Observation.objects.filter(~Q(id=o.id), ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec)
+        for o1 in cut_set:
+            print(o.footprint)
+
+def calc_obs_areas(start):
     # general query
-    obs_list = Observation.objects.all()
-    obs_size = obs_list.count()
+    obs_list = Observation.objects.filter(pk__gte=start)
+    obs_size = Observation.objects.all().count()
     # define a polygon list to avoid unnecessary work
     poly_list = [None] * obs_size
     # these lists will contain the polygons to calculate total coverage/overlapping areas
-    super_union = []
-    super_intersection = []
+    super_union_list = []
+    super_intersection_list = []
     for o in obs_list:
+        if(o.footprint == "" or o.footprint == "nan"):
+            continue
+        print("###############################################")
         # if this polygon's footprint has not been processed before, do so
         poly = poly_list[o.id - 1]
         if(poly is None):
             # create the polygon and add it to the lists
             poly = footprint_to_polygon(o.footprint)
             poly_list[o.id - 1] = poly
-            super_union.append(poly)
+            super_union_list.append(poly)
+        print("Observation " + str(o) + " has an area of " + str(sp.area(poly)*MULT) + " arcsec2")
         # after the polygon is set, calculate overlaps
-        l = Angle(o.fov*3, u.arcsec)
+        l = Angle(o.field_of_view*3, u.arcsec)
         # first-cut bounding box
         min_dec = o.dec - l.degree
         max_dec = o.dec + l.degree
-        min_ra = o.ra - Angle(math.asin(l.radian), u.radian).degree / math.cos(Angle(o.dec, u.degree).radian)
-        max_ra = o.ra + Angle(math.asin(l.radian), u.radian).degree / math.cos(Angle(o.dec, u.degree).radian)
+        # the more accurate solution (only works if fov*3 < i rad)
+        if(l.radian < 1):
+            min_ra = o.ra - Angle(math.asin(l.radian), u.radian).degree / math.cos(Angle(o.dec, u.degree).radian)
+            max_ra = o.ra + Angle(math.asin(l.radian), u.radian).degree / math.cos(Angle(o.dec, u.degree).radian)
+        else:
+            min_ra = o.ra - Angle(l.radian, u.radian).degree / math.cos(Angle(o.dec, u.degree).radian)
+            max_ra = o.ra + Angle(l.radian, u.radian).degree / math.cos(Angle(o.dec, u.degree).radian)
         # find all observations within the box
-        cut_set = Observation.objects.filter(ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec)
+        cut_set = Observation.objects.filter(~Q(id=o.id), ra__gte = min_ra, ra__lte = max_ra, dec__gte = min_dec, dec__lte = max_dec)
+        ov_list = []
         for o1 in cut_set:
+            if(o1.footprint == "" or o1.footprint == "nan"):
+                continue
             poly1 = poly_list[o1.id - 1]
+            print("Processing observation " + str(o1))
             if(poly1 is None):
                 # create the polygon and add it to the lists
                 poly1 = footprint_to_polygon(o1.footprint)
                 poly_list[o1.id - 1] = poly1
-                super_union.append(poly1)
+                super_union_list.append(poly1)
             # determine the intersection polygon and its area
             overlap = poly.intersection(poly1)
             i_area = sp.area(overlap)
             # if there's any intersection, add it to the list and the overlap table!
             if(i_area > 0):
-                super_intersection.append(overlap)
+                super_intersection_list.append(overlap)
+                print("OVERLAP: " + str(o1) + " : " + str(i_area*MULT) + " arcsec2")
                 ov = Overlap(obs1 = o, obs2 = o1, area_num = i_area * MULT)
-                ov.save()
+                ov_list.append(ov)
+        # create all overlaps in bulk
+        ov_create = Overlap.objects.bulk_create(ov_list)
+        print("COMPLETE!")
+
+    # calculate the total covered and total overlapping areas
+    super_union = sp.multi_union(super_union_list)
+    super_intersection = sp.multi_union(super_intersection_list)
+
+    json_properties = {"total_area": sp.area(super_union * MULT), "overlap_area" : sp.area(super_intersection * MULT)}
+
+    with open('areas.json', 'w') as outfile:
+        json.dump(json_properties, outfile, indent=4, cls=DjangoJSONEncoder)
+
 
 class Command(BaseCommand):
     args = '<coiso>'
@@ -131,8 +180,8 @@ class Command(BaseCommand):
             date = convert_date(o.release_date)
             if(date is None):
                 continue
-            f_row = asa_file_f.loc[(asa_file_f["Project code"] == o.project_code) & 
-            (asa_file_f["ALMA source name"] == o.source_name) & 
+            f_row = asa_file_f.loc[(asa_file_f["Project code"] == o.project_code) &
+            (asa_file_f["ALMA source name"] == o.source_name) &
             (asa_file_f["Release date"] == date) &
             (asa_file_f["SB name"] == o.sb_name) &
             (asa_file_f["Member ous id"] == o.member_ous_id)]
@@ -148,7 +197,5 @@ class Command(BaseCommand):
 
 
     def handle(self, *args, **options):
-        #self._load_footprints()
-        #self._test_footprints()
-        #self._calc_obs_total_areas()
-        fix_areas()
+        calc_obs_areas(34867)
+        #debug_obs_footprint(4501)
