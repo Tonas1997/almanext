@@ -9,6 +9,7 @@ class Cluster(models.Model):
     area_total = models.FloatField()
     area_overlap = models.FloatField()
     processed = models.BooleanField(default = False)
+    count = models.IntegerField()
 
 class ObsRef(models.Model):
     parent = models.ForeignKey(Cluster, on_delete=models.CASCADE, null=True, related_name='cluster_obs')

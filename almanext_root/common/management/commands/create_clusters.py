@@ -41,14 +41,21 @@ def get_lod1_obs_areas():
         c.processed = True
         c.save()
 
+def get_all_cluster_obs_count():
+    curr_max_level = Cluster.objects.all().aggregate(Max('level')).get('level__max')
+    cluster_set = Cluster.objects.filter(level = curr_max_level)
+    for c in cluster_set:
+        get_cluster_obs_count(c)
+
 def get_cluster_obs_count(c):
     count = 0
     if(c.level == 1):
         count = ObsRef.objects.filter(parent = c).count()
     else:
         children = Cluster.objects.filter(parent = c)
-        for c in children :
-            count += get_cluster_obs_count(c)
+        for c1 in children :
+            count += get_cluster_obs_count(c1)
+            print(count)
     c.count = count
     c.save()
     return count
@@ -148,7 +155,7 @@ def create_clusters():
                 print(str(row["child"]) + str(row["parent"]))
                 c = Cluster.objects.get(pk = int(row["child"]))
                 c.parent = Cluster.objects.get(pk = int(row["parent"]))
-                #c.save()
+                c.save()
 
 
     # create first-level references
@@ -160,5 +167,5 @@ class Command(BaseCommand):
     args = '<coiso>'
 
     def handle(self, *args, **options):
-        create_clusters()
-        #get_lod1_obs_areas()
+        # create_clusters()
+        get_all_cluster_obs_count()
