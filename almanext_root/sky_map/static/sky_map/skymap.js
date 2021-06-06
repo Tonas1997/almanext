@@ -4,7 +4,12 @@ const margin = {bottom: 50, left: 50, top: 50, right: 50}
 
 var svg
 var xScale, xAxis, yScale, yAxis, rScale, plot_svg, x_svg, y_svg
+var scaleExtent = [1, 1000]
 var x = 150, y = 30, r = 40
+var lodLevels = 0
+var clusterData = []
+
+var transform_store
 
 $(function() 
 {
@@ -29,8 +34,8 @@ function createSkymap()
         .scale(yScale)
 
     rScale = d3.scaleLinear()
-        .domain([0, 100])
-        .range([0, 100])
+        .domain([0, 3000])
+        .range([0, 70])
 
     plot_svg = d3.select("#skymap")
         .append("svg")
@@ -86,51 +91,89 @@ function createSkymap()
     plot_svg.append("circle")
           .attr("cx", xScale(x))
           .attr("cy", yScale(y))
-          .attr("r", rScale(r))
+          .attr("r", 40)
           .style("fill", "#68b2a1")
 
     const extent = [[0, 0], [width, height]];
 
     plot_svg.call(d3.zoom()
-        .scaleExtent([1, 1000])
+        .scaleExtent(scaleExtent)
         .translateExtent(extent)
         .extent(extent)
         .on("zoom", zoomed))
 
-    getSkymapData()
-}
-
-function zoomed()
-{
-    var transform = d3.event.transform
-    // create new scale ojects based on event
-    var new_xScale = transform.rescaleX(xScale);
-    var new_yScale = transform.rescaleY(yScale);
-
-
-    // update axes
-    x_svg.selectAll("#x-axis").call(xAxis.scale(transform.rescaleX(xScale)));
-    y_svg.selectAll("#y-axis").call(yAxis.scale(transform.rescaleY(yScale)));
-    
-    plot_svg.selectAll("circle")
-        .attr("transform", "translate(" + transform.x + "," + transform.y + ") scale(" + transform.k + ")")
-        .transition().duration(100).style('opacity', function() {
-            return (new_xScale(x) - transform.k*r < margin.left * 2 || new_yScale(y) + transform.k*r > height - margin.bottom * 2) ? 0.5 : 1.0})
-}
-
-function getVisibleClusters()
-
-function getSkymapData()
-{
     $.ajax(    
         {
             url: $("#url-div-clusters").data('url'),
             data_type: 'json',
             success: function(data) {
-                console.log(JSON.parse(data))
+                clusterData = JSON.parse(data)
+                lodLevels = Object.keys(clusterData).length
             }
         }
     )
+    zoomed()
+}
+
+function zoomed()
+{
+    if(d3.event != null)
+        transform_store = d3.event.transform
+    else
+        transform_store = d3.zoomIdentity
+    // create new scale ojects based on event
+    var new_xScale = transform_store.rescaleX(xScale);
+    var new_yScale = transform_store.rescaleY(yScale);
+
+    renderVisibleClusters(new_xScale, new_yScale)
+    // update axes
+    x_svg.selectAll("#x-axis").call(xAxis.scale(new_xScale));
+    y_svg.selectAll("#y-axis").call(yAxis.scale(new_yScale));
+}
+
+function renderVisibleClusters(new_xScale, new_yScale)
+{
+    var k = transform_store.k
+    var min_ra = new_xScale.domain()[0]
+    var max_ra = new_xScale.domain()[1]
+    var min_dec = new_yScale.domain()[0]
+    var max_dec = new_yScale.domain()[1]
+    var level = getLODByZoom(k)
+    var lod_data = clusterData["lod" + level]
+    
+    var filtered_lod_data = lod_data.filter(c => c.ra > min_ra && c.ra < max_ra &&  
+        c.dec > min_dec && c.dec < max_dec)
+
+    plot_svg.selectAll('circle').remove()
+
+    plot_svg.selectAll('circle')
+        .data(filtered_lod_data)
+        .enter()
+        .append('circle')
+            .attr("type", "static")
+            .attr("cx", function(f) { return new_xScale(f.ra)})
+            .attr("cy", function(f) { return new_yScale(f.dec)})
+            .attr("r", function(f) { return calcRadius(f)})
+            .style("fill", level != 0 ? "#373755" : "#cc0000")
+            .transition()
+            .duration(100)
+            .style('opacity', function(f) {
+                var r = calcRadius(f)
+                return ((parseFloat(d3.select(this).attr("cx")) - r < margin.left) || 
+                        (parseFloat(d3.select(this).attr("cy")) + r > height - margin.bottom)) ? 0.1 : 0.7
+                })
+
+        function calcRadius(o)
+        {
+            return level != 0 ? rScale(o.n_obs)*k : 5
+        }
+}
+
+function getLODByZoom(x)
+{
+    var k = 0.02
+    // a logistic function that has been tuned for a reasonable transition between lods
+    return Math.max(Math.round(-(2*lodLevels)/(1 + Math.E ** (-k * (x - 1))) + 2 * lodLevels - 1), 0)
 }
 
 function initializeControls()
