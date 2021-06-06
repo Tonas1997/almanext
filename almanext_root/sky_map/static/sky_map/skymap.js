@@ -3,8 +3,8 @@ var height = $("#skymap").innerHeight()
 const margin = {bottom: 50, left: 50, top: 50, right: 50}
 
 var svg
-var xScale, xAxis, yScale, yAxis, plot_svg, x_svg, y_svg
-var x = 150, y = 30
+var xScale, xAxis, yScale, yAxis, rScale, plot_svg, x_svg, y_svg
+var x = 150, y = 30, r = 40
 
 $(function() 
 {
@@ -27,6 +27,10 @@ function createSkymap()
         .range([height, 0])
     yAxis = d3.axisLeft() 
         .scale(yScale)
+
+    rScale = d3.scaleLinear()
+        .domain([0, 100])
+        .range([0, 100])
 
     plot_svg = d3.select("#skymap")
         .append("svg")
@@ -82,7 +86,7 @@ function createSkymap()
     plot_svg.append("circle")
           .attr("cx", xScale(x))
           .attr("cy", yScale(y))
-          .attr("r", 40)
+          .attr("r", rScale(r))
           .style("fill", "#68b2a1")
 
     const extent = [[0, 0], [width, height]];
@@ -92,26 +96,41 @@ function createSkymap()
         .translateExtent(extent)
         .extent(extent)
         .on("zoom", zoomed))
+
+    getSkymapData()
 }
 
 function zoomed()
 {
+    var transform = d3.event.transform
     // create new scale ojects based on event
-    var new_xScale = d3.event.transform.rescaleX(xScale);
-    var new_yScale = d3.event.transform.rescaleY(yScale);
+    var new_xScale = transform.rescaleX(xScale);
+    var new_yScale = transform.rescaleY(yScale);
+
+
     // update axes
-    x_svg.selectAll("#x-axis").call(xAxis.scale(d3.event.transform.rescaleX(xScale)));
-    y_svg.selectAll("#y-axis").call(yAxis.scale(d3.event.transform.rescaleY(yScale)));
+    x_svg.selectAll("#x-axis").call(xAxis.scale(transform.rescaleX(xScale)));
+    y_svg.selectAll("#y-axis").call(yAxis.scale(transform.rescaleY(yScale)));
+    
     plot_svg.selectAll("circle")
-        .attr('cx', function() {return new_xScale(x)})
-        .attr('cy', function() {return new_yScale(y)})
+        .attr("transform", "translate(" + transform.x + "," + transform.y + ") scale(" + transform.k + ")")
         .transition().duration(100).style('opacity', function() {
-            return (new_xScale(x) < margin.left * 2 || new_yScale(y) > height - margin.bottom * 2) ? 0.5 : 1.0})
+            return (new_xScale(x) - transform.k*r < margin.left * 2 || new_yScale(y) + transform.k*r > height - margin.bottom * 2) ? 0.5 : 1.0})
 }
+
+function getVisibleClusters()
 
 function getSkymapData()
 {
-
+    $.ajax(    
+        {
+            url: $("#url-div-clusters").data('url'),
+            data_type: 'json',
+            success: function(data) {
+                console.log(JSON.parse(data))
+            }
+        }
+    )
 }
 
 function initializeControls()
@@ -147,4 +166,9 @@ function initializeControls()
         slide: function(event, ui) 
         {}
     })
+}
+
+function drawClusters(data)
+{
+
 }

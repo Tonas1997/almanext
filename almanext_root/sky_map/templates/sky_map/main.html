@@ -5,6 +5,7 @@
 {% block content %}
 
 <link href="{% static 'sky_map/style.css' %}" rel="stylesheet" type="text/css" />
+<div id="url-div-clusters" data-url="{% url 'get_clusters' %}"></div>
 <div class="container">
     <div id="skymap-wrapper">
         <div id="skymap"></div>

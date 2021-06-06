@@ -89,6 +89,10 @@ STATIC_URL = '/static/'
 
 STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "almanext_root\\almanext_site")
 
+if DEBUG:
+    import mimetypes
+    mimetypes.add_type("application/javascript", ".js", True)
+
 mimetypes.add_type("image/svg+xml", ".svg", True)
 
 dir(settings)

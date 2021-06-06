@@ -5,6 +5,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    url(r'^get_clusters/$', views.get_clusters, name='get_clusters'),
     url(r'', views.index, name='index'),
 ]
 

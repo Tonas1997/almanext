@@ -1,17 +1,13 @@
-from astropy.coordinates.sky_coordinate import SkyCoord
+
 from django.core.management.base import BaseCommand
-from numpy.lib.utils import source
-from pandas.core import frame
-from common.models import Observation, Trace
-from sky_map.models import Cluster, ObsRef, Overlap
-from astropy import units as u
-from astropy import coordinates, units as u
-from sklearn.cluster import KMeans
 from django.core.serializers.json import DjangoJSONEncoder
-from astroquery.alma import utils, Alma
-from common.utils import calc_obs_areas
 from django.db.models import Max
 
+from common.models import Observation
+from common.utils import calc_obs_areas
+from sky_map.models import Cluster, ObsRef
+
+from sklearn.cluster import KMeans
 import pandas as pd
 import math
 import json
@@ -60,30 +56,45 @@ def get_cluster_obs_count(c):
     c.save()
     return count
 
+def create_cluster_json():
+    # get the number of levels-of-detail
+    curr_max_level = Cluster.objects.all().aggregate(Max('level')).get('level__max')
+    # create two lists: one for the lod labels and another for the datapoints
+    lod_list = []
+    lod_names = []
+    # build one lod at a time
+    for i in range(0, curr_max_level + 1):
+        lod_names.append("lod" + str(i))
+        ls = []
+        # if we're on level 0, add the ObsRef objects
+        if(i == 0):
+            obsref_set = ObsRef.objects.all()
+            for oref in obsref_set:
+                ls.append({
+                    "id": oref.obs.id,
+                    "project_code": oref.obs.project_code,
+                    "ra": oref.obs.ra,
+                    "dec": oref.obs.dec,
+                    "total_area": oref.obs.total_area
+                })
+        # else, add the Cluster objects
+        else:
+            cluster_set = Cluster.objects.filter(level = i)
+            for c in cluster_set:
+                ls.append({
+                    "ra": c.ra,
+                    "dec": c.dec,
+                    "n_obs": c.count
+                })
+        lod_list.append(ls)
+    # create a dict from both lists
+    cluster_zip = dict(zip(lod_names, lod_list))
+    print(cluster_zip)
+    with open('cluster.json', 'w') as outfile:
+        json.dump(cluster_zip, outfile, indent=4, cls=DjangoJSONEncoder)
+
 
 def create_clusters():
-    #firstly, create the obs_link objects
-
-    '''obs_set = Observation.objects.filter(total_area__gt = 0.0)
-    df_id = pd.DataFrame.from_records(obs_set.values("id"))
-    df = pd.DataFrame.from_records(obs_set.values("ra", "dec"))
-    print(df)
-
-    kmeans = KMeans(n_clusters=int(len(df.index)/10))
-    kmeans.fit(df)
-
-    labels = kmeans.labels_
-    centroids = kmeans.cluster_centers_
-
-    obs_clusters = pd.DataFrame()
-    obs_clusters["obs"] = df_id["id"]
-    obs_clusters["cluster"] = labels
-
-    clusters = pd.DataFrame(centroids, columns=["ra", "dec"])
-
-    print(clusters)
-    print(obs_clusters)'''
-
     # how many levels do we need?
     obs_set = Observation.objects.filter(total_area__gt = 0.0)
     lod_levels = max(math.floor(math.log10(obs_set.count())) - 2, 0)
@@ -123,7 +134,7 @@ def create_clusters():
             # NOW we can start measuring areas!
             # get_lod1_obs_areas()'''
         else:
-            # get all clusters from the previous level
+            # get all clusters from the previous level to create new ones with
             set = Cluster.objects.filter(level = i - 1)
             df = pd.DataFrame.from_records(set.values("ra", "dec"))
             kmeans = KMeans(n_clusters=int(len(df.index)/10*i))
@@ -157,15 +168,8 @@ def create_clusters():
                 c.parent = Cluster.objects.get(pk = int(row["parent"]))
                 c.save()
 
-
-    # create first-level references
-    #for index, row in obs_clusters.iterrows():
-
-
-
 class Command(BaseCommand):
     args = '<coiso>'
 
     def handle(self, *args, **options):
-        # create_clusters()
-        get_all_cluster_obs_count()
+        create_cluster_json()

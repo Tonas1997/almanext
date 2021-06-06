@@ -1,11 +1,10 @@
 import json
-import pickle
 import math
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from field_plot.utils import *
 from field_plot.class_pixel import Pixel
-from common.models import Observation, SpectralWindow, Trace, Band, EmissionLine
+from common.models import Observation
 
 from celery import shared_task
 from celery_progress.backend import ProgressRecorder
@@ -13,7 +12,6 @@ from celery_progress.backend import ProgressRecorder
 #from common.class_observation import ObservationClass
 #from common.class_spectral_window import SpectralWindowClass
 from django.core.serializers.json import DjangoJSONEncoder
-from django.http import JsonResponse
 
 
 # global vars
