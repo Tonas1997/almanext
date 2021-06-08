@@ -14,6 +14,7 @@ import json
 
 tolerance = 0.5 # in degrees
 MULT = 42545170301.5
+FACTOR = 5
 
 def fix_obs_area(area):
     radians = area / MULT
@@ -97,8 +98,11 @@ def create_cluster_json():
 def create_clusters():
     # how many levels do we need?
     obs_set = Observation.objects.filter(total_area__gt = 0.0)
-    lod_levels = max(math.floor(math.log10(obs_set.count())) - 2, 0)
-    curr_max_level = Cluster.objects.all().aggregate(Max('level')).get('level__max')
+    lod_levels = max(math.floor(math.log(obs_set.count(), FACTOR)) - 2, 0)
+    if(Cluster.objects.all().count() != 0):
+        curr_max_level = Cluster.objects.all().aggregate(Max('level')).get('level__max')
+    else:
+        curr_max_level = 0
 
     # create cluster levels
     for i in range(curr_max_level + 1, lod_levels + 1):
@@ -107,7 +111,7 @@ def create_clusters():
             # only select observations whose polygons have been successfuly used
             set = Observation.objects.filter(total_area__gt = 0.0)
             df = pd.DataFrame.from_records(set.values("ra", "dec"))
-            kmeans = KMeans(n_clusters=int(len(df.index)/10*i))
+            kmeans = KMeans(n_clusters=int(len(df.index)/FACTOR*i))
             kmeans.fit(df)
             centroids = kmeans.cluster_centers_
             clusters = pd.DataFrame(centroids, columns=["ra", "dec"])
@@ -130,14 +134,14 @@ def create_clusters():
             for i, row in obs_clusters.iterrows():
                 orf = ObsRef(parent = Cluster.objects.get(pk=int(row["cluster"])+1), obs = Observation.objects.get(pk=int(row["obs"])))
                 orf_list.append(orf)
-            #orf_create = ObsRef.objects.bulk_create(orf_list)
+            orf_create = ObsRef.objects.bulk_create(orf_list)
             # NOW we can start measuring areas!
             # get_lod1_obs_areas()'''
         else:
             # get all clusters from the previous level to create new ones with
             set = Cluster.objects.filter(level = i - 1)
             df = pd.DataFrame.from_records(set.values("ra", "dec"))
-            kmeans = KMeans(n_clusters=int(len(df.index)/10*i))
+            kmeans = KMeans(n_clusters=int(len(df.index)/FACTOR*i))
             kmeans.fit(df)
             centroids = kmeans.cluster_centers_
             clusters = pd.DataFrame(centroids, columns=["ra", "dec"])
@@ -172,4 +176,6 @@ class Command(BaseCommand):
     args = '<coiso>'
 
     def handle(self, *args, **options):
-        create_cluster_json()
+        #create_clusters()
+        get_all_cluster_obs_count()
+        #create_cluster_json()
