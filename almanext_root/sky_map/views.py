@@ -8,7 +8,7 @@ def index(request):
     return render(request, 'sky_map/main.html')
 
 def get_clusters(request):
-    with open('clusters.json') as f:
+    with open('cluster.json') as f:
         data = json.load(f)
         json_clusters = json.dumps(data, cls=DjangoJSONEncoder)
         return JsonResponse(json_clusters, safe=False)

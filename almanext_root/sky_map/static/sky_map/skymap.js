@@ -35,7 +35,7 @@ function createSkymap()
 
     rScale = d3.scaleLinear()
         .domain([0, 3000])
-        .range([0, 70])
+        .range([0, 30])
 
     plot_svg = d3.select("#skymap")
         .append("svg")
@@ -109,10 +109,10 @@ function createSkymap()
             success: function(data) {
                 clusterData = JSON.parse(data)
                 lodLevels = Object.keys(clusterData).length
+                zoomed()
             }
         }
     )
-    zoomed()
 }
 
 function zoomed()
@@ -139,6 +139,7 @@ function renderVisibleClusters(new_xScale, new_yScale)
     var min_dec = new_yScale.domain()[0]
     var max_dec = new_yScale.domain()[1]
     var level = getLODByZoom(k)
+    console.log(level)
     var lod_data = clusterData["lod" + level]
     
     var filtered_lod_data = lod_data.filter(c => c.ra > min_ra && c.ra < max_ra &&  
@@ -155,8 +156,6 @@ function renderVisibleClusters(new_xScale, new_yScale)
             .attr("cy", function(f) { return new_yScale(f.dec)})
             .attr("r", function(f) { return calcRadius(f)})
             .style("fill", level != 0 ? "#373755" : "#cc0000")
-            .transition()
-            .duration(100)
             .style('opacity', function(f) {
                 var r = calcRadius(f)
                 return ((parseFloat(d3.select(this).attr("cx")) - r < margin.left) || 
