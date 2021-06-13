@@ -4,12 +4,18 @@ const margin = {bottom: 50, left: 50, top: 50, right: 50}
 
 var svg
 var xScale, xAxis, yScale, yAxis, rScale, plot_svg, x_svg, y_svg
-var scaleExtent = [1, 1000]
+var scaleExtent = [1, 2000]
 var x = 150, y = 30, r = 40
 var lodLevels = 0
 var clusterData = []
 
-var transform_store
+var radiusMultiplier = 1.0
+
+var transform_store = d3.zoomIdentity
+var currLevel
+
+// the minimum zoom level observations are displayed at
+const L0_ZOOM = 100
 
 $(function() 
 {
@@ -33,7 +39,7 @@ function createSkymap()
     yAxis = d3.axisLeft() 
         .scale(yScale)
 
-    rScale = d3.scaleLinear()
+    rScale = d3.scaleSqrt()
         .domain([0, 3000])
         .range([0, 30])
 
@@ -133,14 +139,19 @@ function zoomed()
 
 function renderVisibleClusters(new_xScale, new_yScale)
 {
+    if(new_xScale == undefined && new_yScale == undefined)
+    {
+        new_xScale = xScale
+        new_yScale = yScale
+    }
     var k = transform_store.k
     var min_ra = new_xScale.domain()[0]
     var max_ra = new_xScale.domain()[1]
     var min_dec = new_yScale.domain()[0]
     var max_dec = new_yScale.domain()[1]
-    var level = getLODByZoom(k)
-    console.log(level)
-    var lod_data = clusterData["lod" + level]
+    currLevel = getLODByZoom(k)
+    console.log(k)
+    var lod_data = clusterData["lod" + currLevel]
     
     var filtered_lod_data = lod_data.filter(c => c.ra > min_ra && c.ra < max_ra &&  
         c.dec > min_dec && c.dec < max_dec)
@@ -155,25 +166,32 @@ function renderVisibleClusters(new_xScale, new_yScale)
             .attr("cx", function(f) { return new_xScale(f.ra)})
             .attr("cy", function(f) { return new_yScale(f.dec)})
             .attr("r", function(f) { return calcRadius(f)})
-            .style("fill", level != 0 ? "#373755" : "#cc0000")
+            .style("fill", currLevel != 0 ? "#373755" : "#cc0000")
             .style('opacity', function(f) {
                 var r = calcRadius(f)
                 return ((parseFloat(d3.select(this).attr("cx")) - r < margin.left) || 
                         (parseFloat(d3.select(this).attr("cy")) + r > height - margin.bottom)) ? 0.1 : 0.7
                 })
-
-        function calcRadius(o)
-        {
-            return level != 0 ? rScale(o.n_obs)*k : 5
-        }
 }
 
-function getLODByZoom(x)
+function calcRadius(o)
 {
-    var k = 0.02
-    // a logistic function that has been tuned for a reasonable transition between lods
-    return Math.max(Math.round(-(2*lodLevels)/(1 + Math.E ** (-k * (x - 1))) + 2 * lodLevels - 1), 0)
+    return currLevel != 0 ? rScale(o.n_obs) * transform_store.k * radiusMultiplier : 5
 }
+
+function getLODByZoom(k)
+{
+    //var k = 0.02
+    // a logistic function that has been tuned for a reasonable transition between lods
+    //return Math.max(Math.round(-(2*lodLevels)/(1 + Math.E ** (-k * (x - 1))) + 2 * lodLevels - 1), 0)
+    var n = Math.ceil(getBaseLog(0.5, (k/L0_ZOOM)))
+    return Math.max(Math.min(n, lodLevels - 1), 0)
+}
+
+function getBaseLog(base, x) 
+{
+    return Math.log(x) / Math.log(base);
+  }
 
 function initializeControls()
 {
@@ -192,21 +210,14 @@ function initializeControls()
     $("#opt-clustersize-scale").slider(
     {
         min: 0.1, 
-        max: 10,  
+        max: 2,  
         value:[1],
         step: 0.1,
         slide: function(event, ui) 
-        {}
-    })
-
-    $("#opt-clusteropacity-scale").slider(
-    {
-        min: 0.1, 
-        max: 10,  
-        value:[1],
-        step: 0.1,
-        slide: function(event, ui) 
-        {}
+        {
+            radiusMultiplier = ui.value
+            plot_svg.selectAll('circle').transition().attr('r', d => calcRadius(d))
+        }
     })
 }
 

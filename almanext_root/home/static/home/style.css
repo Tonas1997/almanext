@@ -82,6 +82,12 @@ html, body
     fill: #ebebf4;
 }
 
+.bar-display
+{
+    stroke-width: 0;
+    fill: rgb(85, 55, 85);
+}
+
 .band-label
 {
     fill: white;
