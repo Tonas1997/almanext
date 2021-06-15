@@ -127,7 +127,7 @@ def create_cluster_json():
     # create a dict from both lists
     cluster_zip = dict(zip(lod_names, lod_list))
     print(cluster_zip)
-    with open('cluster.json', 'w') as outfile:
+    with open('clusters.json', 'w') as outfile:
         json.dump(cluster_zip, outfile, indent=4, cls=DjangoJSONEncoder)
 
 

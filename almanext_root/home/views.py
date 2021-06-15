@@ -9,7 +9,7 @@ def index(request):
 
 def get_bands(request):
     bands_list = []
-    bands_result = Band.objects.all()
+    bands_result = Band.objects.filter(designation__gte = 3)
     for b in bands_result:
         bands_list.append({
             "designation": b.designation,
@@ -20,3 +20,9 @@ def get_bands(request):
     lines_json = json.dumps({"bands": bands_list}, cls=DjangoJSONEncoder)
 
     return JsonResponse(lines_json, safe=False)
+
+def get_area_per_freq(request):
+    with open('area_per_freq.json') as f:
+        data = json.load(f)
+        json_area_per_freq = json.dumps(data, cls=DjangoJSONEncoder)
+        return JsonResponse(json_area_per_freq, safe=False)

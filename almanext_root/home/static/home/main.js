@@ -1,41 +1,51 @@
 var width = $("#area-by-freq").innerWidth()
 var height = $("#area-by-freq").innerHeight()
-const margin = {bottom: 30, left: 30, top: 5, right: 10}
+const margin = {bottom: 30, left: 50, top: 5, right: 10}
 
 var svg
-var xScale, xAxis, yScale, yAxis, plot_svg, x_svg, y_svg
+var xScale, xAxis, yScale, yAxis, plot_svg, bands_svg, x_svg, y_svg
+var bucketSize, freqArray
+
 var x = 150, y = 30
 
 $(function()
 {
-    drawAreaPlot()
+    loadAreaPlot()
 })
 
 
 function loadAreaPlot()
 {
-    drawAreaPlot()
     $.ajax(    
         {
             url: $("#url-div-area-per-freq").data('url'),
             data_type: 'json',
             success: function(data) {
-                drawAreaPlot(data)
+                console.log(data)
+                drawAreaPlot(JSON.parse(data))
             }
         }
     )
 }
 
-function drawAreaPlot()
+function drawAreaPlot(data)
 {
+    bucketSize = data.bucket_size
+    freqArray = data.areas.filter(d => { return d.total_area > 0 })
+
+    var minFreq = freqArray[0].freq
+    var maxFreq = freqArray[freqArray.length - 1].freq
+    var minArea = d3.min(freqArray, function(d) { return d.total_area })
+    var maxArea = d3.max(freqArray, function(d) { return d.total_area })
+
     xScale = d3.scaleLinear()
-        .domain([85, 950])
+        .domain([minFreq, maxFreq])
         .range([0, width]);
     xAxis = d3.axisBottom()
         .scale(xScale)
 
-    yScale = d3.scaleLinear()
-        .domain([0, 10])
+    yScale = d3.scaleLog()
+        .domain([minArea, maxArea])
         .range([height, 0])
     yAxis = d3.axisLeft() 
         .scale(yScale)
@@ -74,6 +84,9 @@ function drawAreaPlot()
         .attr("clip-path", "url(#clipX)")
     y_svg = svg.append("g")
         .attr("clip-path", "url(#clipY)")
+    bands_svg = svg.append("g")
+        .attr("clip-path", "url(#clipPlot)")
+        .attr("z-index", 100)
     plot_svg = svg.append("g")
         .attr("clip-path", "url(#clipPlot)")
 
@@ -99,21 +112,15 @@ function drawAreaPlot()
         .attr("transform", "translate(" + 10 + "," + (height/2) + ")rotate(-90)")
         .attr("class", "axis-label")
         .style("text-anchor", "middle")
-        .text("Total area");
-
-    /*plot_svg.call(d3.zoom()
-        .scaleExtent([1, 1000])
-        .translateExtent(extent)
-        .extent(extent)
-        .on("zoom", () => plot_svg.attr("transform", d3.event.transform)));*/
+        .text("Total area (arcsec²)");
 
     $.ajax(    
         {
             url: $("#url-div-bands").data('url'),
             data_type: 'json',
             success: function(data) {
-   
                 drawBands(JSON.parse(data))
+                drawAreaBars()
             }
         }
     )
@@ -122,7 +129,7 @@ function drawAreaPlot()
 function drawBands(bandsJSON)
 {
     var bar_height = height - margin.top - margin.bottom
-    var bands_g = plot_svg.selectAll("svg")
+    var bands_g = bands_svg.selectAll("svg")
         .data(bandsJSON.bands)
 
     var rect = bands_g
@@ -143,3 +150,25 @@ function drawBands(bandsJSON)
         .attr("class", "band-label")
         .text(function(b) { return "Band " + b.designation})
 }
+
+function drawAreaBars()
+{
+    var barSize = Math.abs(xScale(bucketSize) - xScale(0))
+
+    plot_svg.selectAll("rect")
+    .data(freqArray)
+    .enter()
+    .append("rect")
+    .attr("x", function(f) { return margin.left + xScale(f.freq)})
+    .attr("y", function(f) { return yScale(f.total_area)})
+    .attr("width", barSize)
+    .attr("height", function(f) { return height - yScale(f.total_area)})
+    .attr("class", "bar-display")
+    .on("mouseover", function() {
+        plot_svg.selectAll("rect").transition().duration(100).attr("opacity", 0.1)
+    })
+    .on("mouseout", function() {
+        plot_svg.selectAll("rect").transition().duration(100).attr("opacity", 1.0)
+    })
+}
+
