@@ -4,10 +4,11 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Max
 
 from common.models import Observation
-from common.utils import calc_obs_areas
+from common.utils import calc_obs_areas_simple
 from sky_map.models import Cluster, ObsRef
 
 from sklearn.cluster import KMeans
+import multiprocessing
 import pandas as pd
 import math
 import json
@@ -37,6 +38,41 @@ def get_lod1_obs_areas():
         c.area_overlap = fix_obs_area(areas.get("intersection"))
         c.processed = True
         c.save()
+
+def get_all_cluster_obs_area():
+    curr_max_level = Cluster.objects.all().aggregate(Max('level')).get('level__max')
+    cluster_set = Cluster.objects.filter(processed = False)
+    pool = multiprocessing.Pool()
+    pool.map(get_cluster_obs_area, cluster_set)
+    #for c in cluster_set:
+    #    get_cluster_obs_area(c)
+
+def get_cluster_obs_area(c):
+    print(multiprocessing.current_process())
+    if(c.level == 1):
+        o_ref_set = ObsRef.objects.filter(parent = c)
+        obs_set = Observation.objects.filter(pk__in = o_ref_set)
+        areas = calc_obs_areas_simple(obs_set)
+        u = fix_obs_area(areas.get("u_area"))
+        i = fix_obs_area(areas.get("i_area"))
+    else:
+        children = Cluster.objects.filter(parent = c)
+        u = 0
+        i = 0
+        for c1 in children:
+            if(c1.processed == True):
+                u += c1.area_total
+                i += c1.area_overlap
+            else:
+                areas = get_cluster_obs_area(c1)
+                u += fix_obs_area(areas.get("u_area"))
+                i += fix_obs_area(areas.get("i_area"))
+    c.area_total = u
+    c.area_overlap = i
+    c.processed = True
+    c.save()
+    areas = {"i_area" : i, "u_area": u}
+    return areas
 
 def get_all_cluster_obs_count():
     curr_max_level = Cluster.objects.all().aggregate(Max('level')).get('level__max')
@@ -177,5 +213,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         #create_clusters()
-        get_all_cluster_obs_count()
+        get_all_cluster_obs_area()
         #create_cluster_json()

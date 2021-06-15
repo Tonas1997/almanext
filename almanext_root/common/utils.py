@@ -43,6 +43,45 @@ def footprint_to_polygon(fp):
     # finally, create the polygon from all polygons added to the list
     return sp.multi_union(polygon_list)
 
+def calc_obs_areas_simple(obs_set):
+    # create union and intersection polgyon lists
+    super_union_list = []
+    super_intersection_list = []
+    added_ids = []
+    # iterate over the given queryset
+    for o in obs_set:
+        if(o.footprint == "" or o.footprint == "nan"):
+            continue
+        print("###############################################")
+        # get the observation's polygon
+        poly = footprint_to_polygon(o.footprint)
+        if(o.id not in added_ids):
+            super_union_list.append(poly)
+            added_ids.append(o.id)
+        print("Observation " + str(o) + " has an area of " + str(sp.area(poly)*MULT) + " arcsec2")
+        # get all observations within the set that aren't this one
+        cut_set = obs_set.filter(~Q(id=o.id))
+        for o1 in cut_set:
+            if(o1.footprint == "" or o1.footprint == "nan"):
+                continue
+            print("Processing observation " + str(o1))
+            # calculate union and intersection
+            poly1 = footprint_to_polygon(o1.footprint)
+            if(o1.id not in added_ids):
+                super_union_list.append(poly1)
+                added_ids.append(o.id)
+            overlap = poly.intersection(poly1)
+            i_area = sp.area(overlap)
+            if(i_area > 0):
+                super_intersection_list.append(overlap)
+
+    i_area = 0 if not super_intersection_list else sp.area(sp.multi_union(super_intersection_list)) * MULT
+    u_area = 0 if not super_union_list else sp.area(sp.multi_union(super_union_list)) * MULT
+    print("Union: " + str(u_area) + " - Intersection: " + str(i_area) + " arcsec2")
+    areas = {"i_area" : i_area, "u_area": u_area}
+    return areas
+
+
 def calc_obs_areas(obs_set):
     # general query
     obs_size = obs_set.last().id
@@ -111,10 +150,9 @@ def calc_obs_areas(obs_set):
     # calculate the total covered and total overlapping areas
     #super_union = sp.multi_union(super_union_list)
     print("calculating intersection...")
-    if not super_intersection_list:
-        area = 0
-    else:
-        print(super_intersection_list)
-        area = sp.area(sp.multi_union(super_intersection_list)) * MULT
-    areas = {"intersection" : area}
+
+    i_area = 0 if not super_intersection_list else sp.area(sp.multi_union(super_intersection_list)) * MULT
+    u_area = 0 if not super_union_list else sp.area(sp.multi_union(super_union_list)) * MULT
+
+    areas = {"i_area" : i_area, "u_area": u_area}
     return areas
