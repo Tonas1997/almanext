@@ -11,8 +11,22 @@ var x = 150, y = 30
 $(function()
 {
     loadAreaPlot()
+    loadArchiveInfo()
 })
 
+function loadArchiveInfo()
+{
+    $.ajax(    
+        {
+            url: $("#url-div-archive-info").data('url'),
+            data_type: 'json',
+            success: function(data) {
+                console.log(data)
+                showArchiveInfo(JSON.parse(data))
+            }
+        }
+    )
+}
 
 function loadAreaPlot()
 {
@@ -26,6 +40,19 @@ function loadAreaPlot()
             }
         }
     )
+}
+
+function showArchiveInfo(data)
+{
+    var count_obs = data.info_count_obs
+    var area_total = data.info_area_total
+    var area_overlap = data.info_area_overlap
+    let counter_1 = new countUp.CountUp('count_obs', count_obs);
+    let counter_2 = new countUp.CountUp('area_total', area_total, 2);
+    let counter_3 = new countUp.CountUp('area_overlap', area_overlap, 2);
+    counter_1.start()
+    counter_2.start()
+    counter_3.start()
 }
 
 function drawAreaPlot(data)

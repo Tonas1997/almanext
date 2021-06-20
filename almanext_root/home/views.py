@@ -7,6 +7,12 @@ import json
 def index(request):
     return render(request, 'home/main.html')
 
+def get_archive_info(request):
+    with open('archive_info.json') as f:
+        data = json.load(f)
+        json_area_per_freq = json.dumps(data, cls=DjangoJSONEncoder)
+        return JsonResponse(json_area_per_freq, safe=False)
+
 def get_bands(request):
     bands_list = []
     bands_result = Band.objects.filter(designation__gte = 3)

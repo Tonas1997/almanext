@@ -3,46 +3,54 @@ var height = $("#skymap").innerHeight()
 const margin = {bottom: 50, left: 50, top: 50, right: 50}
 
 var svg
-var xScale, xAxis, yScale, yAxis, rScale, plot_svg, x_svg, y_svg
+var xScale, xAxis, yScale, yAxis, rScale, oScale, plot_svg, x_svg, y_svg
 var scaleExtent = [1, 2000]
 var x = 150, y = 30, r = 40
 var lodLevels = 0
 var clusterData = []
 
 var radiusMultiplier = 1.0
+var varRadius = "n_obs"
+var varOpacity = "fixed"
 
 var transform_store = d3.zoomIdentity
 var currLevel
 
 // the minimum zoom level observations are displayed at
 const L0_ZOOM = 100
+const R_RANGE = 30
 
 $(function() 
 {
-    initializeControls()
     createSkymap()
+    loadSkymapData()
 })
 
 function createSkymap()
 {
-    //setPlotDimensions()
-
+    // right ascension
     xScale = d3.scaleLinear()
         .domain([0, 360])
         .range([0, width]);
     xAxis = d3.axisBottom()
         .scale(xScale)
 
+    // declination
     yScale = d3.scaleLinear()
         .domain([-90, 90])
         .range([height, 0])
     yAxis = d3.axisLeft() 
         .scale(yScale)
 
+    // radius
     rScale = d3.scaleSqrt()
-        .domain([0, 3000])
-        .range([0, 30])
+        .range([0, R_RANGE])
 
+    // opacity
+    oScale = d3.scaleSqrt()
+        .range([0, 1])
+
+    // this svg will contain the datapoints
     plot_svg = d3.select("#skymap")
         .append("svg")
         .attr("width", width)
@@ -70,18 +78,18 @@ function createSkymap()
     y_svg = plot_svg.append("g")
         .attr("clip-path", "url(#clipY)")
 
-    // right ascension
+    // right ascension axis
     x_svg.append("g")
         .attr('id', 'x-axis')
         .attr('transform', 'translate(0,' + (height - margin.bottom) + ')')
         .call(xAxis)
     x_svg.append("text")             
-        .attr("transform", "translate(" + (width/2) + "," + (height - margin.bottom + 20) + ")")
+        .attr("transform", "translate(" + (width/2) + "," + (height - margin.bottom + 30) + ")")
         .attr("class", "axis-label")
         .style("text-anchor", "middle")
         .text("Right ascension");
 
-    // declination
+    // declination axis
     y_svg.append("g")
         .attr('id', 'y-axis')
         .attr('class', 'plot-axis')
@@ -94,12 +102,7 @@ function createSkymap()
         .style("text-anchor", "middle")
         .text("Declination");
 
-    plot_svg.append("circle")
-          .attr("cx", xScale(x))
-          .attr("cy", yScale(y))
-          .attr("r", 40)
-          .style("fill", "#68b2a1")
-
+    // set the panning limits
     const extent = [[0, 0], [width, height]];
 
     plot_svg.call(d3.zoom()
@@ -108,6 +111,17 @@ function createSkymap()
         .extent(extent)
         .on("zoom", zoomed))
 
+    initializeControls()
+}
+
+function updateScales()
+{
+    rScale.domain([0, d3.max(clusterData["lod" + (lodLevels - 1)], function(d) { return d[varRadius] })])
+    oScale.domain([0, d3.max(clusterData["lod" + (lodLevels - 1)], function(d) { return d[varOpacity] })])
+}
+
+function loadSkymapData()
+{
     $.ajax(    
         {
             url: $("#url-div-clusters").data('url'),
@@ -115,6 +129,7 @@ function createSkymap()
             success: function(data) {
                 clusterData = JSON.parse(data)
                 lodLevels = Object.keys(clusterData).length
+                updateScales()
                 zoomed()
             }
         }
@@ -167,23 +182,29 @@ function renderVisibleClusters(new_xScale, new_yScale)
             .attr("cy", function(f) { return new_yScale(f.dec)})
             .attr("r", function(f) { return calcRadius(f)})
             .style("fill", currLevel != 0 ? "#373755" : "#cc0000")
-            .style('opacity', function(f) {
-                var r = calcRadius(f)
-                return ((parseFloat(d3.select(this).attr("cx")) - r < margin.left) || 
-                        (parseFloat(d3.select(this).attr("cy")) + r > height - margin.bottom)) ? 0.1 : 0.7
-                })
+            .style('opacity', function(f) { return calcOpacity(f, new_xScale, new_yScale)})
+            
 }
 
 function calcRadius(o)
 {
-    return currLevel != 0 ? rScale(o.n_obs) * transform_store.k * radiusMultiplier : 5
+    return currLevel != 0 ? rScale(o[varRadius]) * transform_store.k * radiusMultiplier : 5
+}
+
+function calcOpacity(o, xScale, yScale)
+{
+    var r = calcRadius(o)
+    if ((parseFloat(xScale(o.ra)) - r < margin.left) || (parseFloat(yScale(o.dec)) + r > height - margin.bottom))
+        return 0.1
+    else if (currLevel == 0 || varOpacity == "fixed")
+        return 0.7
+    else
+        return oScale(o[varOpacity])
 }
 
 function getLODByZoom(k)
 {
-    //var k = 0.02
-    // a logistic function that has been tuned for a reasonable transition between lods
-    //return Math.max(Math.round(-(2*lodLevels)/(1 + Math.E ** (-k * (x - 1))) + 2 * lodLevels - 1), 0)
+    // a logarithmic function that has been tuned for a reasonable transition between lods
     var n = Math.ceil(getBaseLog(0.5, (k/L0_ZOOM)))
     return Math.max(Math.min(n, lodLevels - 1), 0)
 }
@@ -198,19 +219,28 @@ function initializeControls()
     $("#opt-clustersize").selectmenu(
     {
         change: function(event, ui)
-        {}
+        {
+            varRadius = ui.item.value
+            updateScales()
+            plot_svg.selectAll('circle').transition().attr('r', d => calcRadius(d))
+            console.log(rScale.domain())
+        }
     })
 
     $("#opt-clusteropacity").selectmenu(
     {
         change: function(event, ui)
-        {}
+        {
+            varOpacity = ui.item.value
+            updateScales()
+            plot_svg.selectAll('circle').transition().style('opacity', d => calcOpacity(d, xScale, yScale))
+        }
     }).addClass("no-scroll")
     
     $("#opt-clustersize-scale").slider(
     {
         min: 0.1, 
-        max: 2,  
+        max: 10,  
         value:[1],
         step: 0.1,
         slide: function(event, ui) 

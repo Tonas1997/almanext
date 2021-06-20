@@ -1,7 +1,7 @@
 
 from django.core.management.base import BaseCommand
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Max
+from django.db.models import Max, Sum
 
 from common.models import Observation
 from common.utils import calc_obs_areas_simple
@@ -112,7 +112,7 @@ def create_cluster_json():
                     "project_code": oref.obs.project_code,
                     "ra": oref.obs.ra,
                     "dec": oref.obs.dec,
-                    "total_area": oref.obs.total_area
+                    "area_total": oref.obs.total_area
                 })
         # else, add the Cluster objects
         else:
@@ -121,7 +121,9 @@ def create_cluster_json():
                 ls.append({
                     "ra": c.ra,
                     "dec": c.dec,
-                    "n_obs": c.count
+                    "n_obs": c.count,
+                    "area_total": c.area_total,
+                    "area_overlap": c.area_overlap
                 })
         lod_list.append(ls)
     # create a dict from both lists
@@ -208,10 +210,22 @@ def create_clusters():
                 c.parent = Cluster.objects.get(pk = int(row["parent"]))
                 c.save()
 
+def create_archive_info_json():
+    curr_max_level = Cluster.objects.all().aggregate(Max('level')).get('level__max')
+    # we can just get the aggregates from the lowest zoom level
+    info_area_total = Cluster.objects.filter(level = curr_max_level).aggregate(Sum('area_total')).get('area_total__sum')
+    info_area_overlap = Cluster.objects.filter(level = curr_max_level).aggregate(Sum('area_overlap')).get('area_overlap__sum')
+    info_count_obs = Observation.objects.all().count()
+    # build the JSON file
+    info_json = {"info_area_total": info_area_total, "info_area_overlap": info_area_overlap, "info_count_obs": info_count_obs}
+    with open('archive_info.json', 'w') as outfile:
+        json.dump(info_json, outfile, indent=4, cls=DjangoJSONEncoder)
+
 class Command(BaseCommand):
     args = '<coiso>'
 
     def handle(self, *args, **options):
         #create_clusters()
-        get_all_cluster_obs_area()
+        #get_all_cluster_obs_area()
         #create_cluster_json()
+        create_archive_info_json()

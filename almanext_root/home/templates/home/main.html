@@ -5,6 +5,7 @@
 {% block content %}
 <div id="url-div-bands" data-url="{% url 'get_bands' %}"></div>
 <div id="url-div-area-per-freq" data-url="{% url 'get_area_per_freq' %}"></div>
+<div id="url-div-archive-info" data-url="{% url 'get_archive_info' %}"></div>
 <link href="{% static 'home/style.css' %}" rel="stylesheet" type="text/css"/>
 <div id="container">
     <div id="left">
@@ -15,15 +16,15 @@
         <div id="archive-info">
             <div class="infobox" id="box-number-observations">
                 <div class="infobox-label">Number of observations</div>
-                <div class="infobox-value" id="number-observations">asd</div>
+                <div class="infobox-value" id="number-observations"><span id="count_obs"></span></div>
             </div>
             <div class="infobox" id="box-total-area">
                 <div class="infobox-label">Total area (estimated)</div>
-                <div class="infobox-value" id="total-area">asd</div>
+                <div class="infobox-value" id="total-area"><span id="area_total"></span> arcsec<sup>2</sup></div>
             </div>
             <div class="infobox" id="box-overlap-area">
                 <div class="infobox-label">Overlapping area (estimated)</div>
-                <div class="infobox-value" id="overlap-area">asd</div>
+                <div class="infobox-value" id="overlap-area"><span id="area_overlap"></span> arcsec<sup>2</sup></div>
             </div>
         </div>
         <div id="area-by-freq">
@@ -37,13 +38,12 @@
         </div>
     </div>
 </div>
+
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.js"></script>
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.css">
-
+<script type="module" src="{% static 'home/countUp.umd.js' %}"></script>
 <script type="module" src="{% static 'home/main.js' %}"></script>
 
 {% endblock content %}
