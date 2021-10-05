@@ -47,7 +47,7 @@ spherical-geometry==1.2.20
 sqlparse==0.3.0
 threadpoolctl==2.1.0
 toml==0.10.2
-urllib3==1.26.4
+urllib3==1.26.5
 vine==5.0.0
 wcwidth==0.2.5
 webencodings==0.5.1
