@@ -1226,7 +1226,7 @@ function showPlotControls()
 			<div class="sep-horizontal-small"></div>
 			<div id="observations-table">
 				<div class="info-wrapper">
-					<table id='obs_list' class='display compact' width='90%'>
+					<table id='obs_list' class='display compact pageResize' width='90%'>
 						<thead>
 							<tr>
 								<th>Project code</th>
@@ -1947,13 +1947,14 @@ function drawControls()
  */
 function createLinesSVG(em_lines_g)
 {
+    var svgHeight = freq_hist_height - freq_hist_margin.top - freq_hist_margin.bottom
     var line = em_lines_g
         .enter()
         .append("svg")
         .attr("x", function(e) {return freq_hist_xScale(e.frequency/(1+z))-5})
         .attr("y", freq_hist_margin.top)
         .attr("width", 50)
-        .attr("height", 200)
+        .attr("height", freq_hist_height)
         .style("opacity", 0.0)
         /*
         .on("mouseout", function() {
@@ -1962,7 +1963,7 @@ function createLinesSVG(em_lines_g)
         })*/
     line.append("rect")
         .attr("x", 0)
-        .attr("y", 45)
+        .attr("y", svgHeight/2 - 15)
         .attr("width", 10)
         .attr("height", 30)
         .attr("stroke", "#b4b40f")
@@ -1974,13 +1975,13 @@ function createLinesSVG(em_lines_g)
         .attr("font-size", "10px")
         .attr("fill", "white")
         .attr("text-anchor", "middle")
-        .attr("transform", "translate(6,60) rotate(270)")
+        .attr("transform", "translate(6," + svgHeight/2 + 15 + ") rotate(270)")
         .text(function(e) {return e.species})
     line.append("line")
         .attr("stroke", "#b4b40f")
         .attr("stroke-linecap", "null")
         .attr("stroke-linejoin", "null")
-        .attr("y2", "45")
+        .attr("y2", svgHeight/2 - 15)
         .attr("x2", "5")
         .attr("y1", "0")
         .attr("x1", "5")
@@ -1990,9 +1991,9 @@ function createLinesSVG(em_lines_g)
         .attr("stroke", "#b4b40f")
         .attr("stroke-linecap", "null")
         .attr("stroke-linejoin", "null")
-        .attr("y2", "120")
+        .attr("y2", svgHeight)
         .attr("x2", "5")
-        .attr("y1", "75")
+        .attr("y1", svgHeight/2 + 15)
         .attr("x1", "5")
         .attr("stroke-width", "2")
         .attr("fill", "none")

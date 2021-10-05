@@ -97,6 +97,18 @@ body
   cursor: pointer; /* Mouse pointer on hover */
 }
 
+.pixel-tooltip
+{
+  font-size: x-small;
+  position: absolute;
+  background-color: rgba(40, 40, 40, 0.5);
+  color: white;
+  border-radius: 2px;
+  z-index: 100;
+  padding: 2px;
+  border-radius: 5px;
+}
+
 .no-scroll
 {
   overflow: hidden !important

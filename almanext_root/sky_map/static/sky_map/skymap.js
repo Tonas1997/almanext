@@ -15,6 +15,7 @@ var varOpacity = "fixed"
 
 var transform_store = d3.zoomIdentity
 var currLevel
+var prevLevel
 
 // the minimum zoom level observations are displayed at
 const L0_ZOOM = 100
@@ -102,6 +103,8 @@ function createSkymap()
         .style("text-anchor", "middle")
         .text("Declination");
 
+    d3.select('#skymap-tooltip').style("display", "none");
+
     // set the panning limits
     const extent = [[0, 0], [width, height]];
 
@@ -167,12 +170,16 @@ function renderVisibleClusters(new_xScale, new_yScale)
     currLevel = getLODByZoom(k)
     console.log(k)
     var lod_data = clusterData["lod" + currLevel]
+
+    if(currLevel != prevLevel)
+        d3.select('#skymap-tooltip').style("opacity", 0);
+    prevLevel = currLevel
     
     var filtered_lod_data = lod_data.filter(c => c.ra > min_ra && c.ra < max_ra &&  
         c.dec > min_dec && c.dec < max_dec)
 
     plot_svg.selectAll('circle').remove()
-
+    
     plot_svg.selectAll('circle')
         .data(filtered_lod_data)
         .enter()
@@ -183,7 +190,42 @@ function renderVisibleClusters(new_xScale, new_yScale)
             .attr("r", function(f) { return calcRadius(f)})
             .style("fill", currLevel != 0 ? "#373755" : "#cc0000")
             .style('opacity', function(f) { return calcOpacity(f, new_xScale, new_yScale)})
-            
+            .on("mouseover", function(f) {
+                var mouse = d3.mouse(this)
+                var mouseX = mouse[0];
+                var mouseY = mouse[1];
+                d3.select('#skymap-tooltip')
+                    .transition()
+                    .duration(200)
+                    .style("opacity", .9)
+                d3.select('#skymap-tooltip')
+                    .attr('class', "pixel-tooltip")
+                    .style('left', mouseX + 10 + 'px')
+                    .style('top', mouseY - 20 + 'px')
+                    .style('display', 'block')		
+                    .html(
+                        (currLevel != 0 ? 'Number of observations: ' + f.n_obs : 'Project code: ' + f.project_code) + '<br>' +
+                        'Right ascension: ' + f.ra.toFixed(2) + 'º<br>' + 
+                        'Declination: ' + f.dec.toFixed(2) + 'º<br>' +  
+                        'Total area: ' + f.area_total.toFixed(2) + ' arcsec<sup>2</sup>' +
+                        (currLevel != 0 ? '<br> Overlapping area: ' + f.area_overlap.toFixed(2) + ' arcsec<sup>2</sup>': ""))
+                    })
+            .on("mousemove", function(f) {
+                var mouse = d3.mouse(this)
+                var mouseX = mouse[0];
+                var mouseY = mouse[1];		
+                d3.select('#skymap-tooltip')
+                    .style('left', mouseX + 10 + 'px')
+                    .style('top', mouseY - 20 + 'px')
+            })				
+            .on("mouseout", function(f) {		
+                d3.select('#skymap-tooltip')
+                    .transition()
+                    .duration(200)
+                    .style("opacity", 0);
+                d3.select('#skymap-tooltip')
+                    .style('display', 'none')	
+            });       
 }
 
 function calcRadius(o)

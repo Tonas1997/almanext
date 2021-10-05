@@ -4,9 +4,7 @@ var obs_table
  */
 export function showObservationList(data)
 {
-    showListControlPane()
-    //var table_string = '<table id="obs_list" class="display" width="100%"></table>'
-    //$('#tab-observations').html(table_string)
+    //showListControlPane()
     console.log(data.observations)
     obs_table = $('#obs_list').DataTable( 
     {
@@ -19,14 +17,18 @@ export function showObservationList(data)
             { "data": "total_area" },
             { "data": "overlap_area" }
         ],
-        "scrollY": "180px",
+        "scrollY": "35vh",
         "paging": false,
         "searching": false,
         "info": false,
         "orderClasses": false,
-        "asStripeClasses": [""]
+        "asStripeClasses": [""],
+        "pageResize": true
     } 
     ).columns.adjust().draw();
+
+    var container = $("#observations-table")
+    container.find(".dataTables_scrollBody").css('height', container.height() - 20);
 }
 
 export function getObservationRowData(tr)

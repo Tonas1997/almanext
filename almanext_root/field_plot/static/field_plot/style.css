@@ -295,7 +295,6 @@ form
 .info-wrapper
 {
   display: flex;
-  flex: 1 0 20vh;
   flex-direction: column;
   margin: 10px 5px 5px 10px
 }
@@ -309,7 +308,6 @@ form
 
 #tab-information-plot
 {
-  display: flex;
   flex: 1 1 50%;
   flex-direction: column;
 }
@@ -324,14 +322,18 @@ form
 
 #tab-information-pixel
 {
-  display: flex;
   flex: 1 1 50%;
   flex-direction: column;
 }
 
+#plot-information
+{
+  flex: 1 1 70vh;
+}
+
 #info-row
 {
-  height: 240px;
+  height: 30vh;
 }
 
 #infobox-plot-num
@@ -518,6 +520,13 @@ form
 }
 
 /* Observation table classes */
+#observations-table
+{
+  display: flex;
+  flex: 1 1 40vh;
+  flex-direction: column;
+}
+
 .highlighted-row
 {
   background-color: #a2aec7 !important;
