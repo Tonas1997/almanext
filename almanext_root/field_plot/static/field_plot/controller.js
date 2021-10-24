@@ -1355,7 +1355,7 @@ function getPixelObservations(px_observations)
 
 var freq_hist_width //= $('#infotabs').width() - 50;
 var freq_hist_height //= $('#infotabs').height() - 40;
-const freq_hist_margin = {left: 50, right: 40, top: 10, bottom: 15, xlabel: 25, ylabelLeft: 15, ylabelRight: 10};
+const freq_hist_margin = {left: 60, right: 20, top: 10, bottom: 15, xlabel: 25, ylabelLeft: 15, ylabelRight: 10};
 
 var freq_hist_svg
 var freq_hist_xScale
@@ -1480,7 +1480,7 @@ function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
         .attr('id', 'y-axis1')
         .attr('transform', 'translate(' + freq_hist_margin.left + ',' + freq_hist_margin.top + ')')
         .call(freq_hist_yAxis1
-            .tickFormat(d3.format(".0s")))
+            .tickFormat(customFormat))
     g = freq_hist_svg.append("text")
         .attr("id", "y-axis1-label")             
         .attr("transform", "translate(" + freq_hist_margin.ylabelLeft + "," + (freq_hist_height/2) + ")rotate(-90)")
@@ -1489,6 +1489,7 @@ function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
         .text("Observation count");
 
     // right Y axis
+    /*
     g = freq_hist_svg.append("g")
         .attr('id', 'y-axis2')
         .attr('transform', 'translate(' + (freq_hist_width - freq_hist_margin.right) + ',0)')
@@ -1498,6 +1499,7 @@ function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
         .attr("class", "axis-label")
         .style("text-anchor", "middle")
         .text("Line sensitivity (mJy/beam)");
+        */
 
     var clip1 = freq_hist_svg.append("defs").append("svg:clipPath")
         .attr("id", "clip1")
@@ -1544,6 +1546,23 @@ function showFreqHistogram(plot_properties, plot_freqs, emission_lines)
         .translateExtent(extent)
         .extent(extent)
         .on("zoom", () => freqHistZoomed(d3.event.transform)));
+}
+
+function customFormat(value) {
+    var formattedValue = value;
+
+    if (value > 999 && value < 10000) {
+        if (value % 1000 < 50) {
+            formattedValue = d3.format('.0s')(value);
+        } else {
+            formattedValue = d3.format('.1s')(value);
+        }
+    } 
+    else if (value >= 10000) {
+        formattedValue = d3.format('.2s')(value);
+    }
+
+    return formattedValue;
 }
 
 /**
@@ -1893,6 +1912,7 @@ function drawControls()
     // convert the above elements to JQueryUI instances
     $("#freq-histogram-yaxis1").selectmenu(
     {
+        width : 180,
         change: function(event, ui)
         {
             left_axis = ui.item.value

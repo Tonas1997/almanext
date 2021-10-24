@@ -59,8 +59,6 @@ export function updateListSelectedObs(obs_list)
         obs_table.rows().every(function() 
         {
             var rowData = this.data();
-            //console.log(id_list)
-            //console.log(rowData.index)
             if(id_list.includes(rowData.index))
                 $(this.node()).addClass('selected');
         })

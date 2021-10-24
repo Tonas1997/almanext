@@ -260,9 +260,9 @@ def update_obs_overlapping_areas(y, x, counter):
     global observations_list
     pixel_observations = pixel_array[y][x].get_observations()
     for o in pixel_observations:
-        print("o: " + str(o) + ", l: " + str(pixel_observations) + ", c: " + str(counter))
+        #print("o: " + str(o) + ", l: " + str(pixel_observations) + ", c: " + str(counter))
         # this will prevent duplicate increments
-        if(o != counter and len(pixel_observations) < 2):
+        if(len(pixel_observations) <= 1):
             observations_list[o]["overlap_area"] += pixel_area
 
 # -----------------------------------------------------------------------------------------
@@ -347,10 +347,11 @@ def fill_pixels(obs_json, mean_freq, array, counter):
                         # update plot area   
                         properties_list["total_area"] += pixel_area
                     # else, increment the plot's overlapping area counter...
-                    elif(pixel.count_pointings == 1):
-                        properties_list["overlap_area"] += pixel_area
-                        # ...and also for any other observations covering this pixel
+                    else:
+                        if(pixel.count_pointings == 1):
+                            properties_list["overlap_area"] += pixel_area
                         obs_json["overlap_area"] += pixel_area
+                        # ...and also for any other observations covering this pixel
                         update_obs_overlapping_areas(y, x, counter)  
                     # change the average values
                     pixel_array[y][x].change_avgs(res, sens, int_time)

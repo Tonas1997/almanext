@@ -13,12 +13,6 @@
 
 /* ========== PARAMETERS ========== */
 
-#plot-parameters
-{
-  flex: 0 1 20vh;
-  align-items: center;
-}
-
 .plot-parameters-form
 {
   display: flex;
@@ -284,7 +278,7 @@ form
 
 .pane-frame
 {
-  margin: 10px 0px 0px 10px;
+  margin: 10px 0px 10px 10px;
 }
 
 #infotabs .ui-tabs-panel 
@@ -459,6 +453,11 @@ form
 {
   margin-left: 10px;
   margin-right: 10px;
+}
+
+#freq-histogram-yaxis-control
+{
+  width: 260px;
 }
 
 .checkbox-clean

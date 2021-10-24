@@ -157,7 +157,6 @@ def get_plot(request):
 
     obs_ids = obs_result.values_list('id', flat=True)
     print(list(obs_ids))
-    
     result = get_json_plot.delay(ra, dec, size, res, list(obs_ids), min_freq, max_freq)
     print("Task id")
     print(result.task_id)
