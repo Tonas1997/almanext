@@ -5,7 +5,7 @@ astropy==4.0
 astroquery==0.4.2
 beautifulsoup4==4.9.3
 billiard==3.6.3.0
-celery==5.0.5
+celery==5.2.2
 celery-progress==0.1.0
 certifi==2020.12.5
 chardet==4.0.0
