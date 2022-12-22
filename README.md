@@ -24,11 +24,14 @@ Average sensitivity
 
 ![unnamed (2)](https://user-images.githubusercontent.com/43859708/208936250-55d6b666-ac84-4608-8325-1b49852227ce.png)
 
-Average integration time & Potential SNR improvement ratio (12m antennae)
+ & Potential SNR improvement ratio (12m antennae)
 
 ![unnamed (3)](https://user-images.githubusercontent.com/43859708/208936349-920b84f5-5e3a-4edb-981a-3fcfd2423430.png)
 ![unnamed (4)](https://user-images.githubusercontent.com/43859708/208936402-cf52fb11-290e-4328-9f2f-35e89df012aa.png)
 
+Average integration time             |  Potential SNR improvement ratio (12m antennae)
+:-------------------------:|:-------------------------:
+![unnamed (3)](https://user-images.githubusercontent.com/43859708/208936349-920b84f5-5e3a-4edb-981a-3fcfd2423430.png)  |  ![unnamed (4)](https://user-images.githubusercontent.com/43859708/208936402-cf52fb11-290e-4328-9f2f-35e89df012aa.png)
 ---
 
 
