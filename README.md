@@ -1,3 +1,9 @@
+The ALMA Science Hub (ASH)
+
+Full-sky plot of observation clusters
+
+![Picture1](https://user-images.githubusercontent.com/43859708/208936658-51915bf0-0f93-4ec3-b37b-f1506b18596f.jpg)
+
 # almanext
 Private repository for the ALMA data exploitation website.
 
@@ -25,6 +31,4 @@ Potential SNR improvement ratio (12m antennae)
 
 ---
 
-Full-sky plot of observation clusters
 
-![Picture1](https://user-images.githubusercontent.com/43859708/208936658-51915bf0-0f93-4ec3-b37b-f1506b18596f.jpg)
