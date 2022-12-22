@@ -1,11 +1,14 @@
-The ALMA Science Hub (ASH)
+# The ALMA Science Hub (ASH)
 
 Full-sky plot of observation clusters
 
 ![Picture1](https://user-images.githubusercontent.com/43859708/208936658-51915bf0-0f93-4ec3-b37b-f1506b18596f.jpg)
 
-# almanext
-Private repository for the ALMA data exploitation website.
+(Private repository for the ALMA data exploitation website.)
+
+The Atacama Large Millimetre Array, located on the homonymous Chilean desert, constitutes one of the world’s most advanced interferometric observatories. Covering the millimetre and sub-millimetre wavelengths, the facility supports the needs of an ever-growing community within astronomy and astrophysics research groups. As it happens with all ground-based astronomical instruments, however, data storage and exploitation remain an outstanding challenge; while the former can be managed through technical upgrades to the Array instrumentation, the latter largely depends on how the archival data is accessed, analysed and presented to the user. Currently, ALMA observations are made publicly available through the ASA (ALMA Science Archive) online platform. Despite offering native, metadata-based filtering that can be applied to an observation’s various fields, such as location, spectral windows or integration time, it is understood that the ASA would benefit from supplementary tools improving its visualization components, allowing for a more direct assessment of both the archive’s global state and its more localized clusters (e.g., field density distribution). This thesis describes the status of an ongoing project within the Institute of Astrophysics and Space Sciences (IA), foreseeing the development and production of a separate website that provides the user with a set of data analysis and visualization tools; while other functionalities are predicted to be included, the platform will mainly focus on the visual plotting of specific regions containing ALMA observations, enabling the users to directly identify particularly deep regions of the sky. Apart from allowing for a better scientific exploitation of pre-existing astronomical data through the combination of interrelated observations, the visualization toolkit may also increase the archive’s appeal and utility among non-expert users, promoting a larger public engagement with the ESO’s activities; on a longterm basis, it is intended that this platform will come to represent a valuable asset to the ALMA community.
+
+The software was developed as part of my MSc thesis in Software Engineering (September 2022) at the Faculty of Sciences, Universidade de Lisboa. The developed tool is the result of a collaboration between the Computer Science (DI) department at FCUL and the FCUL research unit Institute of Astrophysics and Space Sciences (IA).
 
 A few generated plots, featuring observations on the COSMOS field in band 3:
 
